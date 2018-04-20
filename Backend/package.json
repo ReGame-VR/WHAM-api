@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "The WHAM Code For the Server",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.16.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryan-bradford/WHAM.git"
+  },
+  "author": "WHAM",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ryan-bradford/WHAM/issues"
+  },
+  "homepage": "https://github.com/ryan-bradford/WHAM#readme"
+}
