@@ -55,4 +55,4 @@ CREATE TABLE PATIENT_MESSAGE (
     FOREIGN KEY (patientID) REFERENCES PATIENT(username),
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username)   
     -- No primary key
-)
+);
