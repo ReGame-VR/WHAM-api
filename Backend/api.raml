@@ -1,0 +1,169 @@
+#%RAML 1.0
+title: WHAM API
+version: v1
+mediaType: application/json
+baseUri: http://api.wham.com
+types:
+  User:
+    properties:
+      name: string
+      id: number
+    example:
+      name: "UserA"
+      id: 8971203
+
+  Therapist:
+    type: User
+    example:
+      name: "UserA"
+      id: 8971203
+
+  Patient:
+    type: User
+    properties:
+      therapist: Therapist
+    example:
+      name: "Joey"
+      therapist:
+        name: "Jen"
+        id: 92013
+      id: 128939
+
+  NewTherapist:
+    properties:
+      name: string
+      password: string
+    example:
+      name: "Jen"
+      password: "qwertyy"
+
+  NewPatient:
+    properties:
+      name: string
+      password: string
+      therapist?: number
+    examples:
+      noTherapist:
+        name: "Greg"
+        password: "jfido"
+      withTherapist:
+        name: "Fred"
+        password: "2fei333"
+        therapist: 39012
+
+  NewPatientSession:
+    properties:
+      activityLevel: number
+      date: datetime
+    example:
+      activityLevel: 88
+      date: 2016-02-28T16:41:41.090Z
+
+  PatientSession:
+    properties:
+      activityLevel: number
+      date: datetime
+      id: number
+    example:
+      activityLevel: 88
+      date: 2016-02-28T16:41:41.090Z
+      id: 1427828
+
+resourceTypes:
+  Collection:
+    get:
+      description: Get overview information on a collection of <<item>>s
+      responses:
+        200:
+          body:
+            application/json:
+              type: <<item>>[]
+
+  Member:
+    get:
+      description: Get specific information on the <<item>>
+      responses:
+        200:
+          body:
+            application/json:
+              type: <<item>>
+    delete:
+      description: Delete the <<item>>
+      responses:
+        204:
+
+  UserCollection:
+    type:  { Collection: {item : <<item>>} }
+    post:
+      description: Register a new <<item>> user.
+      body:
+        application/json:
+          type: <<newItem>>
+
+      responses:
+        201:
+          description: Succesfully registered.
+          body:
+            application/json:
+              type: <<item>>
+        403:
+          description: Invalid username/password.
+          body:
+            properties:
+              error: string
+            examples:
+              usernameTaken:
+                error: "Username taken already."
+              badPassword:
+                error: "Password must be at least 8 characters long."
+
+/patients:
+  type:  { UserCollection: {newItem : NewPatient, item : Patient} }
+  description: A collection of all patients in the system.
+
+  /{id}:
+    type:  { Member: {item : Patient} }
+    description: A specific patient.
+
+    /sessions:
+      type:  { Collection: {item : PatientSession} }
+      description: A collection of a patient's sessions.
+      post:
+        body:
+          application/json:
+            type: NewPatientSession
+
+      /{id}:
+        type:  { Member: {item : PatientSession} }
+        description: A specific patient session.
+
+/therapists:
+  type:  { UserCollection: {newItem : NewTherapist, item : Therapist} }
+  description: A collection of all therapists in the system.
+
+  /{id}:
+    type:  { Member: {item : Therapist} }
+    description: A specific therapist.
+
+    /patients:
+      type:  { Collection: {item : Patient} }
+
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                example:
+                 - name: "Joey"
+                   therapist:
+                     name: "Jen"
+                     id: 92013
+                   id: 128939
+                 - name: "Jill"
+                   therapist:
+                     name: "Jen"
+                     id: 92013
+                   id: 1428739
+      description: |
+        A collection of all of a therapist's patients. For more detail on the
+        patient, the top level /patient should be used.
