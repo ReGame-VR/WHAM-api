@@ -1,17 +1,35 @@
 const express = require('express')
-const app = express()
+const mysql = require('mysql');
+const app = express();
+app.use(express.bodyParser());
+
+var connection = mysql.createConnection({
+  host     : 'localhost',
+  user     : 'me',
+  password : 'secret',
+  database : 'my_db'
+});
+
+connection.connect();
 
 app.get('/patients',getPatients)
 
 //Gives all patient info in either JSON or HTML form
 function getPatients(req, res) {
-  if(req.headers['accept'].includes('text/html')) {
-    //Send patient info as HTML
-  } else if(req.headers['accept'].includes('application/json')) {
-    //Send patient info as JSON
-  } else {
-    //An unsupported request
-  }
+  // var sql_no_session = "SELECT * FROM PATIENT"; // gives just the patient info
+  var sql = "SELECT * FROM PATIENT P, PATIENT_SESSION PS WHERE P.username = PS.patientID"; 
+  // Returns all patient info and all session info for every patient
+  sql = mysql.format(sql, []);
+  connection.query(sql, function (error, results, fields) {
+    if (error) throw error;
+      if(req.headers['accept'].includes('text/html')) {
+        //Send patient info as HTML
+      } else if(req.headers['accept'].includes('application/json')) {
+        //Send patient info as JSON
+      } else {
+        //An unsupported request
+      }
+  });
   res.send("GET Patients");
 }
 
@@ -19,6 +37,20 @@ app.post('/patients',addPatient)
 
 //Adds the patient to the database
 function addPatient(req, res) {
+  // Username, password, DOB, Weight, Height, (?) Information
+  var sql = "INSERT INTO PATIENTS VALUES (?, ?, ?, ?, ?, ?)"
+  var username = req.param('username', null);
+  var password = req.param('password', null);
+  var dob = req.param('dob', null);
+  var weight = req.param('weight', null);
+  var height = req.param('height', null);
+  var information = req.param('information', ""); // Default of empty string
+
+  var inserts = [username, password, dob, weight, height, information];
+  sql = mysql.format(sql, inserts);
+  connection.query(sql, function (error, results, fields) {
+    if (error) { res.send("Could Not Add"); throw error; }
+  });
   res.send("ADD Patients");
 }
 
@@ -143,3 +175,6 @@ function getTherapistPatients(req, res) {
 
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
+
+
+//connection.end(); put somewhere
