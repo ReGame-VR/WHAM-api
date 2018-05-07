@@ -58,6 +58,11 @@ app.get('/patients/:patientID',getPatient)
 
 //Returns the info for a single patient
 function getPatient(req, res) {
+  var username = req.param('username', null);
+  var patientInfoQuerry = "SELECT * FROM PATIENT P WHERE P.username = ?";
+  var patientSessionQuerry = "SELECT * FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
+  var patientMessageQuerry = "SELECT * FROM PATIENT_MESSAGE PM WHERE P.patientID = ?";
+
   if(req.headers['accept'].includes('text/html')) {
     //Send patient info as HTML
   } else if(req.headers['accept'].includes('application/json')) {
