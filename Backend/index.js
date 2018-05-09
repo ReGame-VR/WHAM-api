@@ -5,6 +5,8 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 const mysql = require('mysql');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 app.engine('handlebars', exphbs({
     defaultLayout: false,
@@ -59,13 +61,14 @@ function addPatient(req, res) {
     // Username, password, DOB, Weight, Height, (?) Information
     var sql = "INSERT INTO PATIENTS VALUES (?, ?, ?, ?, ?, ?)"
     var username = req.param('username', null);
-    var password = req.param('password', null);
+    var salt = bcrypt.genSaltSync(saltRounds);
+    var password = bcrypt.hashSync(req.param('password', null), salt);
     var dob = req.param('dob', null);
     var weight = req.param('weight', null);
     var height = req.param('height', null);
     var information = req.param('information', ""); // Default of empty string
 
-    var inserts = [username, password, dob, weight, height, information];
+    var inserts = [username, password, salt, dob, weight, height, information];
     sql = mysql.format(sql, inserts);
     connection.query(sql, function(error, results, fields) {
         if (error) {
