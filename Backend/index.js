@@ -1,5 +1,18 @@
 const express = require('express')
-const app = express()
+const exphbs = require('express-handlebars');
+const app = express();
+const path = require('path');
+
+app.engine('handlebars', exphbs({
+    defaultLayout: false,
+    helpers: {
+        concat: (...args) => args.slice(0, -1).join('')
+    }
+}));
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.set('view engine', 'handlebars');
 
 app.get('/patients',getPatients)
 
@@ -28,12 +41,12 @@ app.get('/patients/:patientID',getPatient)
 function getPatient(req, res) {
   if(req.headers['accept'].includes('text/html')) {
     //Send patient info as HTML
+    res.render('patient-detail');
   } else if(req.headers['accept'].includes('application/json')) {
     //Send patient info as JSON
   } else {
     //An unsupported request
   }
-  res.send("GET Patient " + req.params['patientID']);
 }
 
 app.delete('/patients/:patientID',deletePatient)
@@ -106,28 +119,42 @@ function addTherapist(req, res) {
   res.send("ADD Therapist");
 }
 
-app.get('/patients/:therapistID',getTherapist)
+app.get('/therapists/:therapistID',getTherapist)
 
 //Returns the info for a single therapist
 function getTherapist(req, res) {
   if(req.headers['accept'].includes('text/html')) {
     //Send therapist info as HTML
+    res.render('patient-overview', {
+        patients: [{
+                name: "John Doe",
+                lastActive: "1 day ago",
+                latestScore: 80,
+                id: 1
+            },
+            {
+                name: "Mary Moe",
+                lastActive: "3 hours ago",
+                latestScore: 72,
+                id: 2
+            }
+        ]
+    });
   } else if(req.headers['accept'].includes('application/json')) {
     //Send therapist info as JSON
   } else {
     //An unsupported request
   }
-  res.send("GET Therapist " + req.params['therapistID']);
 }
 
-app.delete('/patients/:therapistID',deleteTherpist)
+app.delete('/therapists/:therapistID',deleteTherpist)
 
 //Deletes this therapist from the database
 function deleteTherpist(req, res) {
   res.send("DELETE Therapist " + req.params['therapistID']);
 }
 
-app.get('/patients/:therapistID/patients',getTherapistPatients)
+app.get('/therapists/:therapistID/patients',getTherapistPatients)
 
 //Returns the info for all patients of this therapist
 function getTherapistPatients(req, res) {
