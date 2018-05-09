@@ -4,8 +4,10 @@
   "description": "The WHAM Code For the Server",
   "main": "index.js",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
+    "mysql": "^2.15.0",
     "osprey-mock-service": "^0.3.0"
   },
   "devDependencies": {},
