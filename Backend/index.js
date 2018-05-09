@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express')
 const exphbs = require('express-handlebars');
 const app = express();
@@ -19,12 +20,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json())
 
 var connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'password'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: "WHAM"
 });
 
-connection.connect();
+connection.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected!");
+  });
 
 app.get('/patients', getPatients)
 
