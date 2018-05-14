@@ -1,0 +1,146 @@
+require('dotenv').config();
+const mysql = require('mysql');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+class PatientDB {
+
+
+    constructor(dbName) {
+        this.connection = mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: dbName
+        });
+
+        this.connection.connect(function (err) {
+            if (err) throw err;
+            console.log("Connected!");
+        });
+    }
+
+    // (Boolean -> Void) -> Void
+    // Deletes all patients from the DB
+    // If suceed, calls the callback with true
+    // If fail, calls the callback with false (server error or other)
+    delete_all_patient_info(callback) {
+        var sql = "DELETE FROM PATIENT_SESSION";
+        var connection = this.connection;
+        connection.query(sql, function (error, results, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                var sql = "DELETE FROM PATIENT_MESSAGE";
+                connection.query(sql, function (error, results, fields) {
+                    if (error) {
+                        callback(false);
+                    } else {
+                        var sql = "DELETE FROM PATIENT_MESSAGE";
+                        connection.query(sql, function (error, results, fields) {
+                            if (error) {
+                                callback(false);
+                            } else {
+                                var sql = "DELETE FROM PATIENT_THERAPIST";
+                                connection.query(sql, function (error, results, fields) {
+                                    if (error) {
+                                        callback(false);
+                                    } else {
+                                        var sql = "DELETE FROM PATIENT";
+                                        connection.query(sql, function (error, results, fields) {
+                                            if (error) {
+                                                callback(false);
+                                            } else {
+                                                callback(true);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    // ([List-of String] -> Void) -> Void
+    // Calls the callback with the usernames of every patient
+    get_all_patient_info(callback) {
+        var sql = "SELECT username FROM PATIENT";
+        this.connection.query(sql, function (error, results, fields) {
+            if (error) {
+                callback([]);
+            } else {
+                var toReturn = [];
+                for(var i = 0; i < results.length; i += 1) {
+                    toReturn.push(String(results[i].username));
+                }
+                callback(toReturn);
+            }
+        });
+    }
+
+    // String -> ???
+    // Returns all information for the given patient
+    get_patient_info(patientID) {
+
+    }
+
+    // String String String Number Number String (Boolean -> Void) -> Void
+    // Tries to add the patient to the database
+    // If suceed, calls the callback with true
+    // If fail, calls the callback with false (user already exists or other)
+    // Note: Weight in Kilo, Height in CM, DOB in YYYY-MM-DD
+    add_patient(username, unencrypt_password, dob, weight, height, information, callback) {
+        // Username, password, salt, DOB, Weight, Height, (?) Information
+        var sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?, ?, ?)"
+        var salt = bcrypt.genSaltSync(saltRounds);
+        var password = bcrypt.hashSync(unencrypt_password, salt);
+
+        var inserts = [username, password, salt, dob, weight, height, information];
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function (error, results, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
+    }
+
+    // String -> Boolean
+    // Tries to purge the patient from the DB 
+    // Including all session, message, and patient-therapist info
+    // If suceed, returns true
+    // If fail, returns false (unknown reason, probably server error)
+    delete_patient(patientID) {
+
+    }
+
+    // String -> ???
+    // Returns all the session info for a given patient
+    get_patient_sessions(patientID) {
+
+    }
+
+    // String Number Date -> Boolean
+    // Adds an entry for a session to the DB
+    // If suceed, returns true
+    // If fail, returns false (server error or already added)
+    add_patient_session(patientID, score, time) {
+
+    }
+
+    // String Date -> Boolean
+    // Deletes a given patient session for the DB
+    // If suceed, returns true
+    // If fail, returns false (server error)
+    delete_patient_session(patientID, time) {
+
+    }
+
+}
+
+module.exports = PatientDB;
+
