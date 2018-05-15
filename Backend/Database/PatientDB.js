@@ -16,7 +16,6 @@ class PatientDB {
 
         this.connection.connect(function (err) {
             if (err) throw err;
-            console.log("Connected!");
         });
     }
 
@@ -36,24 +35,17 @@ class PatientDB {
                     if (error) {
                         callback(false);
                     } else {
-                        var sql = "DELETE FROM PATIENT_MESSAGE";
+                        var sql = "DELETE FROM PATIENT_THERAPIST";
                         connection.query(sql, function (error, results, fields) {
                             if (error) {
                                 callback(false);
                             } else {
-                                var sql = "DELETE FROM PATIENT_THERAPIST";
+                                var sql = "DELETE FROM PATIENT";
                                 connection.query(sql, function (error, results, fields) {
                                     if (error) {
                                         callback(false);
                                     } else {
-                                        var sql = "DELETE FROM PATIENT";
-                                        connection.query(sql, function (error, results, fields) {
-                                            if (error) {
-                                                callback(false);
-                                            } else {
-                                                callback(true);
-                                            }
-                                        });
+                                        callback(true);
                                     }
                                 });
                             }
@@ -74,16 +66,61 @@ class PatientDB {
             } else {
                 var toReturn = [];
                 for(var i = 0; i < results.length; i += 1) {
-                    toReturn.push(String(results[i].username));
+                    toReturn.push(results[i].username);
                 }
                 callback(toReturn);
             }
         });
     }
 
-    // String -> ???
+    // String ([Maybe  //False if user does not exist
+                    //  (list String Date Number Number String)  // User Info
+                    //  [List-of (list Number Date )]  //Session Info
+                    //  [List-of (list String Date Boolean)]]  //Message Info
+                //  -> Void) 
+    //  -> Void
     // Returns all information for the given patient
-    get_patient_info(patientID) {
+    get_patient_info(username, callback) {
+        var inserts = [username];
+        var info_query = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
+        info_query = mysql.format(info_query, inserts);
+
+        var session_query = "SELECT score, time FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
+        session_query = mysql.format(session_query, inserts);
+
+        var message_query = "SELECT message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
+        message_query = mysql.format(message_query, inserts);
+        
+        var connection = this.connection;
+
+        connection.query(info_query, function (error1, info_results, fields) {
+            if (error1 || info_results.length == 0) {
+                callback(false, false, false);
+            } else {
+                var user_info = [info_results[0].username, info_results[0].dob, info_results[0].weight, info_results[0].height, info_results[0].information];
+                connection.query(session_query, function (error2, session_results, fields) {
+                    if (error2) {
+                        callback(false, false, false);
+                    } else {
+                        var session_info = [];
+                        for(var i = 0; i < session_results.length; i += 1) {
+                            session_info.push([session_results[i].score, session_results[i].time]);
+                        }
+                        connection.query(message_query, function (error3, message_results, fields) {
+                            if (error3) {
+                                callback(false, false, false);
+                            } else {
+                                var message_info = []
+                                for(var i = 0; i < message_results.length; i += 1) {
+                                    message_info.push([message_results[i].message, message_results[i].date_sent, message_results[i].is_read]);
+                                }
+                                callback(user_info, session_info, message_info);
+                            }
+                        });
+                    }
+                });
+            }
+        });
 
     }
 
@@ -109,13 +146,49 @@ class PatientDB {
         });
     }
 
-    // String -> Boolean
+    // String (Boolean -> Void) -> Void
     // Tries to purge the patient from the DB 
     // Including all session, message, and patient-therapist info
     // If suceed, returns true
     // If fail, returns false (unknown reason, probably server error)
-    delete_patient(patientID) {
-
+    delete_patient(patientID, callback) {
+        var inserts = [patientID];
+        var sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ?";
+        sql = mysql.format(sql, inserts);
+        console.log(sql);
+        var connection = this.connection;
+        connection.query(sql, function (error, results) {
+            if (error) {
+                throw error;
+                callback(false);
+            } else {
+                var sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ?";
+                sql = mysql.format(sql, inserts);
+                connection.query(sql, function (error, results) {
+                    if (error) {
+                        callback(false);
+                    } else {
+                        var sql = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ?";
+                        sql = mysql.format(sql, inserts);
+                        connection.query(sql, function (error, results) {
+                            if (error) {
+                                callback(false);
+                            } else {
+                                var sql = "DELETE FROM PATIENT where username = ?";
+                                sql = mysql.format(sql, inserts);
+                                connection.query(sql, function (error, results) {
+                                    if (error) {
+                                        callback(false);
+                                    } else {
+                                        callback(true);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
     }
 
     // String -> ???
