@@ -140,6 +140,35 @@ class PatientDB {
 
     }
 
+    // String String (Boolean -> Void) -> Void
+    // Calls the callback with true given a proper login
+    // False given an incorrect login
+    login(username, unencrypt_password, callback) {
+        var get_salt_sql = "SELECT salt FROM PATIENT P WHERE P.username = ?";
+        var get_salt_insert = [username];
+        get_salt_sql = mysql.format(get_salt_sql, get_salt_insert);
+        var loginFunc = this._login;
+        var connection = this.connection;
+        connection.query(get_salt_sql, function (error, results, fields) {
+            if(error || results.length == 0) {
+                callback(false);
+            } else {
+                var salt = results[0].salt;
+                var password = bcrypt.hashSync(unencrypt_password, salt);
+                var login_sql = "SELECT username FROM PATIENT P where P.username = ? AND P.password = ?";
+                var login_insert = [username, password];
+                login_sql = mysql.format(login_sql, login_insert);
+                connection.query(login_sql, function (error, results, fields) {
+                    if(error || results.length == 0) {
+                        callback(false);
+                    } else {
+                        callback(true);
+                    }
+                });
+            }
+        });
+    }
+
 }
 
 module.exports = PatientDB;
