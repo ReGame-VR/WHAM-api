@@ -75,7 +75,7 @@ class PatientDB {
 
     // String ([Maybe  //False if user does not exist
                     //  (list String Date Number Number String)  // User Info
-                    //  [List-of (list Number Date )]  //Session Info
+                    //  [List-of (list Number DateTime )]  //Session Info
                     //  [List-of (list String Date Boolean)]]  //Message Info
                 //  -> Void) 
     //  -> Void
@@ -191,26 +191,78 @@ class PatientDB {
         });
     }
 
-    // String -> ???
+    // String ([Maybe [List-of (list Number DateTime)]] -> Void) -> Void
     // Returns all the session info for a given patient
-    get_patient_sessions(patientID) {
+    get_patient_sessions(patientID, callback) {
+        var inserts = [patientID];
 
+        var session_query = "SELECT score, time FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
+        session_query = mysql.format(session_query, inserts);
+
+        this.connection.query(session_query, function (error2, session_results, fields) {
+            if (error2) {
+                callback(false);
+            } else {
+                var session_info = [];
+                for(var i = 0; i < session_results.length; i += 1) {
+                    session_info.push([session_results[i].score, session_results[i].time]);
+                }
+                callback(session_info);
+            }
+        });
     }
 
-    // String Number Date -> Boolean
+    // String Number String (Boolean -> Void) -> Void
     // Adds an entry for a session to the DB
     // If suceed, returns true
     // If fail, returns false (server error or already added)
-    add_patient_session(patientID, score, time) {
+    add_patient_session(patientID, score, time, callback) {
+        var sql = "INSERT INTO PATIENT_SESSION VALUES (?, ?, ?)"
+        var inserts = [patientID, score, time];
 
+        sql = mysql.format(sql, inserts);
+
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
     }
 
-    // String Date -> Boolean
+    // String String (Boolean -> Void) -> Void
     // Deletes a given patient session for the DB
     // If suceed, returns true
     // If fail, returns false (server error)
-    delete_patient_session(patientID, time) {
+    delete_patient_session(patientID, time, callback) {
+        var sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ? AND time = ?";
+        var inserts = [patientID, time];
 
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
+    }
+
+    // String String ([Number] -> Void) -> Void
+    // Returns the score for the session at the given time
+    get_patient_session_specific(patientID, time, callback) {
+        var sql = "SELECT score FROM PATIENT_SESSION WHERE patientID = ? AND time = ?"
+        var inserts = [patientID, time];
+
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function (error, result, fields) {
+            if (error || result.length == 0) {
+                callback(false);
+            } else {
+                callback(result[0].score);
+            }
+        });
     }
 
     // String String (Boolean -> Void) -> Void

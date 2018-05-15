@@ -39,7 +39,7 @@ CREATE TABLE PATIENT_THERAPIST (
 CREATE TABLE PATIENT_SESSION ( 
     patientID VARCHAR(100),
     score FLOAT,
-    time DATE,
+    time DATETIME,
     -- sessionID INTEGER NOT NULL AUTO_INCREMENT,
     -- PRIMARY KEY (sessionID),
     PRIMARY KEY (patientID, time),
@@ -53,7 +53,7 @@ CREATE TABLE PATIENT_MESSAGE (
     patientID VARCHAR(100),     
     therapistID VARCHAR(100),
     message VARCHAR(8000),
-    date_sent DATE,
+    date_sent DATETIME,
     is_read BOOLEAN,
     FOREIGN KEY (patientID) REFERENCES PATIENT(username),
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username)   
