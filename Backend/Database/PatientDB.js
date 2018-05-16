@@ -33,6 +33,7 @@ class PatientDB {
                 var sql = "DELETE FROM PATIENT_MESSAGE";
                 connection.query(sql, function (error, results, fields) {
                     if (error) {
+                        throw error;
                         callback(false);
                     } else {
                         var sql = "DELETE FROM PATIENT_THERAPIST";
@@ -79,7 +80,7 @@ class PatientDB {
                     //  [List-of (list String Date Boolean)]]  //Message Info
                 //  -> Void) 
     //  -> Void
-    // Returns all information for the given patient
+    // Gives all information for the given patient
     get_patient_info(username, callback) {
         var inserts = [username];
         var info_query = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
@@ -149,8 +150,8 @@ class PatientDB {
     // String (Boolean -> Void) -> Void
     // Tries to purge the patient from the DB 
     // Including all session, message, and patient-therapist info
-    // If suceed, returns true
-    // If fail, returns false (unknown reason, probably server error)
+    // If suceed, gives true
+    // If fail, gives false (unknown reason, probably server error)
     delete_patient(patientID, callback) {
         var inserts = [patientID];
         var sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ?";
@@ -192,7 +193,7 @@ class PatientDB {
     }
 
     // String ([Maybe [List-of (list Number DateTime)]] -> Void) -> Void
-    // Returns all the session info for a given patient
+    // Gives all the session info for a given patient
     get_patient_sessions(patientID, callback) {
         var inserts = [patientID];
 
@@ -214,8 +215,8 @@ class PatientDB {
 
     // String Number String (Boolean -> Void) -> Void
     // Adds an entry for a session to the DB
-    // If suceed, returns true
-    // If fail, returns false (server error or already added)
+    // If suceed, gives true
+    // If fail, gives false (server error or already added)
     add_patient_session(patientID, score, time, callback) {
         var sql = "INSERT INTO PATIENT_SESSION VALUES (?, ?, ?)"
         var inserts = [patientID, score, time];
@@ -233,8 +234,8 @@ class PatientDB {
 
     // String String (Boolean -> Void) -> Void
     // Deletes a given patient session for the DB
-    // If suceed, returns true
-    // If fail, returns false (server error)
+    // If suceed, gives true
+    // If fail, gives false (server error)
     delete_patient_session(patientID, time, callback) {
         var sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ? AND time = ?";
         var inserts = [patientID, time];
@@ -250,7 +251,7 @@ class PatientDB {
     }
 
     // String String ([Number] -> Void) -> Void
-    // Returns the score for the session at the given time
+    // Gives the score for the session at the given time
     get_patient_session_specific(patientID, time, callback) {
         var sql = "SELECT score FROM PATIENT_SESSION WHERE patientID = ? AND time = ?"
         var inserts = [patientID, time];
@@ -290,6 +291,60 @@ class PatientDB {
                         callback(true);
                     }
                 });
+            }
+        });
+    }
+
+    // String String String String (Boolean -> Void) -> Void
+    // Adds a message to this patients database entry
+    // Calls the callback with the sucess of the querry
+    add_message_to_patient(patientID, therapistID, message, time, callback) {
+        var sql = "INSERT INTO PATIENT_MESSAGE VALUES (?, ?, ?, ?, false)";
+        var inserts = [patientID, therapistID, message, time];
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function(error, results, fields) {
+            if(error) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
+    }
+
+    // String
+        //([Maybe [List-of (list String String Date Boolean Int)]] -> Void)
+    // -> Void
+    // Gives every message that this patient has ever recieved
+    get_all_messages_for(patientID, callback) {
+        var sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ?";
+        var inserts = [patientID];
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function(erorr, result, fields) {
+            if(error) {
+                callback(false);
+            } else {
+                var toSend = [];
+                for(var i = 0; i < result.length; i += 1) {
+                    toSend.push([result[i].therapistID, result[i].message, result[i].date_sent, result[i].is_read, result[i].messageID]);
+                }
+                callback(toSend);
+            }
+        });
+    }
+
+    // String Int (Boolean -> Void) -> Void
+    // Marks the given message id as read
+    // Gives back whether the querry suceeded or not
+    mark_message_as_read(patientID, messageID, callback) {
+        var sql = "UPDATE PATIENT_MESSAGE SET is_read = true WHERE patientID = ? AND messageID = ?";
+        var inserts = [patientID, messageID];
+        sql = mysql.format(sql, inserts);
+
+        this.connection.query(sql, function(error, result, fields) {
+            if(error) {
+                callback(false);
+            } else {
+                callback(true);
             }
         });
     }

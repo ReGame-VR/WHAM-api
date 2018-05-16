@@ -20,6 +20,7 @@ CREATE TABLE PATIENT (
 CREATE TABLE THERAPIST (
     username VARCHAR(100),
     password VARCHAR(100),
+    salt VARCHAR(100),
     PRIMARY KEY (username)
 );
 
@@ -55,6 +56,8 @@ CREATE TABLE PATIENT_MESSAGE (
     message VARCHAR(8000),
     date_sent DATETIME,
     is_read BOOLEAN,
+    messageID INTEGER NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY(messageID),
     FOREIGN KEY (patientID) REFERENCES PATIENT(username),
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username)   
 );

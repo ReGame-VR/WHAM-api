@@ -1,19 +1,46 @@
 const PatientDB = require('../Database/PatientDB.js');
+const TherapistDB = require('../Database/TherapistDB.js');
+const DBReseter = require('../Database/ResetDB.js');
 const chai = require("chai");
 var expect = chai.expect;
 
+var resetDB = new DBReseter("WHAM_TEST");
 var patientDB = new PatientDB("WHAM_TEST");
+var therapistDB = new TherapistDB("WHAM_TEST");
 
-describe('PatientDB', function () {
 
-    describe('#delete_all_patients()', function () {
-        it("should delete every patient and all the information stored with them", function (done) {
-            patientDB.delete_all_patient_info(function (worked) {
+describe('DBReseter', function() {
+    it("should not error if the deletion is sucessful", function(done) {
+        resetDB.reset_db(function(worked) {
+            expect(worked).to.be.equal(true);
+            done();
+        });
+    });
+});
+
+describe('TherapistDB', function() {
+    describe('#add_therapist()', function(done) {
+        it("should give true if the addding worked", function(done) {
+            therapistDB.add_therapist("therapist1", "test_password1", function(worked) {
                 expect(worked).to.be.equal(true);
-                done();
+                therapistDB.add_therapist("therapist1", "test_password2", function(worked) {
+                    expect(worked).to.be.equal(false);
+                    therapistDB.add_therapist("therapist2", "test_password3", function(worked) {
+                        expect(worked).to.be.equal(true);
+                        done();
+                    });
+                });
             });
         });
     });
+
+    describe('#login()', function() {
+
+    });
+
+});
+
+describe('PatientDB', function () {
 
     describe('#add_patient()', function () {
         it('should return true when the patient does not exist', function (done) {
