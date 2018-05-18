@@ -6,68 +6,91 @@ baseUri: http://api.wham.com
 types:
   User:
     properties:
-      name: string
-      id: number
+      username: string
+      password: string
+      salt: string
     example:
-      name: "UserA"
-      id: 8971203
+      username: "UserA"
+      password: "$2b$10$WzyxzUnJPWDHAAw3b2BUFeOq5J.jcL.YLJKquTojjJXu2XKmPp9ru"
+      salt: "$2b$10$WzyxzUnJPWDHAAw3b2BUFe"
 
   Therapist:
     type: User
     example:
-      name: "UserA"
-      id: 8971203
+      username: "UserA"
+      password: "$2b$10$WzyxzUnJPWDHAAw3b2BUFeOq5J.jcL.YLJKquTojjJXu2XKmPp9ru"
+      salt: "$2b$10$WzyxzUnJPWDHAAw3b2BUFe"
 
   Patient:
     type: User
-    properties:
-      therapist: Therapist
+    properties: 
+          dob: date-only
+          weight: number # In Kilos
+          height: number # In CM
+          information: string # Stuff about the patient that is not already included
     example:
-      name: "Joey"
-      therapist:
-        name: "Jen"
-        id: 92013
-      id: 128939
+      username: "Joey"
+      password: "$2b$10$WzyxzUnJPWDHAAw3b2BUFeOq5J.jcL.YLJKquTojjJXu2XKmPp9ru"
+      salt: "$2b$10$WzyxzUnJPWDHAAw3b2BUFe"
+      dob: "1982-07-02"
+      weight: 155
+      height: 72
+      information: "He cannot move his right arm"
 
   NewTherapist:
-    properties:
-      name: string
-      password: string
-    example:
-      name: "Jen"
-      password: "qwertyy"
+    type: Therapist
 
   NewPatient:
-    properties:
-      name: string
-      password: string
-      therapist?: number
-    examples:
-      noTherapist:
-        name: "Greg"
-        password: "jfido"
-      withTherapist:
-        name: "Fred"
-        password: "2fei333"
-        therapist: 39012
+    type: Patient
 
   NewPatientSession:
     properties:
-      activityLevel: number
+      score: number
       date: datetime
     example:
-      activityLevel: 88
+      score: 88
       date: 2016-02-28T16:41:41.090Z
 
   PatientSession:
     properties:
       activityLevel: number
       date: datetime
-      id: number
+      id: number 
     example:
       activityLevel: 88
       date: 2016-02-28T16:41:41.090Z
       id: 1427828
+  
+  Message:
+    properties: 
+      patientID: string
+      therapistID: string
+      message-content: string
+      date-sent: datetime
+      is-read: boolean
+      messageID: number
+    example:
+      patientID: "Joey"
+      therapistID: "UserA"
+      message-content: "This is a message"
+      date-sent: "2015-03-21 03:21"
+      is-read: true
+      messageID: 1
+
+  NewMessage:
+    properties: 
+      patientID: string
+      therapistID: string
+      message-content: string
+      date-sent: datetime
+      is-read: boolean
+    example:
+      patientID: "Joey"
+      therapistID: "UserA"
+      message-content: "This is a message"
+      date-sent: "2015-03-21 03:21"
+      is-read: true
+
 
 resourceTypes:
   Collection:
@@ -125,6 +148,21 @@ resourceTypes:
     type:  { Member: {item : Patient} }
     description: A specific patient.
 
+    /messages:
+      type:  { Collection: {item : Message} }
+      description: A collection of all the patient's messages.
+      post:
+          body:
+            application/json:
+              type: NewMessage
+
+      /{id}:
+        type:  { Member: {item : Message} }
+        description: A specific message.
+
+        put:
+          description: Sets this message set as read.
+
     /sessions:
       type:  { Collection: {item : PatientSession} }
       description: A collection of a patient's sessions.
@@ -146,7 +184,18 @@ resourceTypes:
     description: A specific therapist.
 
     /patients:
-      type:  { Collection: {item : Patient} }
+      type:  { Collection: {item : Patient} } 
+      delete:
+        body:
+          application/json:
+            type: string
+        description: Removes this patient from this therapist.
+
+      post:
+        body:
+          application/json:
+            type: string
+        description: Add a patient to this therapist.
 
       get:
         responses:
@@ -167,3 +216,18 @@ resourceTypes:
       description: |
         A collection of all of a therapist's patients. For more detail on the
         patient, the top level /patient should be used.
+
+    /messages:
+      post:
+        body:
+          application/json:
+            type: NewMessage
+        description: Sends a message to a patient.
+
+      get:
+        description: Returns every message this therapist has sent
+        responses:
+          200:
+            body:
+              application/json:
+                type: <<item>>

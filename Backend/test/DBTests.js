@@ -267,3 +267,11 @@ describe("JointDB", function() {
         });
     })
 });
+
+describe("TherapistDB Pt 2", function() {
+    describe("#get_all_therapists()", function() {
+        it("should return every therapist and the number of patients they have", function(done) {
+
+        });
+    })
+})

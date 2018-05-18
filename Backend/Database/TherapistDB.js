@@ -45,7 +45,7 @@ class TherapistDB {
         var loginFunc = this._login;
         var connection = this.connection;
         connection.query(get_salt_sql, function (error, results, fields) {
-            if(error || results.length == 0) {
+            if (error || results.length == 0) {
                 callback(false);
             } else {
                 var salt = results[0].salt;
@@ -54,7 +54,7 @@ class TherapistDB {
                 var login_insert = [username, password];
                 login_sql = mysql.format(login_sql, login_insert);
                 connection.query(login_sql, function (error, results, fields) {
-                    if(error || results.length == 0) {
+                    if (error || results.length == 0) {
                         callback(false);
                     } else {
                         callback(true);
@@ -101,7 +101,23 @@ class TherapistDB {
         });
     }
 
+    // (Maybe(List-of (list String Number)) -> Void) -> Void
+    // Gives a list of every therapist and the number of patients they have
+    get_all_therapists(callback) {
+        var sql = "SELECT therapistID, COUNT(*) as count FROM THERAPIST T, PATIENT_THERAPIST PT WHERE T.username = PT.therapistID GROUP BY therapistID";
+        this.connection.query(sql, function (error, results, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                var toSend = [];
+                for (var i = 0; i < resutls.length; i += 1) {
+                    toSend.push([results[i].therapistID, results[i].count]);
+                }
+                callback(count);
+            }
+        });
+    }
+
 }
 
 module.exports = TherapistDB;
-
