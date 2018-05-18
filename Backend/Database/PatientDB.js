@@ -66,7 +66,7 @@ class PatientDB {
                 callback([]);
             } else {
                 var toReturn = [];
-                for(var i = 0; i < results.length; i += 1) {
+                for (var i = 0; i < results.length; i += 1) {
                     toReturn.push(results[i].username);
                 }
                 callback(toReturn);
@@ -75,10 +75,10 @@ class PatientDB {
     }
 
     // String ([Maybe  //False if user does not exist
-                    //  (list String Date Number Number String)  // User Info
-                    //  [List-of (list Number DateTime )]  //Session Info
-                    //  [List-of (list String Date Boolean)]]  //Message Info
-                //  -> Void) 
+    //  (list String Date Number Number String)  // User Info
+    //  [List-of (list Number DateTime )]  //Session Info
+    //  [List-of (list String Date Boolean)]]  //Message Info
+    //  -> Void) 
     //  -> Void
     // Gives all information for the given patient
     get_patient_info(username, callback) {
@@ -91,7 +91,7 @@ class PatientDB {
 
         var message_query = "SELECT message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
         message_query = mysql.format(message_query, inserts);
-        
+
         var connection = this.connection;
 
         connection.query(info_query, function (error1, info_results, fields) {
@@ -104,7 +104,7 @@ class PatientDB {
                         callback(false, false, false);
                     } else {
                         var session_info = [];
-                        for(var i = 0; i < session_results.length; i += 1) {
+                        for (var i = 0; i < session_results.length; i += 1) {
                             session_info.push([session_results[i].score, session_results[i].time]);
                         }
                         connection.query(message_query, function (error3, message_results, fields) {
@@ -112,7 +112,7 @@ class PatientDB {
                                 callback(false, false, false);
                             } else {
                                 var message_info = []
-                                for(var i = 0; i < message_results.length; i += 1) {
+                                for (var i = 0; i < message_results.length; i += 1) {
                                     message_info.push([message_results[i].message, message_results[i].date_sent, message_results[i].is_read]);
                                 }
                                 callback(user_info, session_info, message_info);
@@ -205,7 +205,7 @@ class PatientDB {
                 callback(false);
             } else {
                 var session_info = [];
-                for(var i = 0; i < session_results.length; i += 1) {
+                for (var i = 0; i < session_results.length; i += 1) {
                     session_info.push([session_results[i].score, session_results[i].time]);
                 }
                 callback(session_info);
@@ -276,7 +276,7 @@ class PatientDB {
         var loginFunc = this._login;
         var connection = this.connection;
         connection.query(get_salt_sql, function (error, results, fields) {
-            if(error || results.length == 0) {
+            if (error || results.length == 0) {
                 callback(false);
             } else {
                 var salt = results[0].salt;
@@ -285,7 +285,7 @@ class PatientDB {
                 var login_insert = [username, password];
                 login_sql = mysql.format(login_sql, login_insert);
                 connection.query(login_sql, function (error, results, fields) {
-                    if(error || results.length == 0) {
+                    if (error || results.length == 0) {
                         callback(false);
                     } else {
                         callback(true);
@@ -295,36 +295,20 @@ class PatientDB {
         });
     }
 
-    // String String String String (Boolean -> Void) -> Void
-    // Adds a message to this patients database entry
-    // Calls the callback with the sucess of the querry
-    add_message_to_patient(patientID, therapistID, message, time, callback) {
-        var sql = "INSERT INTO PATIENT_MESSAGE VALUES (?, ?, ?, ?, false)";
-        var inserts = [patientID, therapistID, message, time];
-        sql = mysql.format(sql, inserts);
-        this.connection.query(sql, function(error, results, fields) {
-            if(error) {
-                callback(false);
-            } else {
-                callback(true);
-            }
-        });
-    }
-
     // String
-        //([Maybe [List-of (list String String Date Boolean Int)]] -> Void)
+    //([Maybe [List-of (list String String Date Boolean Int)]] -> Void)
     // -> Void
     // Gives every message that this patient has ever recieved
     get_all_messages_for(patientID, callback) {
         var sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ?";
         var inserts = [patientID];
         sql = mysql.format(sql, inserts);
-        this.connection.query(sql, function(erorr, result, fields) {
-            if(error) {
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
                 callback(false);
             } else {
                 var toSend = [];
-                for(var i = 0; i < result.length; i += 1) {
+                for (var i = 0; i < result.length; i += 1) {
                     toSend.push([result[i].therapistID, result[i].message, result[i].date_sent, result[i].is_read, result[i].messageID]);
                 }
                 callback(toSend);
@@ -340,8 +324,8 @@ class PatientDB {
         var inserts = [patientID, messageID];
         sql = mysql.format(sql, inserts);
 
-        this.connection.query(sql, function(error, result, fields) {
-            if(error) {
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
                 callback(false);
             } else {
                 callback(true);
@@ -352,4 +336,3 @@ class PatientDB {
 }
 
 module.exports = PatientDB;
-

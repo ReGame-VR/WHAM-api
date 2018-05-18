@@ -35,7 +35,18 @@ describe('TherapistDB', function() {
     });
 
     describe('#login()', function() {
-
+        it("should return true if the login was sucessful", function(done) {
+           therapistDB.login("therapist1", "test_password1", function(worked) {
+            expect(worked).to.be.equal(true);
+            therapistDB.login("therapist15", "test_password1", function(worked) {
+                expect(worked).to.be.equal(false);
+                therapistDB.login("therapist1", "test_password67", function(worked) {
+                    expect(worked).to.be.equal(false);
+                    done();
+                   }); 
+               }); 
+           }); 
+        });
     });
 
 });
@@ -193,4 +204,66 @@ describe('PatientDB', function () {
         });
     });
 
+});
+
+describe("JointDB", function() {
+    describe("#send_patient_a_message()", function() {
+        it("should give true if the message was sucessfully added", function(done) {
+            therapistDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function(worked) {
+                expect(worked).to.be.equal(true);
+                therapistDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04", function(worked) {
+                    expect(worked).to.be.equal(false);
+                    therapistDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function(worked) {
+                        expect(worked).to.be.equal(false);
+                        therapistDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04", function(worked) {
+                            expect(worked).to.be.equal(true);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    describe("#get_all_messages_for_patient()", function() {
+        it("should return every message this patient has recieved", function(done) {
+            patientDB.get_all_messages_for("tim", function(messages) {
+                var expectation = [];
+                expectation.push(["therapist1", "You are a cool dude.", new Date("2012-03-04 4:1:04"), 0, 1]);
+                expectation.push(["therapist2", "You are a very cool dude.", new Date("2012-02-01 4:1:04"), 0, 4]);
+                expect(messages).to.be.deep.equal(expectation);
+                done();
+            });
+        });
+    });
+
+    describe("#mark_as_read()", function() {
+        it("should return true if the message was properly marked as read", function(done) {
+            patientDB.mark_message_as_read("tim", "1", function(worked) {
+                expect(worked).to.be.equal(true);
+                done();
+            });
+        });
+    });
+
+    describe("#get_all_messages_for_patient()", function() {
+        it("should return every message this patient has recieved", function(done) {
+            patientDB.get_all_messages_for("tim", function(messages) {
+                var expectation = [];
+                expectation.push(["therapist1", "You are a cool dude.", new Date("2012-03-04 4:1:04"), 1, 1]);
+                expectation.push(["therapist2", "You are a very cool dude.", new Date("2012-02-01 4:1:04"), 0, 4]);
+                expect(messages).to.be.deep.equal(expectation);
+                done();
+            });
+        });
+    });
+
+    describe("#get_all_messages_from_therapist", function() {
+        it("should return every message this therapist has sent", function(done) {
+            therapistDB.get_all_messages_from("therapist1", function(messages) {
+                expect(messages).to.be.deep.equal([["tim", "You are a cool dude.", new Date("2012-03-04 4:1:04"), 1, 1]]);
+                done();
+            });
+        });
+    })
 });

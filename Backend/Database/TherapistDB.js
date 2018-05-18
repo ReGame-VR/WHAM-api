@@ -64,6 +64,42 @@ class TherapistDB {
         });
     }
 
+    // String String String String (Boolean -> Void) -> Void
+    // Adds a message to this patients database entry
+    // Calls the callback with the sucess of the querry
+    send_patient_a_message(patientID, therapistID, message, time, callback) {
+        var sql = "INSERT INTO PATIENT_MESSAGE (patientID, therapistID, message, date_sent, is_read) VALUES (?, ?, ?, ?, false)";
+        var inserts = [patientID, therapistID, message, time];
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function (error, results, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
+    }
+
+    // String
+    //([Maybe [List-of (list String String Date Boolean Int)]] -> Void)
+    // -> Void
+    // Gives every message that this patient has ever recieved
+    get_all_messages_from(therapistID, callback) {
+        var sql = "SELECT patientID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE therapistID = ?";
+        var inserts = [therapistID];
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                var toSend = [];
+                for (var i = 0; i < result.length; i += 1) {
+                    toSend.push([result[i].patientID, result[i].message, result[i].date_sent, result[i].is_read, result[i].messageID]);
+                }
+                callback(toSend);
+            }
+        });
+    }
 
 }
 

@@ -62,3 +62,6 @@ typings/
 
 # Login Info
 Backend/.env
+
+# VSCode Workspce
+.vscode
