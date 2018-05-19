@@ -104,14 +104,14 @@ class TherapistDB {
     // (Maybe(List-of (list String Number)) -> Void) -> Void
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
-        var sql = "SELECT therapistID, COUNT(*) as count FROM THERAPIST T, PATIENT_THERAPIST PT WHERE T.username = PT.therapistID GROUP BY therapistID";
+        var sql = "SELECT username FROM THERAPIST";
         this.connection.query(sql, function (error, results, fields) {
             if (error) {
                 callback(false);
             } else {
                 var toSend = [];
                 for (var i = 0; i < resutls.length; i += 1) {
-                    toSend.push([results[i].therapistID, results[i].count]);
+                    toSend.push([results[i].username, results[i].password, results[i].salt]);
                 }
                 callback(count);
             }

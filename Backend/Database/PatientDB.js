@@ -60,14 +60,20 @@ class PatientDB {
     // ([List-of String] -> Void) -> Void
     // Calls the callback with the usernames of every patient
     get_all_patient_info(callback) {
-        var sql = "SELECT username FROM PATIENT";
+        var sql = "SELECT username, dob, weight, height, information FROM PATIENT";
         this.connection.query(sql, function (error, results, fields) {
             if (error) {
                 callback([]);
             } else {
                 var toReturn = [];
                 for (var i = 0; i < results.length; i += 1) {
-                    toReturn.push(results[i].username);
+                    toReturn.push([results[i].username, 
+                                results[i].password, 
+                                results[i].salt, 
+                                results[i].dob,
+                                results[i].weight,
+                                results[i].height,
+                                results[i].information]);
                 }
                 callback(toReturn);
             }
