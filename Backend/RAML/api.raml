@@ -139,8 +139,11 @@ resourceTypes:
           type: <<newItem>>
 
       responses:
-        204:
-
+        200:
+          description: Returns the salt that is bound to the users account.
+          body:
+            application/json:
+              type: string
         403:
           description: Invalid username/password.
           body:
@@ -151,6 +154,26 @@ resourceTypes:
                 error: "Username taken already."
               badPassword:
                 error: "Password must be at least 8 characters long."
+
+/login:
+  post:
+    description: Returns the authentication token  if there is a sucessful login.
+    queryParameters: 
+      username: string
+      password: string
+    responses: 
+      200:
+        description: Returns the authentication token.
+        body:
+          application/json:
+            type: string
+      
+      403:
+        description: Bad request.
+        body:
+          application/json:
+            type: string
+          example: Invalid password
 
 /patients:
   type:  { UserCollection: {newItem : NewPatient, item : Patient} }
@@ -234,7 +257,7 @@ resourceTypes:
               application/json:
                 type: string   
 
-      /{id}:
+      /{time}:
         type:  { Member: {item : PatientSession} }
         description: A specific patient session.
 

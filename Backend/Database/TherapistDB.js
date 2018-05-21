@@ -5,6 +5,12 @@ const saltRounds = 10;
 
 class TherapistDB {
 
+    // Objects: 
+    // Therapist = String
+    // Patient = Object(String Date Number Number String)
+    // Session = Object(Number Date)
+    // Message = Object(String String Date Boolean Number)
+
     constructor(dbName) {
         this.connection = mysql.createConnection({
             host: process.env.DB_HOST,
@@ -81,7 +87,7 @@ class TherapistDB {
     }
 
     // String
-    //([Maybe [List-of (list String String Date Boolean Int)]] -> Void)
+    //([Maybe [List-of Message]] -> Void)
     // -> Void
     // Gives every message that this patient has ever recieved
     get_all_messages_from(therapistID, callback) {
@@ -94,14 +100,20 @@ class TherapistDB {
             } else {
                 var toSend = [];
                 for (var i = 0; i < result.length; i += 1) {
-                    toSend.push([result[i].patientID, result[i].message, result[i].date_sent, result[i].is_read, result[i].messageID]);
+                    toSend.push({
+                        patientID: result[i].patientID,
+                        message: result[i].message,
+                        date_sent: result[i].date_sent,
+                        is_read: result[i].is_read,
+                        messageID: result[i].messageID
+                    });                
                 }
                 callback(toSend);
             }
         });
     }
 
-    // (Maybe(List-of (list String Number)) -> Void) -> Void
+    // (Maybe(List-of String) -> Void) -> Void
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
         var sql = "SELECT username FROM THERAPIST";
@@ -110,14 +122,63 @@ class TherapistDB {
                 callback(false);
             } else {
                 var toSend = [];
-                for (var i = 0; i < resutls.length; i += 1) {
-                    toSend.push([results[i].username, results[i].password, results[i].salt]);
+                for (var i = 0; i < results.length; i += 1) {
+                    toSend.push(results[i].username);
                 }
-                callback(count);
+                callback(toSend);
             }
         });
     }
 
+    // String (Boolean -> Void) -> Void
+    // Deletes this therapist
+    delete_therapist(therapistID, callback) {
+        var deleteJoinSQL = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
+        var deleteInfoSQL = "DELETE FROM THERAPIST WHERE username = ?";
+        var inserts = [therapistID];
+        deleteJoinSQL = mysql.format(deleteJoinSQL, inserts);
+        deleteInfoSQL = mysql.format(deleteInfoSQL, inserts);
+        var connection = this.connection
+
+        connection.query(deleteJoinSQL, function (error, result, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                connection.query(deleteInfoSQL, function (error, result, fields) {
+                    if (error) {
+                        callback(false);
+                    } else {
+                        callback(true);
+                    }
+                });
+            }
+        });
+    }
+
+    // String (Listof Patient -> Void) -> Void
+    get_all_patients(therapistID, callback) {
+        var sql = "SELECT username, dob, weight, height, information FROM PATIENT P, PATIENT_THERAPIST PT WHERE P.username = PT.patientID AND PT.therapistID = ?";
+        var inserts = [therapistID];
+        sql = mysql.format(sql, inserts);
+
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                var toReturn = [];
+                for (var i = 0; i < results.length; i += 1) {
+                    toReturn.push({
+                        username: results[i].username,
+                        dob: results[i].dob,
+                        weight: results[i].weight,
+                        height: results[i].height,
+                        information: results[i].information
+                    });
+                }
+                callback(toReturn);
+            }
+        });
+    }
 }
 
 module.exports = TherapistDB;

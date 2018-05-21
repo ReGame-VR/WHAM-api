@@ -5,6 +5,10 @@ const saltRounds = 10;
 
 class PatientDB {
 
+    // Objects: 
+    // Patient = Object(String Date Number Number String)
+    // Session = Object(Number Date)
+    // Message = Object(String String Date Boolean Number)
 
     constructor(dbName) {
         this.connection = mysql.createConnection({
@@ -57,7 +61,7 @@ class PatientDB {
         });
     }
 
-    // ([List-of String] -> Void) -> Void
+    // ([List-of Patient] -> Void) -> Void
     // Calls the callback with the usernames of every patient
     get_all_patient_info(callback) {
         var sql = "SELECT username, dob, weight, height, information FROM PATIENT";
@@ -67,13 +71,13 @@ class PatientDB {
             } else {
                 var toReturn = [];
                 for (var i = 0; i < results.length; i += 1) {
-                    toReturn.push([results[i].username, 
-                                results[i].password, 
-                                results[i].salt, 
-                                results[i].dob,
-                                results[i].weight,
-                                results[i].height,
-                                results[i].information]);
+                    toReturn.push({
+                        username: results[i].username,
+                        dob: results[i].dob,
+                        weigth: results[i].weight,
+                        height: results[i].height,
+                        information: results[i].information
+                    });
                 }
                 callback(toReturn);
             }
@@ -81,9 +85,9 @@ class PatientDB {
     }
 
     // String ([Maybe  //False if user does not exist
-    //  (list String Date Number Number String)  // User Info
-    //  [List-of (list Number DateTime )]  //Session Info
-    //  [List-of (list String Date Boolean)]]  //Message Info
+    //  Patient  // User Info
+    //  [List-of Session]  //Session Info
+    //  [List-of Message]]  //Message Info
     //  -> Void) 
     //  -> Void
     // Gives all information for the given patient
@@ -95,7 +99,7 @@ class PatientDB {
         var session_query = "SELECT score, time FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
         session_query = mysql.format(session_query, inserts);
 
-        var message_query = "SELECT message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
+        var message_query = "SELECT therapistID, message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
         message_query = mysql.format(message_query, inserts);
 
         var connection = this.connection;
@@ -104,14 +108,23 @@ class PatientDB {
             if (error1 || info_results.length == 0) {
                 callback(false, false, false);
             } else {
-                var user_info = [info_results[0].username, info_results[0].dob, info_results[0].weight, info_results[0].height, info_results[0].information];
+                var user_info = {
+                    username: info_results[0].username,
+                    dob: info_results[0].dob,
+                    weight: info_results[0].weight,
+                    height: info_results[0].height,
+                    information: info_results[0].information
+                };
                 connection.query(session_query, function (error2, session_results, fields) {
                     if (error2) {
                         callback(false, false, false);
                     } else {
                         var session_info = [];
                         for (var i = 0; i < session_results.length; i += 1) {
-                            session_info.push([session_results[i].score, session_results[i].time]);
+                            session_info.push({
+                                score: session_results[i].score,
+                                time: session_results[i].time
+                            });
                         }
                         connection.query(message_query, function (error3, message_results, fields) {
                             if (error3) {
@@ -119,7 +132,12 @@ class PatientDB {
                             } else {
                                 var message_info = []
                                 for (var i = 0; i < message_results.length; i += 1) {
-                                    message_info.push([message_results[i].message, message_results[i].date_sent, message_results[i].is_read]);
+                                    message_info.push({
+                                        therapistID: message_results[i].therapistID,
+                                        message: message_results[i].message,
+                                        date_sent: message_results[i].date_sent,
+                                        is_read: message_results[i].is_read
+                                    });
                                 }
                                 callback(user_info, session_info, message_info);
                             }
@@ -198,7 +216,7 @@ class PatientDB {
         });
     }
 
-    // String ([Maybe [List-of (list Number DateTime)]] -> Void) -> Void
+    // String ([Maybe [List-of Session]] -> Void) -> Void
     // Gives all the session info for a given patient
     get_patient_sessions(patientID, callback) {
         var inserts = [patientID];
@@ -212,7 +230,10 @@ class PatientDB {
             } else {
                 var session_info = [];
                 for (var i = 0; i < session_results.length; i += 1) {
-                    session_info.push([session_results[i].score, session_results[i].time]);
+                    session_info.push({
+                        score: session_results[i].score,
+                        time: session_results[i].time
+                    });
                 }
                 callback(session_info);
             }
@@ -302,7 +323,7 @@ class PatientDB {
     }
 
     // String
-    //([Maybe [List-of (list String String Date Boolean Int)]] -> Void)
+    //([Maybe [List-of Message]] -> Void)
     // -> Void
     // Gives every message that this patient has ever recieved
     get_all_messages_for(patientID, callback) {
@@ -315,7 +336,13 @@ class PatientDB {
             } else {
                 var toSend = [];
                 for (var i = 0; i < result.length; i += 1) {
-                    toSend.push([result[i].therapistID, result[i].message, result[i].date_sent, result[i].is_read, result[i].messageID]);
+                    toSend.push({
+                        therapistID: result[i].therapistID,
+                        message: result[i].message,
+                        date_sent: result[i].date_sent,
+                        is_read: result[i].is_read,
+                        messageID: result[i].messageID
+                    });
                 }
                 callback(toSend);
             }
