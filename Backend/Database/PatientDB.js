@@ -402,6 +402,21 @@ class PatientDB {
         });
     }
 
+    // String String Date (Boolean -> Void) -> Void
+    // Unpairs this therapist and patinet in the PATIENT_THERAPIST DB
+    unassign_to_therapist(patientID, therapistID, callback) {
+        var sql = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ? AND therapistID = ?";
+        var inserts = [patientID, therapistID];
+        sql = mysql.format(sql, inserts);
+        this.connection.query(sql, function (error, result, fields) {
+            if (error) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
+    }
+
 }
 
 module.exports = PatientDB;

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>WHAM</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>Patients</h1>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Last Active</th>
+          <th>Latest Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each patients}}
+        <form action={{concat "/therapists/" ../therapistID "/patients/" username "?_method=DELETE"}} method = "POST">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type = "submit">Remove</button>
+        </form>
+        <tr class="click-row" onclick={{concat "window.location='/patients/" username "'"}}>
+          <td>{{username}}</td>
+          <td>{{time}}</td>
+          <td>{{score}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <form action={{concat "/therapists/" therapistID "/patients" }} method="POST">
+    Patient Username:
+    <br>
+    <input type="text" name="id" value="username">
+    <br>
+    <input type="submit" value="Submit">
+  </form>
+</body>
+
+</html>

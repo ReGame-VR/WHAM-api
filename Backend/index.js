@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const PatientDB = require('./Database/PatientDB.js');
 const TherapistDB = require('./Database/TherapistDB.js');
+const methodOverride = require('method-override');
 
 var patientDB = new PatientDB("WHAM_TEST");
 var therapistDB = new TherapistDB("WHAM_TEST");
@@ -21,6 +22,21 @@ app.set('view engine', 'handlebars');
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.get('', showAPI);
+
+app.use(methodOverride('_method'))
+
+function showAPI(req, res) {
+    if (req.headers['accept'].includes('text/html')) {
+        res.render('api');
+    } else if (req.headers['accept'].includes('application/json')) {
+        res.send("Not Supported");
+    } else {
+        res.send("Not Supported");
+    }
+}
 
 app.post('/login', login);
 
@@ -246,8 +262,9 @@ function getTherapist(req, res) {
     therapistDB.get_all_patients(req.params.therapistID, function (info) {
         if (req.headers['accept'].includes('text/html')) {
             //Send therapist info as HTML
-            res.render('patient-overview', {
-                patients: info
+            res.render('therapist-detail', {
+                patients: info,
+                therapistID: req.params.therapistID
             });
         } else if (req.headers['accept'].includes('application/json')) {
             if (info === false) {
@@ -301,6 +318,39 @@ function getTherapistPatients(req, res) {
         }
     })
     res.send("GET Patients for Therapist " + req.params['therapistID']);
+}
+
+app.post('/therapists/:therapistID/patients', addPatientTherapist);
+
+function addPatientTherapist(req, res) {
+    var therapistID = req.params.therapistID;
+    var patientID = req.body.id;
+    patientDB.assign_to_therapist(patientID, therapistID, new Date(), function(worked) {
+        if(worked) {
+            res.status(204);
+            res.send();
+        } else {
+            res.status(403);
+            res.send("Bad request");
+        }
+    });
+}
+
+app.delete('/therapists/:therapistID/patients/:patientID', removePatientTherapist);
+
+function removePatientTherapist(req, res) {
+    console.log("here!");
+    var therapistID = req.params.therapistID;
+    var patientID = req.params.patientID;
+    patientDB.unassign_to_therapist(patientID, therapistID, function(worked) {
+        if(worked) {
+            res.status(204);
+            res.send();
+        } else {
+            res.status(403);
+            res.send("Bad request");
+        }
+    });
 }
 
 
