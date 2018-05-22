@@ -65,3 +65,7 @@ Backend/.env
 
 # VSCode Workspce
 .vscode
+WHAMBackend.code-workspace
+
+#Mac Dumb Files
+*/.DS_Store
