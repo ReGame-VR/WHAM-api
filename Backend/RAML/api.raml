@@ -271,11 +271,6 @@ resourceTypes:
 
     /patients:
       type:  { Collection: {item : Patient} } 
-      delete:
-        body:
-          application/json:
-            type: string
-        description: Removes this patient from this therapist.
 
       post:
         body:
@@ -302,6 +297,14 @@ resourceTypes:
       description: |
         A collection of all of a therapist's patients. For more detail on the
         patient, the top level /patient should be used.
+
+      /{id}:
+        description: For editing a specific patient-therapist combo.
+        delete:
+          body:
+            application/json:
+              type: string
+          description: Removes this patient from this therapist.
 
     /messages:
       post:
