@@ -41,9 +41,9 @@ CREATE TABLE PATIENT_SESSION (
     patientID VARCHAR(100),
     score FLOAT,
     time DATETIME,
-    -- sessionID INTEGER NOT NULL AUTO_INCREMENT,
-    -- PRIMARY KEY (sessionID),
-    PRIMARY KEY (patientID, time),
+    sessionID INTEGER NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (sessionID),
+    -- PRIMARY KEY (patientID, time),
     FOREIGN KEY (patientID) REFERENCES PATIENT(username)
 );
 

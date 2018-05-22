@@ -47,9 +47,12 @@ app.get('/patients', getPatients)
 
 //Gives all patient info in either JSON or HTML form
 function getPatients(req, res) {
-    patientDB.get_all_patient_info(function (response) {
+    patientDB.get_all_patient_info(function (info) {
         if (req.headers['accept'].includes('text/html')) {
-            res.send("Not Supported Yet");
+            //Send therapist info as HTML
+            res.render('patient-overview', {
+                patients: info
+            });
         } else if (req.headers['accept'].includes('application/json')) {
             res.status(200);
             res.send(JSON.stringify(response));
@@ -86,10 +89,14 @@ app.get('/patients/:patientID', getPatient)
 
 //Returns the info for a single patient
 function getPatient(req, res) {
+    var id = req.params.patientID
     patientDB.get_patient_info(id, function (info, sessions, messages) {
-        var id = req.params.patientID
         if (req.headers['accept'].includes('text/html')) {
-            res.render('patient-detail');
+            res.render('patient-detail', {
+                info: info,
+                sessions: sessions,
+                messages: messages
+            });
         } else if (req.headers['accept'].includes('application/json')) {
             if (info === false) {
                 res.status(403);
@@ -109,8 +116,8 @@ app.delete('/patients/:patientID', deletePatient)
 
 //Deletes this patient from the database
 function deletePatient(req, res) {
-    patientDB.delete_patient(req.params.patientID, function(worked) {
-        if(worked === false) {
+    patientDB.delete_patient(req.params.patientID, function (worked) {
+        if (worked === false) {
             res.status(403);
             res.send("Bad request");
         } else {
@@ -124,11 +131,14 @@ app.get('/patients/:patientID/sessions', getPatientSessions)
 
 //Returns the info for a patients activity sessions
 function getPatientSessions(req, res) {
-    patientDB.get_patient_sessions(req.params.patientID, function(sessions) {
+    patientDB.get_patient_sessions(req.params.patientID, function (sessions) {
         if (req.headers['accept'].includes('text/html')) {
-            //Send patient info as HTML
+            res.render('patient-session-overview', {
+                username: req.params.patientID,
+                sessions: sessions
+            });
         } else if (req.headers['accept'].includes('application/json')) {
-            if(sessions === false) {
+            if (sessions === false) {
                 res.status(403);
                 res.send()
             } else {
@@ -139,8 +149,6 @@ function getPatientSessions(req, res) {
             //An unsupported request
         }
     });
-    
-    res.send("GET Sessions For Patient " + req.params['patientID']);
 }
 
 app.post('/patients/:patientID/sessions', addPatientSession)
@@ -150,8 +158,8 @@ function addPatientSession(req, res) {
     var patientID = req.params.patientID;
     var score = req.param('score', null);
     var time = req.param('date', null);
-    patientDB.add_patient_session(patientID, score, time, function(worked) {
-        if(worked) {
+    patientDB.add_patient_session(patientID, score, time, function (worked) {
+        if (worked) {
             res.status(204);
             res.send();
         } else {
@@ -161,17 +169,17 @@ function addPatientSession(req, res) {
     });
 }
 
-app.get('/patients/:patientID/sessions/:time', getSession)
+app.get('/patients/:patientID/sessions/:sessionID', getSession)
 
 //Returns the info for a single patient session
 function getSession(req, res) {
     var patientID = req.params.patientID;
-    var time = req.params.time;
-    patientDB.get_patient_session_specific(patientID, time, function(sessionInfo) {
+    var sessionID = req.params.sessionID;
+    patientDB.get_patient_session_specific(patientID, sessionID, function (sessionInfo) {
         if (req.headers['accept'].includes('text/html')) {
-            //Send patient info as HTML
+            res.send("Getting this session");
         } else if (req.headers['accept'].includes('application/json')) {
-            if(sessionInfo === false) {
+            if (sessionInfo === false) {
                 res.status(403);
                 res.send("Bad request.");
             } else {
@@ -184,14 +192,14 @@ function getSession(req, res) {
     })
 }
 
-app.delete('/patients/:patientID/sessions/:time', deletePatientSession)
+app.delete('/patients/:patientID/sessions/:sessionID', deletePatientSession)
 
 //Deletes this patient session from the database
 function deletePatientSession(req, res) {
     var patientID = req.params.patientID;
-    var time = req.params.time;
-    patientDB.delete_patient_session(patientID, time, function(worked) {
-        if(worked) {
+    var sessionID = req.params.sessionID;
+    patientDB.delete_patient_session(patientID, sessionID, function (worked) {
+        if (worked) {
             res.status(204);
             res.send();
         } else {
@@ -205,14 +213,23 @@ app.get('/therapists', getAllTherapists)
 
 //Gives all therapist info in either JSON or HTML form
 function getAllTherapists(req, res) {
-    if (req.headers['accept'].includes('text/html')) {
-        //Send therapist info as HTML
-    } else if (req.headers['accept'].includes('application/json')) {
-        //Send therapist info as JSON
-    } else {
-        //An unsupported request
-    }
-    res.send("GET Therapists");
+    therapistDB.get_all_therapists(function (therapists) {
+        if (req.headers['accept'].includes('text/html')) {
+            res.render('therapist-overview', {
+                therapists: therapists
+            });
+        } else if (req.headers['accept'].includes('application/json')) {
+            if(therapists == false) {
+                res.status(403);
+                res.send("Bad Request");
+            } else {
+                res.status(200);    
+                res.send(JSON.stringify(therapists));
+            }
+        } else {
+            //An unsupported request
+        }
+    });
 }
 
 app.post('/therapists', addTherapist)
@@ -226,26 +243,14 @@ app.get('/therapists/:therapistID', getTherapist)
 
 //Returns the info for a single therapist
 function getTherapist(req, res) {
-    therapistDB.get_all_therapists(function(info) {
+    therapistDB.get_all_patients(req.params.therapistID, function (info) {
         if (req.headers['accept'].includes('text/html')) {
             //Send therapist info as HTML
             res.render('patient-overview', {
-                patients: [{
-                        name: "John Doe",
-                        lastActive: "1 day ago",
-                        latestScore: 80,
-                        id: 1
-                    },
-                    {
-                        name: "Mary Moe",
-                        lastActive: "3 hours ago",
-                        latestScore: 72,
-                        id: 2
-                    }
-                ]
+                patients: info
             });
         } else if (req.headers['accept'].includes('application/json')) {
-            if(info === false) {
+            if (info === false) {
                 res.status(403);
                 res.send("Bad request");
             } else {
@@ -263,8 +268,8 @@ app.delete('/therapists/:therapistID', deleteTherpist)
 //Deletes this therapist from the database
 function deleteTherpist(req, res) {
     var therapistID = req.params.therapistID;
-    therapistDB.delete_therapist(therapistDB, function(worked) {
-        if(worked) {
+    therapistDB.delete_therapist(therapistDB, function (worked) {
+        if (worked) {
             res.status(204);
             res.send();
         } else {
@@ -280,11 +285,11 @@ app.get('/therapists/:therapistID/patients', getTherapistPatients)
 //Returns the info for all patients of this therapist
 function getTherapistPatients(req, res) {
     var therapistID = req.params.therapistID;
-    therapistDB.get_all_patients(therapistDB, function(info) {
+    therapistDB.get_all_patients(therapistDB, function (info) {
         if (req.headers['accept'].includes('text/html')) {
             //Send therapist-patient info as HTML
         } else if (req.headers['accept'].includes('application/json')) {
-            if(info === false) {
+            if (info === false) {
                 res.status(403);
                 res.send("Bad request");
             } else {

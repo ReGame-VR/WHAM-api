@@ -92,7 +92,22 @@ describe('PatientDB', function () {
                             expect(worked).to.be.equal(true);
                             patientDB.add_patient_session('cole', 29, "2012-03-04 4:1:05", function (worked) {
                                 expect(worked).to.be.equal(true);
-                                done();
+                                patientDB.add_patient_session('tim', 20, "2012-03-04 4:1:01", function (worked) {
+                                    expect(worked).to.be.equal(true);
+                                    patientDB.add_patient_session('tim', 17, "2012-03-04 4:1:02", function (worked) {
+                                        expect(worked).to.be.equal(true);
+                                        patientDB.add_patient_session('tim', 19, "2012-03-04 4:1:03", function (worked) {
+                                            expect(worked).to.be.equal(true);
+                                            patientDB.add_patient_session('tim', 25, "2012-03-04 4:1:04", function (worked) {
+                                                expect(worked).to.be.equal(true);
+                                                patientDB.add_patient_session('tim', 29, "2012-03-04 4:1:05", function (worked) {
+                                                    expect(worked).to.be.equal(true);
+                                                    done();
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
                             });
                         });
                     });
@@ -307,15 +322,13 @@ describe("JointDB", function () {
     describe("#get_all_messages_from_therapist", function () {
         it("should return every message this therapist has sent", function (done) {
             therapistDB.get_all_messages_from("therapist1", function (messages) {
-                expect(messages).to.be.deep.equal([
-                    {
-                        patientID: "tim",
-                        message: "You are a cool dude.",
-                        date_sent: new Date("2012-03-04 4:1:04"),
-                        is_read: 1,
-                        messageID: 1
-                    }
-                ]);
+                expect(messages).to.be.deep.equal([{
+                    patientID: "tim",
+                    message: "You are a cool dude.",
+                    date_sent: new Date("2012-03-04 4:1:04"),
+                    is_read: 1,
+                    messageID: 1
+                }]);
                 done();
             });
         });
@@ -331,4 +344,15 @@ describe("TherapistDB Pt 2", function () {
             });
         });
     });
+});
+
+describe("JointDB Pt 2", function () {
+    describe("#assign_to_therapist()", function () {
+        it("should return true if the pair is sucessful", function (done) {
+            patientDB.assign_to_therapist("tim", "therapist2", "2018-05-22", function (worked) {
+                expect(worked).to.be.equal(true);
+                done();
+            })
+        });
+    })
 });

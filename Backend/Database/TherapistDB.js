@@ -8,6 +8,7 @@ class TherapistDB {
     // Objects: 
     // Therapist = String
     // Patient = Object(String Date Number Number String)
+    // Patient-Session = Object(String Date Number Number String Number Date)
     // Session = Object(Number Date)
     // Message = Object(String String Date Boolean Number)
 
@@ -123,7 +124,7 @@ class TherapistDB {
             } else {
                 var toSend = [];
                 for (var i = 0; i < results.length; i += 1) {
-                    toSend.push(results[i].username);
+                    toSend.push({username: results[i].username});
                 }
                 callback(toSend);
             }
@@ -155,13 +156,18 @@ class TherapistDB {
         });
     }
 
-    // String (Listof Patient -> Void) -> Void
+    // String (Listof Patient-Session -> Void) -> Void
     get_all_patients(therapistID, callback) {
-        var sql = "SELECT username, dob, weight, height, information FROM PATIENT P, PATIENT_THERAPIST PT WHERE P.username = PT.patientID AND PT.therapistID = ?";
+        var sql = 
+        `SELECT username, dob, weight, height, information, 
+        (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time LIMIT 1) as score, 
+        (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time LIMIT 1) as time 
+        FROM PATIENT P, PATIENT_THERAPIST PT
+        WHERE P.username = PT.patientID AND PT.therapistID = ?`;
         var inserts = [therapistID];
         sql = mysql.format(sql, inserts);
 
-        this.connection.query(sql, function (error, result, fields) {
+        this.connection.query(sql, function (error, results, fields) {
             if (error) {
                 callback(false);
             } else {
@@ -172,7 +178,9 @@ class TherapistDB {
                         dob: results[i].dob,
                         weight: results[i].weight,
                         height: results[i].height,
-                        information: results[i].information
+                        information: results[i].information,
+                        score: results[i].score,
+                        time: results[i].time
                     });
                 }
                 callback(toReturn);
