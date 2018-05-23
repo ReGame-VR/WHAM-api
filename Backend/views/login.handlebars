@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>WHAM</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+    crossorigin="anonymous">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>
+    function send() {
+      console.log("hello");
+      $.ajax({
+        url: '/login',
+        type: 'post',
+        dataType: 'json',
+        success: function (data) {
+          console.log("sucess");
+        },
+        data: {
+          username: document.getElementById("username_box").value,
+          password: document.getElementById("password_box").value
+        }
+      });
+    };
+  </script>
+</head>
+
+<body>
+  <form id="login_form" onsubmit="send(); return false">
+    <div class="container">
+      <label for="uname">
+        <b>Username</b>
+      </label>
+      <input id="username_box" type="text" placeholder="Enter Username" name="uname" required>
+
+      <label for="psw">
+        <b>Password</b>
+      </label>
+      <input id="password_box" type="password" placeholder="Enter Password" name="psw" required>
+
+      <button type="submit">Login</button>
+      <label>
+        <input type="checkbox" checked="checked" name="remember"> Remember me
+      </label>
+    </div>
+
+    <div class="container" style="background-color:#f1f1f1">
+      <button type="button" class="cancelbtn">Cancel</button>
+      <span class="psw">Forgot
+        <a href="#">password?</a>
+      </span>
+    </div>
+  </form>
+</body>
+
+</html>

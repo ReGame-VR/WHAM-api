@@ -58,6 +58,22 @@ class AuthenticationDB {
         });
     }
 
+    // String String (Maybe-Integer Maybe-String -> Void) -> Void
+    // Returns the authorization level of this user
+    get_auth_level(salt = 0, table_name, callback) {
+        var sql = "SELECT auth_level, username FROM " + table_name + " WHERE username = ?";
+        this.pool.getConnection(function(err, connection) {
+            if(err){ (callback(false, false))}
+            connection.query(sql, function(error, result, fields) {
+                if(error || result.length == 0) { 
+                    callback(false, false); 
+                } else {
+                    callback(result[0].auth_level, result[0].username);
+                }
+            });
+        })
+    }
+
 }
 
 module.exports = AuthenticationDB;

@@ -42,15 +42,21 @@ function showAPI(req, res) {
     }
 }
 
+app.get('/login', show_login);
+
+function show_login(req, res) {
+    res.render('login');
+}
+
 app.post('/login', login);
 
 function login(req, res) {
-    patientDB.login(req.param('username', null), req.param('password', null), function (sucess) {
+    patientDB.login(req.body.username, req.body.password, function (sucess) {
         if (sucess) {
             res.status(200);
             res.send(JSON.stringify(sucess));
         } else {
-            therapistDB.login(req.param('username', null), req.param('password', null), function (sucess) {
+            therapistDB.login(req.body.username, req.body.password, function (sucess) {
                 if (sucess) {
                     res.status(200);
                     res.send(JSON.stringify(sucess));
@@ -67,17 +73,32 @@ app.get('/patients', getPatients)
 
 //Gives all patient info in either JSON or HTML form
 function getPatients(req, res) {
-    patientDB.get_all_patient_info(function (info) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist info as HTML
-            res.render('patient-overview', {
-                patients: info
-            });
-        } else if (req.headers['accept'].includes('application/json')) {
-            res.status(200);
-            res.send(JSON.stringify(response));
+    if(res.params === undefined || res.params.auth_token === undefined) {
+        show_login(req, res);
+        return;
+    }
+    authorizer.get_auth_level(res.params.auth_token, "PATIENT", function(auth_level, username) {
+        if(auth_level !== 3) {
+            if (req.headers['accept'].includes('text/html')) {
+                show_login(req, res);
+            } else {
+                res.status(403);
+                res.send("Insufficient Permissions");
+            }
         } else {
-            res.send("Not Supported Yet");
+            patientDB.get_all_patient_info(function (info) {
+                if (req.headers['accept'].includes('text/html')) {
+                    //Send therapist info as HTML
+                    res.render('patient-overview', {
+                        patients: info
+                    });
+                } else if (req.headers['accept'].includes('application/json')) {
+                    res.status(200);
+                    res.send(JSON.stringify(response));
+                } else {
+                    res.send("Not Supported Yet");
+                }
+            });
         }
     });
 }
@@ -88,7 +109,7 @@ app.post('/patients', addPatient)
 function addPatient(req, res) {
     // Username, password, DOB, Weight, Height, (?) Information
     var username = req.param('username', null);
-    var password = req.param('password', null);
+    var unencrypt_password = req.param('password', null);
     var dob = req.param('dob', null);
     var weight = req.param('weight', null);
     var height = req.param('height', null);

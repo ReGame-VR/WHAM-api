@@ -13,6 +13,7 @@ CREATE TABLE PATIENT (
     weight FLOAT,
     height FLOAT,
     information VARCHAR(100),
+    auth_level: VARCHAR(20)
     PRIMARY KEY (username)
 );
 
@@ -21,6 +22,7 @@ CREATE TABLE THERAPIST (
     username VARCHAR(100),
     password VARCHAR(100),
     salt VARCHAR(100),
+    auth_level: VARCHAR(20)
     PRIMARY KEY (username)
 );
 

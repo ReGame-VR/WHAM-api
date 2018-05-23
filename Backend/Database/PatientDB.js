@@ -176,7 +176,7 @@ class PatientDB {
     // Note: Weight in Kilo, Height in CM, DOB in YYYY-MM-DD
     add_patient(username, unencrypt_password, dob, weight, height, information, callback) {
         // Username, password, salt, DOB, Weight, Height, (?) Information
-        var sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?, ?, ?)"
+        var sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 

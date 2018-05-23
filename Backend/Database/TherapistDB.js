@@ -24,7 +24,7 @@ class TherapistDB {
     // String String (Boolean -> Void) -> Void
     // Adds this therapist to the database
     add_therapist(username, unencrypt_password, callback) {
-        var sql = "INSERT INTO THERAPIST VALUES (?, ?, ?)"
+        var sql = "INSERT INTO THERAPIST VALUES (?, ?, ?, 1)"
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 
