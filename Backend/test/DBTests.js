@@ -1,12 +1,14 @@
 const PatientDB = require('../Database/PatientDB.js');
 const TherapistDB = require('../Database/TherapistDB.js');
+const AuthenticationDB = require('../Database/AuthenticationDB.js');
 const DBReseter = require('../Database/ResetDB.js');
 const chai = require("chai");
 var expect = chai.expect;
 
+var authorizer = new AuthenticationDB("WHAM_TEST");
 var resetDB = new DBReseter("WHAM_TEST");
-var patientDB = new PatientDB("WHAM_TEST");
-var therapistDB = new TherapistDB("WHAM_TEST");
+var patientDB = new PatientDB("WHAM_TEST", authorizer);
+var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 
 
 describe('DBReseter', function () {
@@ -37,7 +39,7 @@ describe('TherapistDB', function () {
     describe('#login()', function () {
         it("should return true if the login was sucessful", function (done) {
             therapistDB.login("therapist1", "test_password1", function (worked) {
-                expect(worked).to.be.equal(true);
+                expect(worked).to.be.not.equal(false);
                 therapistDB.login("therapist15", "test_password1", function (worked) {
                     expect(worked).to.be.equal(false);
                     therapistDB.login("therapist1", "test_password67", function (worked) {
@@ -129,7 +131,7 @@ describe('PatientDB', function () {
     describe('#login()', function () {
         it('should return true given a real login', function (done) {
             patientDB.login("bob", "password1", function (result) {
-                expect(result).to.be.equal(true);
+                expect(result).to.be.not.equal(false);
                 done();
             });
         });
@@ -339,7 +341,7 @@ describe("TherapistDB Pt 2", function () {
     describe("#get_all_therapists()", function () {
         it("should return every therapist and the number of patients they have", function (done) {
             therapistDB.get_all_therapists(function (all) {
-                expect(all).to.be.deep.equal(["therapist1", "therapist2"]);
+                expect(all).to.be.deep.equal([{username: "therapist1"}, {username: "therapist2"}]);
                 done();
             });
         });

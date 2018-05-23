@@ -111,24 +111,36 @@ types:
 resourceTypes:
   Collection:
     get:
+      queryParameters: 
+        auth_token: string
+
       description: Get overview information on a collection of <<item>>s
       responses:
         200:
           body:
             application/json:
               type: <<item>>[]
+        403:
+          body:
+            application/json:
+              type: string
+            example: Permission Not Granted
 
   Member:
     delete:
+      queryParameters: 
+        auth_token: string
+
       description: Delete the <<item>>
       responses:
         204:
 
         403:
-          description: <<item>> does not exist
+          description: Bad Request
           body:
             application/json:
               type: string
+            example: Permission Not Granted
 
   UserCollection:
     type:  { Collection: {item : <<item>>} }
@@ -183,6 +195,8 @@ resourceTypes:
     type:  { Member: {item : Patient} }
     description: A specific patient.
     get:
+      queryParameters: 
+       auth_token: string
       description: Get specific information on this patient
       responses:
         200:
@@ -197,11 +211,15 @@ resourceTypes:
               examples:
                 userDoesNotExist:
                   error: "Patient does not exist" 
+                badToken:
+                  error: "Permission not granted"
 
     /messages:
       type:  { Collection: {item : Message} }
       description: A collection of all the patient's messages.
       post:
+        queryParameters: 
+          auth_token: string
         description: Sends a message to this patient.
         body:
           application/json:
@@ -223,6 +241,8 @@ resourceTypes:
         description: A specific message.
 
         get:
+          queryParameters: 
+            auth_token: string
           description: Returns the info for this message
           responses:
             201:
@@ -239,6 +259,8 @@ resourceTypes:
                     error: "Message does not exist" 
 
         put:
+          queryParameters: 
+            auth_token: string
           description: Sets this message set as read.
 
     /sessions:
@@ -273,12 +295,14 @@ resourceTypes:
       type:  { Collection: {item : Patient} } 
 
       post:
-        body:
-          application/json:
-            type: string
+        queryParameters: 
+          auth_token: string
+          patientID: string
         description: Add a patient to this therapist.
 
       get:
+        queryParameters: 
+          auth_token: string
         responses:
           200:
             body:
@@ -294,6 +318,9 @@ resourceTypes:
                      name: "Jen"
                      id: 92013
                    id: 1428739
+          403:
+            description: Bad authentication. 
+
       description: |
         A collection of all of a therapist's patients. For more detail on the
         patient, the top level /patient should be used.
@@ -301,22 +328,27 @@ resourceTypes:
       /{id}:
         description: For editing a specific patient-therapist combo.
         delete:
-          body:
-            application/json:
-              type: string
+          queryParameters: 
+            auth_token: string
           description: Removes this patient from this therapist.
 
     /messages:
       post:
+        queryParameters: 
+          auth_token: string
         body:
           application/json:
             type: NewMessage
         description: Sends a message to a patient.
 
       get:
+        queryParameters: 
+          auth_token: string
         description: Returns every message this therapist has sent
         responses:
           200:
             body:
               application/json:
                 type: <<item>>
+          403:
+            description: Bad authentication. 

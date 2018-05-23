@@ -3,12 +3,16 @@ const exphbs = require('express-handlebars');
 const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
+const mysql = require('mysql');
+const bcrypt = require('bcrypt');
 const PatientDB = require('./Database/PatientDB.js');
 const TherapistDB = require('./Database/TherapistDB.js');
+const AuthenticationDB = require("./Database/AuthenticationDB.js");
 const methodOverride = require('method-override');
 
-var patientDB = new PatientDB("WHAM_TEST");
-var therapistDB = new TherapistDB("WHAM_TEST");
+var authorizer = new AuthenticationDB("WHAM_TEST");
+var patientDB = new PatientDB("WHAM_TEST", authorizer);
+var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 
 app.engine('handlebars', exphbs({
     defaultLayout: false,
