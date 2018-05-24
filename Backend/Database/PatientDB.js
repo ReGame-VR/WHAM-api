@@ -166,7 +166,6 @@ class PatientDB {
                 }
             });
         });
-
     }
 
     // String String String Number Number String (Boolean -> Void) -> Void
@@ -190,7 +189,7 @@ class PatientDB {
                     callback(false);
                 } else {
                     connection.release();
-                    callback(true);
+                    callback(salt);
                 }
             });
         });

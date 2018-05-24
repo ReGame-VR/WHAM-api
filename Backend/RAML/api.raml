@@ -170,9 +170,12 @@ resourceTypes:
 /login:
   post:
     description: Returns the authentication token  if there is a sucessful login.
-    queryParameters: 
-      username: string
-      password: string
+    body:
+      application/json:
+        type: 
+          properties:
+            username: string
+            password: string
     responses: 
       200:
         description: Returns the authentication token.

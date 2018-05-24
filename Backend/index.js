@@ -53,16 +53,16 @@ app.post('/login', login);
 function login(req, res) {
     patientDB.login(req.body.username, req.body.password, function (sucess) {
         if (sucess) {
-            res.status(200);
-            res.send(JSON.stringify(sucess));
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.end(JSON.stringify(sucess));
         } else {
             therapistDB.login(req.body.username, req.body.password, function (sucess) {
                 if (sucess) {
-                    res.status(200);
-                    res.send(JSON.stringify(sucess));
+                    res.writeHead(200, {"Content-Type": "application/json"});
+                    res.end(JSON.stringify(sucess));
                 } else {
-                    res.status(403);
-                    res.send(JSON.stringify("Invalid password"));
+                    res.writeHead(403, {"Content-Type": "application/json"});
+                    res.end(JSON.stringify("Invalid password"));
                 }
             });
         }
@@ -108,22 +108,21 @@ app.post('/patients', addPatient)
 //Adds the patient to the database
 function addPatient(req, res) {
     // Username, password, DOB, Weight, Height, (?) Information
-    var username = req.param('username', null);
-    var unencrypt_password = req.param('password', null);
-    var dob = req.param('dob', null);
-    var weight = req.param('weight', null);
-    var height = req.param('height', null);
-    var information = req.param('information', ""); // Default of empty string
+    var username = req.body.username
+    var unencrypt_password = req.body.password
+    var dob = req.body.dob
+    var weight = req.body.weight
+    var height = req.body.height
+    var information = req.body.information
     patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
         if (worked !== false) {
-            res.status(200);
-            res.send(JSON.stringify(worked));
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.end(JSON.stringify(worked));
         } else {
-            res.status(403);
-            res.send(JSON.stringify("User already exists"));
+            res.writeHead(403, {"Content-Type": "application/json"});
+            res.end(JSON.stringify("User already exists"));
         }
     });
-    res.send("ADD Patients");
 }
 
 app.get('/patients/:patientID', getPatient)
