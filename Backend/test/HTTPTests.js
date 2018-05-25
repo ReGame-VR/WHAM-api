@@ -615,7 +615,7 @@ describe("HTTPTests", function () {
         });
     });
 
-    describe("Get every message to a patient", function() {
+    describe("Get every message to a patient", function () {
         it("should return the info for every message to this patient", function (done) {
             chai.request(app)
                 .get('/patients/ryan/messages')
@@ -687,8 +687,8 @@ describe("HTTPTests", function () {
 
     });
 
-    describe("Get patient sessions", function() {
-        it("should return every session this user has logged", function() {
+    describe("Get patient sessions", function () {
+        it("should return every session this user has logged", function (done) {
             chai.request(app)
                 .get('/patients/ryan/sessions')
                 .accept("application/json")
@@ -708,6 +708,387 @@ describe("HTTPTests", function () {
                     expect(res.body).to.be.deep.equal(session_expectation);
                     done();
                 });
+        });
+    });
+
+    describe("Get all therapists", function () {
+        it("should return the username and number of patients of every therapist", function (done) {
+            chai.request(app)
+                .get('/therapists')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal([{
+                            username: "therapist1",
+                            num_patients: 1
+                        },
+                        {
+                            username: "therapist2",
+                            num_patients: 1
+                        },
+                        {
+                            username: "therapist3",
+                            num_patients: 0
+                        }
+                    ]);
+                    done();
+                });
+
+        });
+    });
+
+    describe("Returns info about one therapist", function () {
+        it("should give info about just this one therapist", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist1')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal({
+                        username: "therapist1",
+                        num_patients: 1
+                    });
+                    done();
+                });
+        });
+    });
+
+    describe("Returns every message this therapist has sent", function () {
+        it("should have the contents of every message this therapist has sent", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist1/messages')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal(
+                        [{
+                            patientID: "ryan",
+                            therapistID: "therapist1",
+                            date_sent: "2016-02-28T21:41:41.000Z",
+                            is_read: 0,
+                            message: "This is a message",
+                            messageID: 1
+                        }]);
+                    done();
+                });
+        });
+    });
+
+    describe("Get all therapist patients", function () {
+        it("should return info about every patient this therpist has and their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist1/patients')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal(
+                        [{
+                            username: "ryan",
+                            dob: "1999-05-05T04:00:00.000Z",
+                            weight: 160,
+                            height: 71,
+                            information: "He is a developer of this app!",
+                            last_score: 129,
+                            last_activity_time: "2016-02-28T21:41:29.000Z"
+                        }]);
+                    done();
+                });
+        });
+    });
+
+    describe("Delete a patient session", function () {
+        it("should respond status 204 if the deletion is sucessful", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/sessions/1')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should respond status 403 if the deletion is unsucessful", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/sessions/1jdnksw')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get patient sessions after deletion", function () {
+        it("should return every session this user has logged", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/sessions')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    var session_expectation = [];
+                    for (var i = 11; i < 30; i++) {
+                        session_expectation.push({
+                            sessionID: i - 9,
+                            score: 100 + i,
+                            time: "2016-02-28T21:41:" + i + ".000Z"
+                        });
+                    }
+                    expect(res.body).to.be.deep.equal(session_expectation);
+                    done();
+                });
+        });
+    });
+
+    describe("Delete a patient messagee", function () {
+        it("should respond status 204 if the deletion is sucessful", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/messages/1')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should respond status 403 if the deletion is unsucessful", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/messages/1jdnksw')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get all non-deleted messages", function () {
+        it("should return all messages", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+
+                });
+        });
+    });
+
+    describe("De-pair patient-therapist", function () {
+        it("should return 204 if the de-pairing is sucessful", function (done) {
+            chai.request(app)
+                .delete('/therapists/therapist2/patients/ryan')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should return 403 if the de-pairing is unsucessful", function (done) {
+            chai.request(app)
+                .delete('/therapists/kljfnsdlkmnflsd/patients/ryan')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get all therapists after de-pair", function () {
+        it("should return the username and number of patients of every therapist", function (done) {
+            chai.request(app)
+                .get('/therapists')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal([{
+                            username: "therapist1",
+                            num_patients: 1
+                        },
+                        {
+                            username: "therapist2",
+                            num_patients: 0
+                        },
+                        {
+                            username: "therapist3",
+                            num_patients: 0
+                        }
+                    ]);
+                    done();
+                });
+
+        });
+    });
+
+    describe("Returns info about one therapist after de-pair", function () {
+        it("should give info about just this one therapist", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal({
+                        username: "therapist2",
+                        num_patients: 0
+                    });
+                    done();
+                });
+        });
+    });
+
+    describe("Get all therapist patients after a de-pair", function () {
+        it("should return info about every patient this therpist has and their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapistt/patients')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal([]);
+                    done();
+                });
+        });
+    });
+
+    describe("Deletes a single therapist", function () {
+        it("should return 204 if the deletion was sucessful", function (done) {
+            chai.request(app)
+                .delete('/therapists/therapist2')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should return 403 if the deletion was unsucessful", function (done) {
+            chai.request(app)
+                .delete('/therapists/therapist2slkmdlkas')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get all therapists after deletion and de-pair", function () {
+        it("should return the username and number of patients of every therapist", function (done) {
+            chai.request(app)
+                .get('/therapists')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body).to.be.deep.equal([{
+                            username: "therapist1",
+                            num_patients: 1
+                        },
+                        {
+                            username: "therapist3",
+                            num_patients: 0
+                        }
+                    ]);
+                    done();
+                });
+
+        });
+    });
+
+    describe("Deletes a single patient", function () {
+        it("should return 204 if the deletion is unsucessful", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should return 403 if the deletion is unsucessful", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan')
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get all individual patient info after deletion", function () {
+        it("should return the patient info, sessions, and messages for the given patient", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                })
         });
     });
 

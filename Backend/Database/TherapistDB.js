@@ -31,7 +31,10 @@ class TherapistDB {
         var inserts = [username, password, salt];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -60,7 +63,10 @@ class TherapistDB {
         var inserts = [therapistID];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
                     connection.release();
@@ -73,7 +79,8 @@ class TherapistDB {
                             message: result[i].message,
                             date_sent: result[i].date_sent,
                             is_read: result[i].is_read,
-                            messageID: result[i].messageID
+                            messageID: result[i].messageID,
+                            therapistID: therapistID
                         });
                     }
                     connection.release();
@@ -83,12 +90,50 @@ class TherapistDB {
         });
     }
 
-    // (Maybe(List-of String) -> Void) -> Void
+    // String (Maybe Therapist -> Void) -> Void
+    // Returns just info about this therapist
+    get_specific_therapist(therapistID, callback) {
+        var sql = `SELECT T.username, IFNULL(C.c, 0) as c
+        FROM THERAPIST T LEFT JOIN 
+        (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
+        where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
+        ON T.username = C.username 
+        WHERE T.username = ?`;
+        sql = mysql.format(sql, [therapistID]);
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                return;
+            }
+            connection.query(sql, function (error, results, fields) {
+                if (error || results.length === 0) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    var toSend = {
+                        username: results[0].username,
+                        num_patients: results[0].c
+                    }
+                    connection.release();
+                    callback(toSend);
+                }
+            });
+        });
+    }
+
+    // (Maybe(List-of (Object String Number) -> Void) -> Void
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
-        var sql = "SELECT username FROM THERAPIST";
+        var sql = `SELECT T.username, IFNULL(C.c, 0) as c
+                FROM THERAPIST T LEFT JOIN 
+                (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
+                where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
+                ON T.username = C.username`;
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -97,7 +142,8 @@ class TherapistDB {
                     var toSend = [];
                     for (var i = 0; i < results.length; i += 1) {
                         toSend.push({
-                            username: results[i].username
+                            username: results[i].username,
+                            num_patients: results[i].c
                         });
                     }
                     connection.release();
@@ -110,25 +156,37 @@ class TherapistDB {
     // String (Boolean -> Void) -> Void
     // Deletes this therapist
     delete_therapist(therapistID, callback) {
+        var deleteMessageSQL = "DELETE FROM PATIENT_MESSAGE WHERE therapistID = ?";
         var deleteJoinSQL = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
         var deleteInfoSQL = "DELETE FROM THERAPIST WHERE username = ?";
         var inserts = [therapistID];
+        deleteMessageSQL = mysql.format(deleteMessageSQL, inserts);
         deleteJoinSQL = mysql.format(deleteJoinSQL, inserts);
         deleteInfoSQL = mysql.format(deleteInfoSQL, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
-            connection.query(deleteJoinSQL, function (error, result, fields) {
+            if (err) {
+                callback(false);
+                return;
+            }
+            connection.query(deleteMessageSQL, function (error, result, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
                 } else {
-                    connection.query(deleteInfoSQL, function (error, result, fields) {
+                    connection.query(deleteJoinSQL, function (error, result, fields) {
                         if (error) {
                             connection.release();
                             callback(false);
                         } else {
-                            connection.release();
-                            callback(true);
+                            connection.query(deleteInfoSQL, function (error, result, fields) {
+                                if (error || result.affectedRows === 0) {
+                                    connection.release();
+                                    callback(false);
+                                } else {
+                                    connection.release();
+                                    callback(true);
+                                }
+                            });
                         }
                     });
                 }
@@ -140,14 +198,17 @@ class TherapistDB {
     get_all_patients(therapistID, callback) {
         var sql =
             `SELECT username, dob, weight, height, information, 
-        (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time LIMIT 1) as score, 
-        (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time LIMIT 1) as time 
+        (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time DESC LIMIT 1) as score, 
+        (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time DESC LIMIT 1) as time 
         FROM PATIENT P, PATIENT_THERAPIST PT
-        WHERE P.username = PT.patientID AND PT.therapistID = ?`;
+        WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL`;
         var inserts = [therapistID];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -161,8 +222,8 @@ class TherapistDB {
                             weight: results[i].weight,
                             height: results[i].height,
                             information: results[i].information,
-                            score: results[i].score,
-                            time: results[i].time
+                            last_score: results[i].score,
+                            last_activity_time: results[i].time
                         });
                     }
                     connection.release();

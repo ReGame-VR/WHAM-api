@@ -20,8 +20,11 @@ types:
 
   Therapist:
     type: User
+    properties: 
+      num_patients: number
     example:
       username: "UserA"
+      num_patients: 5
 
   Patient:
     type: User
@@ -157,13 +160,9 @@ resourceTypes:
       description: Delete the <<item>>
       responses:
         204:
-
+          description: Sucessfully deleted.
         403:
           description: Bad Request
-          body:
-            application/json:
-              type: string
-            example: Permission Not Granted
 
   UserCollection:
     type:  { Collection: {item : <<item>>} }
@@ -315,6 +314,18 @@ resourceTypes:
     type:  { Member: {item : Therapist} }
     description: A specific therapist.
 
+    get:
+      queryParameters: 
+          auth_token: string
+      responses: 
+        200:
+          description: Returns the info about this therapist.
+          body:
+            application/json:
+              type: Therapist
+        403:
+          description: Not authorized to view.
+
     /patients:
       type:  { Collection: {item : Patient} } 
 
@@ -338,17 +349,7 @@ resourceTypes:
           200:
             body:
               application/json:
-                example:
-                 - name: "Joey"
-                   therapist:
-                     name: "Jen"
-                     id: 92013
-                   id: 128939
-                 - name: "Jill"
-                   therapist:
-                     name: "Jen"
-                     id: 92013
-                   id: 1428739
+                type: Patient[]
           403:
             description: Bad authentication. 
 
@@ -362,6 +363,11 @@ resourceTypes:
           queryParameters: 
             auth_token: string
           description: Removes this patient from this therapist.
+          responses: 
+            204:
+              description: The pair was sucessfully broken.
+            403:
+              description: The pair could not be broken.
 
     /messages:
       get:
@@ -372,6 +378,6 @@ resourceTypes:
           200:
             body:
               application/json:
-                type: <<item>>
+                type: Message[]
           403:
             description: Bad authentication. 

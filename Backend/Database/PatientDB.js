@@ -28,6 +28,10 @@ class PatientDB {
     delete_all_patient_info(callback) {
         var sql = "DELETE FROM PATIENT_SESSION";
         this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -73,7 +77,10 @@ class PatientDB {
         (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as time
         FROM PATIENT P`;
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -117,7 +124,10 @@ class PatientDB {
         message_query = mysql.format(message_query, inserts);
 
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(info_query, function (error1, info_results, fields) {
                 if (error1 || info_results.length == 0) {
                     connection.release();
@@ -182,7 +192,10 @@ class PatientDB {
         var inserts = [username, password, salt, dob, weight, height, information];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -205,7 +218,10 @@ class PatientDB {
         var sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ?";
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results) {
                 if (error) {
                     connection.release();
@@ -228,7 +244,7 @@ class PatientDB {
                                     var sql = "DELETE FROM PATIENT where username = ?";
                                     sql = mysql.format(sql, inserts);
                                     connection.query(sql, function (error, results) {
-                                        if (error) {
+                                        if (error || results.affectedRows === 0) {
                                             connection.release();
                                             callback(false);
                                         } else {
@@ -253,7 +269,10 @@ class PatientDB {
         var session_query = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
         session_query = mysql.format(session_query, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(session_query, function (error2, session_results, fields) {
                 if (error2) {
                     connection.release();
@@ -284,7 +303,10 @@ class PatientDB {
 
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
                     connection.release();
@@ -307,9 +329,12 @@ class PatientDB {
 
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
-                if (error) {
+                if (error || result.affectedRows === 0) {
                     connection.release();
                     callback(false);
                 } else {
@@ -328,7 +353,10 @@ class PatientDB {
 
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
                     connection.release();
@@ -356,7 +384,10 @@ class PatientDB {
         var inserts = [patientID, therapistID, message, time];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
@@ -378,7 +409,10 @@ class PatientDB {
         var inserts = [patientID];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
                     connection.release();
@@ -410,7 +444,10 @@ class PatientDB {
         var inserts = [patientID, messageID];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {
                     connection.release();
@@ -431,7 +468,10 @@ class PatientDB {
         sql = mysql.format(sql, inserts);
 
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length === 0) {
                     connection.release();
@@ -458,7 +498,10 @@ class PatientDB {
         var inserts = [patientID, therapistID, date_added];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
                     connection.release();
@@ -478,9 +521,34 @@ class PatientDB {
         var inserts = [date_removed, patientID, therapistID];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+                return;
+            }
             connection.query(sql, function (error, result, fields) {
-                if (error) {
+                if (error || result.affectedRows === 0) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback(true);
+                }
+            });
+        });
+    }
+
+    // String (Boolean -> Void) -> Void
+    // Deletes this message
+    delete_message(patientID, messageID, callback) {
+        var sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
+        sql = mysql.format(sql, [patientID, messageID])
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                return;
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error || result.affectedRows === 0) {
                     connection.release();
                     callback(false);
                 } else {

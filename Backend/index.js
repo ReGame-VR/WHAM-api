@@ -421,6 +421,26 @@ function getMessage(req, res) {
     });
 }
 
+app.delete('/patients/:patientID/messages/:messageID', deletePatientMessage);
+
+function deletePatientMessage(req, res) {
+    var patientID = req.params.patientID;
+    var messageID = req.params.messageID;
+    patientDB.delete_message(patientID, messageID, function(worked) {
+        if (worked) {
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        } else {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        }
+    })
+}
+
 app.get('/therapists', getAllTherapists)
 
 //Gives all therapist info in either JSON or HTML form
@@ -478,7 +498,7 @@ app.get('/therapists/:therapistID', getTherapist)
 
 //Returns the info for a single therapist
 function getTherapist(req, res) {
-    therapistDB.get_all_patients(req.params.therapistID, function (info) {
+    therapistDB.get_specific_therapist(req.params.therapistID, function (info) {
         if (req.headers['accept'].includes('text/html')) {
             //Send therapist info as HTML
             res.render('therapist-detail', {
@@ -508,20 +528,19 @@ app.delete('/therapists/:therapistID', deleteTherpist)
 //Deletes this therapist from the database
 function deleteTherpist(req, res) {
     var therapistID = req.params.therapistID;
-    therapistDB.delete_therapist(therapistDB, function (worked) {
+    therapistDB.delete_therapist(therapistID, function (worked) {
         if (worked) {
             res.writeHead(204, {
                 "Content-Type": "application/json"
             });
             res.end();
         } else {
-            res.writeHead(end, {
+            res.writeHead(403, {
                 "Content-Type": "application/json"
             });
             res.end();
         }
     })
-    res.send("DELETE Therapist " + req.params['therapistID']);
 }
 
 app.get('/therapists/:therapistID/patients', getTherapistPatients)
@@ -529,14 +548,12 @@ app.get('/therapists/:therapistID/patients', getTherapistPatients)
 //Returns the info for all patients of this therapist
 function getTherapistPatients(req, res) {
     var therapistID = req.params.therapistID;
-    therapistDB.get_all_patients(therapistDB, function (info) {
+    therapistDB.get_all_patients(therapistID, function (info) {
         if (req.headers['accept'].includes('text/html')) {
             //Send therapist-patient info as HTML
         } else if (req.headers['accept'].includes('application/json')) {
             if (info === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
+                res.writeHead(403);
                 res.end();
             } else {
                 res.writeHead(200, {
@@ -548,7 +565,6 @@ function getTherapistPatients(req, res) {
             //An unsupported request
         }
     })
-    res.send("GET Patients for Therapist " + req.params['therapistID']);
 }
 
 app.post('/therapists/:therapistID/patients', addPatientTherapist);
@@ -574,7 +590,6 @@ function addPatientTherapist(req, res) {
 app.delete('/therapists/:therapistID/patients/:patientID', removePatientTherapist);
 
 function removePatientTherapist(req, res) {
-    console.log("here!");
     var therapistID = req.params.therapistID;
     var patientID = req.params.patientID;
     patientDB.unassign_to_therapist(patientID, therapistID, new Date(), function (worked) {
@@ -592,5 +607,29 @@ function removePatientTherapist(req, res) {
     });
 }
 
+app.get('/therapists/:therapistID/messages', getMessagesFromTherapist);
+
+function getMessagesFromTherapist(req, res) {
+    var therapistID = req.params.therapistID;
+    therapistDB.get_all_messages_from(therapistID, function (messages) {
+        if (req.headers['accept'].includes('text/html')) {
+            //Send therapist-patient info as HTML
+        } else if (req.headers['accept'].includes('application/json')) {
+            if (messages === false) {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            } else {
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(messages));
+            }
+        } else {
+            //An unsupported request
+        }
+    })
+}
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
