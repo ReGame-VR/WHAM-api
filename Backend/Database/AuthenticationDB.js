@@ -11,7 +11,6 @@ class AuthenticationDB {
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
-        console.log("created");
     }
 
     // String String (Maybe-String -> Void) -> Void
@@ -38,6 +37,7 @@ class AuthenticationDB {
             connection.query(get_salt_sql, function (error, results, fields) {
                 if (error || results.length == 0) {
                     callback(false);
+                    connection.release();
                 } else {
                     var salt = results[0].salt;
                     var password = bcrypt.hashSync(unencrypt_password, salt);
@@ -61,7 +61,8 @@ class AuthenticationDB {
     // String String (Maybe-Integer Maybe-String -> Void) -> Void
     // Returns the authorization level of this user
     get_auth_level(salt = 0, table_name, callback) {
-        var sql = "SELECT auth_level, username FROM " + table_name + " WHERE username = ?";
+        var sql = "SELECT auth_level, username FROM " + table_name + " WHERE salt = ?";
+        sql = mysql.format(sql, [salt]);
         this.pool.getConnection(function(err, connection) {
             if(err){ (callback(false, false))}
             connection.query(sql, function(error, result, fields) {

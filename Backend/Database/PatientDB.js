@@ -69,8 +69,8 @@ class PatientDB {
     get_all_patient_info(callback) {
         var sql =
             `SELECT username, dob, weight, height, information, 
-        (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time LIMIT 1) as score,
-        (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time LIMIT 1) as time
+        (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as score,
+        (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as time
         FROM PATIENT P`;
         this.pool.getConnection(function (err, connection) {
             if(err) { callback(false); }
@@ -87,8 +87,8 @@ class PatientDB {
                             weigth: results[i].weight,
                             height: results[i].height,
                             information: results[i].information,
-                            score: results[i].score,
-                            time: results[i].time
+                            last_score: results[i].score,
+                            last_activity_time: results[i].time
                         });
                     }
                     connection.release();
@@ -348,6 +348,27 @@ class PatientDB {
         this.authorizer.patient_login(username, unencrypt_password, callback);
     }
 
+    // String String String String (Boolean -> Void) -> Void
+    // Adds a message to this patients database entry
+    // Calls the callback with the sucess of the querry
+    send_patient_a_message(patientID, therapistID, message, time, callback) {
+        var sql = "INSERT INTO PATIENT_MESSAGE (patientID, therapistID, message, date_sent, is_read) VALUES (?, ?, ?, ?, false)";
+        var inserts = [patientID, therapistID, message, time];
+        sql = mysql.format(sql, inserts);
+        this.pool.getConnection(function (err, connection) {
+            if(err) { callback(false); }
+            connection.query(sql, function (error, results, fields) {
+                if (error) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback(true);
+                }
+            });
+        });
+    }
+
     // String
     //([Maybe [List-of Message]] -> Void)
     // -> Void
@@ -367,6 +388,7 @@ class PatientDB {
                     for (var i = 0; i < result.length; i += 1) {
                         toSend.push({
                             therapistID: result[i].therapistID,
+                            patientID: patientID,
                             message: result[i].message,
                             date_sent: result[i].date_sent,
                             is_read: result[i].is_read,
@@ -390,12 +412,40 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if(err) { callback(false); }
             connection.query(sql, function (error, result, fields) {
-                if (error) {
+                if (error || result.affectedRows === 0) {
                     connection.release();
                     callback(false);
                 } else {
                     connection.release();
                     callback(true);
+                }
+            });
+        });
+    }
+
+    // String String (Maybe-Message -> Void) -> Void
+    // Returns the info for a specific message
+    get_specific_message(patientID, messageID, callback) {
+        var sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
+        var inserts = [patientID, messageID];
+        sql = mysql.format(sql, inserts);
+
+        this.pool.getConnection(function (err, connection) {
+            if(err) { callback(false); }
+            connection.query(sql, function (error, result, fields) {
+                if (error || result.length === 0) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback({
+                        therapistID: result[0].therapistID,
+                        patientID: patientID,
+                        message: result[0].message,
+                        date_sent: result[0].date_sent,
+                        is_read: result[0].is_read,
+                        messageID: result[0].messageID
+                    });
                 }
             });
         });
@@ -423,9 +473,9 @@ class PatientDB {
 
     // String String Date (Boolean -> Void) -> Void
     // Unpairs this therapist and patinet in the PATIENT_THERAPIST DB
-    unassign_to_therapist(patientID, therapistID, callback) {
-        var sql = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ? AND therapistID = ?";
-        var inserts = [patientID, therapistID];
+    unassign_to_therapist(patientID, therapistID, date_removed, callback) {
+        var sql = "UPDATE PATIENT_THERAPIST SET date_removed = ? WHERE patientID = ? AND therapistID = ?";
+        var inserts = [date_removed, patientID, therapistID];
         sql = mysql.format(sql, inserts);
         this.pool.getConnection(function (err, connection) {
             if(err) { callback(false); }

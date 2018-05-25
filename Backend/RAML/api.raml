@@ -14,11 +14,9 @@ types:
     properties:
       username: string
       password: string
-      salt: string
     example:
       username: "UserA"
       password: "$2b$10$WzyxzUnJPWDHAAw3b2BUFeOq5J.jcL.YLJKquTojjJXu2XKmPp9ru"
-      salt: "$2b$10$WzyxzUnJPWDHAAw3b2BUFe"
 
   Therapist:
     type: User
@@ -26,6 +24,24 @@ types:
       username: "UserA"
 
   Patient:
+    type: User
+    properties: 
+          dob: date-only
+          weight: number # In Kilos
+          height: number # In CM
+          information: string # Stuff about the patient that is not already included
+          last_score: string
+          last_activity_time: datetime
+    example:
+      username: "Joey"
+      dob: "1982-07-02"
+      weight: 155
+      height: 72
+      information: "He cannot move his right arm"
+      last_score: 100
+      last_activity_time: 1981-02-27T05:00:00.000Z
+
+  PatientNoSession:
     type: User
     properties: 
           dob: date-only
@@ -52,60 +68,70 @@ types:
     example:
       username: "Joey"
       password: "$2b$10$WzyxzUnJPWDHAAw3b2BUFeOq5J.jcL.YLJKquTojjJXu2XKmPp9ru"
-      salt: "$2b$10$WzyxzUnJPWDHAAw3b2BUFe"
       dob: "1982-07-02"
       weight: 155
       height: 72
       information: "He cannot move his right arm"
 
+  UserLogin:
+    properties: 
+      username: string
+      password: string
+
 
   NewPatientSession:
     properties:
       score: number
-      date: datetime
+      time: datetime
     example:
       score: 88
-      date: 2016-02-28T16:41:41.090Z
+      time: 2016-02-28T16:41:41.090Z
 
   PatientSession:
     properties:
       activityLevel: number
-      date: datetime
+      time: datetime
       id: number 
     example:
       activityLevel: 88
-      date: 2016-02-28T16:41:41.090Z
+      time: 2016-02-28T16:41:41.090Z
       id: 1427828
   
   Message:
     properties: 
       patientID: string
       therapistID: string
-      message-content: string
-      date-sent: datetime
-      is-read: boolean
+      message_content: string
+      date_sent: datetime
+      is_read: boolean
       messageID: number
     example:
       patientID: "Joey"
       therapistID: "UserA"
-      message-content: "This is a message"
-      date-sent: "2015-03-21 03:21"
-      is-read: true
+      message_content: "This is a message"
+      date_sent: "2015-03-21 03:21"
+      is_read: true
       messageID: 1
 
   NewMessage:
     properties: 
-      patientID: string
       therapistID: string
-      message-content: string
-      date-sent: datetime
-      is-read: boolean
+      message_content: string
+      date_sent: datetime
     example:
-      patientID: "Joey"
       therapistID: "UserA"
-      message-content: "This is a message"
-      date-sent: "2015-03-21 03:21"
-      is-read: true
+      message_content: "This is a message"
+      date_sent: "2015-03-21 03:21"
+
+  NewPatientTherapistPair:
+    properties: 
+      patientID: string
+
+  PatientInfoResponse:
+    properties: 
+      info: PatientNoSession
+      sessions: PatientSession[]
+      messages: Message[]
 
 
 resourceTypes:
@@ -121,10 +147,7 @@ resourceTypes:
             application/json:
               type: <<item>>[]
         403:
-          body:
-            application/json:
-              type: string
-            example: Permission Not Granted
+          description: Permission Not Granted
 
   Member:
     delete:
@@ -152,10 +175,11 @@ resourceTypes:
 
       responses:
         200:
-          description: Returns the salt that is bound to the users account.
+          description: Returns the token that is bound to the users account.
           body:
             application/json:
-              type: string
+              properties: 
+                token: string
         403:
           description: Invalid username/password.
           body:
@@ -172,23 +196,22 @@ resourceTypes:
     description: Returns the authentication token  if there is a sucessful login.
     body:
       application/json:
-        type: 
-          properties:
-            username: string
-            password: string
+        type: UserLogin
     responses: 
       200:
         description: Returns the authentication token.
         body:
           application/json:
-            type: string
+            properties:
+              token: string
       
       403:
         description: Bad request.
         body:
           application/json:
-            type: string
-          example: Invalid password
+            properties:
+              error: string
+          example: {"error": "Invalid password"}
 
 /patients:
   type:  { UserCollection: {newItem : NewPatient, item : Patient} }
@@ -205,7 +228,7 @@ resourceTypes:
         200:
           body:
             application/json:
-              type: [ Patient (Collection PatientSession) (Collection PatientMessage) ]
+              type: PatientInfoResponse
         403:
             description: User does not exist
             body:
@@ -229,19 +252,23 @@ resourceTypes:
             type: NewMessage
         responses:
           204:
-          
+            description: Message was sucessfully sent    
           403:
-            description: Message failed to send
-            body:
-              application/json:
-                type: string
-              examples:
-                userDoesNotExist:
-                  error: "Patient does not exist"         
+            description: Message failed to send       
 
       /{id}:
         type:  { Member: {item : Message} }
-        description: A specific message.
+        description: A specific message. 
+
+        put:
+          queryParameters: 
+            auth_token: string
+          description: Sets this message set as read.
+          responses: 
+            204:
+              description: The message was sucessfully marked as read.
+            403: 
+              description: The message was unsucessfully makred as read. 
 
         get:
           queryParameters: 
@@ -259,30 +286,24 @@ resourceTypes:
                   type: string
                 examples:
                   userDoesNotExist:
-                    error: "Message does not exist" 
-
-        put:
-          queryParameters: 
-            auth_token: string
-          description: Sets this message set as read.
+                    error: "Message does not exist"
 
     /sessions:
       type:  { Collection: {item : PatientSession} }
       description: A collection of a patient's sessions.
       post:
+        queryParameters: 
+          auth_token: string
         body:
           application/json:
             type: NewPatientSession
         responses:
           204:
-
+            description: The session was sucessfully added.
           403:
-            description: Session could not be added
-            body:
-              application/json:
-                type: string   
+            description: Session could not be added.
 
-      /{time}:
+      /{id}:
         type:  { Member: {item : PatientSession} }
         description: A specific patient session.
 
@@ -300,8 +321,15 @@ resourceTypes:
       post:
         queryParameters: 
           auth_token: string
-          patientID: string
+        body:
+          application/json:
+            type: NewPatientTherapistPair
         description: Add a patient to this therapist.
+        responses: 
+            204:
+              description: The pairing was sucessful.
+            403:
+              description: The pair was not sucessful.
 
       get:
         queryParameters: 
@@ -336,14 +364,6 @@ resourceTypes:
           description: Removes this patient from this therapist.
 
     /messages:
-      post:
-        queryParameters: 
-          auth_token: string
-        body:
-          application/json:
-            type: NewMessage
-        description: Sends a message to a patient.
-
       get:
         queryParameters: 
           auth_token: string

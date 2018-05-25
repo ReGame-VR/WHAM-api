@@ -63,3 +63,5 @@ CREATE TABLE PATIENT_MESSAGE (
     FOREIGN KEY (patientID) REFERENCES PATIENT(username),
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username)   
 );
+
+INSERT INTO PATIENT VALUES("admin", "password", "kajsdlkasm", "1999-05-05", 162, 71, "", 3);

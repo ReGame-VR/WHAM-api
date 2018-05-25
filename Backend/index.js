@@ -26,7 +26,9 @@ app.set('view engine', 'handlebars');
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 
 app.get('', showAPI);
 
@@ -36,9 +38,15 @@ function showAPI(req, res) {
     if (req.headers['accept'].includes('text/html')) {
         res.render('api');
     } else if (req.headers['accept'].includes('application/json')) {
-        res.send("Not Supported");
+        res.writeHead(403, {
+            "Content-Type": "application/json"
+        });
+        res.end();
     } else {
-        res.send("Not Supported");
+        res.writeHead(403, {
+            "Content-Type": "application/json"
+        });
+        res.end();
     }
 }
 
@@ -53,16 +61,28 @@ app.post('/login', login);
 function login(req, res) {
     patientDB.login(req.body.username, req.body.password, function (sucess) {
         if (sucess) {
-            res.writeHead(200, {"Content-Type": "application/json"});
-            res.end(JSON.stringify(sucess));
+            res.writeHead(200, {
+                "Content-Type": "application/json"
+            });
+            res.end(JSON.stringify({
+                token: sucess
+            }));
         } else {
             therapistDB.login(req.body.username, req.body.password, function (sucess) {
                 if (sucess) {
-                    res.writeHead(200, {"Content-Type": "application/json"});
-                    res.end(JSON.stringify(sucess));
+                    res.writeHead(200, {
+                        "Content-Type": "application/json"
+                    });
+                    res.end(JSON.stringify({
+                        token: sucess
+                    }));
                 } else {
-                    res.writeHead(403, {"Content-Type": "application/json"});
-                    res.end(JSON.stringify("Invalid password"));
+                    res.writeHead(403, {
+                        "Content-Type": "application/json"
+                    });
+                    res.end(JSON.stringify({
+                        error: "Invalid password"
+                    }));
                 }
             });
         }
@@ -73,34 +93,46 @@ app.get('/patients', getPatients)
 
 //Gives all patient info in either JSON or HTML form
 function getPatients(req, res) {
-    if(res.params === undefined || res.params.auth_token === undefined) {
-        show_login(req, res);
-        return;
-    }
-    authorizer.get_auth_level(res.params.auth_token, "PATIENT", function(auth_level, username) {
-        if(auth_level !== 3) {
-            if (req.headers['accept'].includes('text/html')) {
-                show_login(req, res);
-            } else {
-                res.status(403);
-                res.send("Insufficient Permissions");
-            }
+    if (req.query === undefined || req.query.auth_token === undefined) {
+        if (req.headers['accept'].includes('text/html')) {
+            show_login(req, res);
         } else {
-            patientDB.get_all_patient_info(function (info) {
-                if (req.headers['accept'].includes('text/html')) {
-                    //Send therapist info as HTML
-                    res.render('patient-overview', {
-                        patients: info
-                    });
-                } else if (req.headers['accept'].includes('application/json')) {
-                    res.status(200);
-                    res.send(JSON.stringify(response));
-                } else {
-                    res.send("Not Supported Yet");
-                }
+            res.writeHead(403, {
+                "Content-Type": "application/json"
             });
+            res.end();
         }
-    });
+    } else {
+        authorizer.get_auth_level(req.query.auth_token, "PATIENT", function (auth_level, username) {
+            if (auth_level !== "3") {
+                if (req.headers['accept'].includes('text/html')) {
+                    show_login(req, res);
+                } else {
+                    res.writeHead(403, {
+                        "Content-Type": "application/json"
+                    });
+                    res.end();
+                }
+            } else {
+                patientDB.get_all_patient_info(function (info) {
+                    if (req.headers['accept'].includes('text/html')) {
+                        //Send therapist info as HTML
+                        res.render('patient-overview', {
+                            patients: info
+                        });
+                    } else if (req.headers['accept'].includes('application/json')) {
+                        res.writeHead(200, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end(JSON.stringify(info));
+                    } else {
+                        res.writeHead(403);
+                        res.end();
+                    }
+                });
+            }
+        });
+    }
 }
 
 app.post('/patients', addPatient)
@@ -109,6 +141,15 @@ app.post('/patients', addPatient)
 function addPatient(req, res) {
     // Username, password, DOB, Weight, Height, (?) Information
     var username = req.body.username
+    if (username.includes(" ")) {
+        res.writeHead(403, {
+            "Content-Type": "application/json"
+        });
+        res.end(JSON.stringify({
+            error: "User already exists"
+        }));
+        return;
+    }
     var unencrypt_password = req.body.password
     var dob = req.body.dob
     var weight = req.body.weight
@@ -116,11 +157,19 @@ function addPatient(req, res) {
     var information = req.body.information
     patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
         if (worked !== false) {
-            res.writeHead(200, {"Content-Type": "application/json"});
-            res.end(JSON.stringify(worked));
+            res.writeHead(200, {
+                "Content-Type": "application/json"
+            });
+            res.end(JSON.stringify({
+                token: worked
+            }));
         } else {
-            res.writeHead(403, {"Content-Type": "application/json"});
-            res.end(JSON.stringify("User already exists"));
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end(JSON.stringify({
+                error: "User already exists"
+            }));
         }
     });
 }
@@ -139,11 +188,21 @@ function getPatient(req, res) {
             });
         } else if (req.headers['accept'].includes('application/json')) {
             if (info === false) {
-                res.status(403);
-                res.send(JSON.stringify("User does not exist"));
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify({
+                    error: "User does not exist"
+                }));
             } else {
-                res.status(200);
-                res.send(JSON.stringify(info, sessions, messages));
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify({
+                    info: info,
+                    sessions: sessions,
+                    messages: messages
+                }));
             }
             //Send patient info as JSON
         } else {
@@ -158,11 +217,15 @@ app.delete('/patients/:patientID', deletePatient)
 function deletePatient(req, res) {
     patientDB.delete_patient(req.params.patientID, function (worked) {
         if (worked === false) {
-            res.status(403);
-            res.send("Bad request");
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         } else {
-            res.status(204);
-            res.send();
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         }
     });
 }
@@ -179,11 +242,15 @@ function getPatientSessions(req, res) {
             });
         } else if (req.headers['accept'].includes('application/json')) {
             if (sessions === false) {
-                res.status(403);
-                res.send()
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
             } else {
-                res.status(200);
-                res.send(JSON.stringify(sessions));
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(sessions));
             }
         } else {
             //An unsupported request
@@ -196,15 +263,19 @@ app.post('/patients/:patientID/sessions', addPatientSession)
 //Adds the session for the given patient to the database
 function addPatientSession(req, res) {
     var patientID = req.params.patientID;
-    var score = req.param('score', null);
-    var time = req.param('date', null);
+    var score = req.body.score;
+    var time = req.body.time;
     patientDB.add_patient_session(patientID, score, time, function (worked) {
         if (worked) {
-            res.status(204);
-            res.send();
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         } else {
-            res.status(403);
-            res.send("Session could not be added");
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         }
     });
 }
@@ -220,11 +291,15 @@ function getSession(req, res) {
             res.send("Getting this session");
         } else if (req.headers['accept'].includes('application/json')) {
             if (sessionInfo === false) {
-                res.status(403);
-                res.send("Bad request.");
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
             } else {
-                res.status(200);
-                res.send(JSON.stringify(sessionInfo));
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(sessionInfo));
             }
         } else {
             //An unsupported request
@@ -240,11 +315,108 @@ function deletePatientSession(req, res) {
     var sessionID = req.params.sessionID;
     patientDB.delete_patient_session(patientID, sessionID, function (worked) {
         if (worked) {
-            res.status(204);
-            res.send();
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         } else {
-            res.status(403);
-            res.send("Bad request.");
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        }
+    });
+}
+
+app.post('/patients/:patientID/messages', addPatientMessage);
+
+function addPatientMessage(req, res) {
+    var patientID = req.params.patientID;
+    var therapistID = req.body.therapistID;
+    var message_content = req.body.message_content;
+    var date_sent = req.body.date_sent;
+    patientDB.send_patient_a_message(patientID, therapistID, message_content, date_sent, function (worked) {
+        if (worked) {
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        } else {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        }
+    });
+}
+
+app.get('/patients/:patientID/messages', getPatientMessages);
+
+function getPatientMessages(req, res) {
+    var patientID = req.params.patientID;
+    patientDB.get_all_messages_for(patientID, function(messages) {
+        if (req.headers['accept'].includes('text/html')) {
+            res.send("Getting these messages");
+        } else if (req.headers['accept'].includes('application/json')) {
+            if (messages === false) {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            } else {
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(messages));
+            }
+        } else {
+            //An unsupported request
+        }
+    });
+}
+
+app.put('/patients/:patientID/messages/:messageID', markMessageAsRead);
+
+function markMessageAsRead(req, res) {
+    var patientID = req.params.patientID;
+    var messageID = req.params.messageID;
+    patientDB.mark_message_as_read(patientID, messageID, function (worked) {
+        if (worked) {
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        } else {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        }
+    });
+}
+
+app.get('/patients/:patientID/messages/:messageID', getMessage);
+
+function getMessage(req, res) {
+    var patientID = req.params.patientID;
+    var messageID = req.params.messageID;
+    patientDB.get_specific_message(patientID, messageID, function(message_content) {
+        if (req.headers['accept'].includes('text/html')) {
+            res.send("Getting this message");
+        } else if (req.headers['accept'].includes('application/json')) {
+            if (message_content === false) {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            } else {
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(message_content));
+            }
+        } else {
+            //An unsupported request
         }
     });
 }
@@ -259,12 +431,16 @@ function getAllTherapists(req, res) {
                 therapists: therapists
             });
         } else if (req.headers['accept'].includes('application/json')) {
-            if(therapists == false) {
-                res.status(403);
-                res.send("Bad Request");
+            if (therapists == false) {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
             } else {
-                res.status(200);    
-                res.send(JSON.stringify(therapists));
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(therapists));
             }
         } else {
             //An unsupported request
@@ -276,7 +452,26 @@ app.post('/therapists', addTherapist)
 
 //Adds the therapist to the database
 function addTherapist(req, res) {
-    res.send("ADD Therapist");
+    // Username, password, DOB, Weight, Height, (?) Information
+    var username = req.body.username
+    var unencrypt_password = req.body.password
+    therapistDB.add_therapist(username, unencrypt_password, function (worked) {
+        if (worked !== false) {
+            res.writeHead(200, {
+                "Content-Type": "application/json"
+            });
+            res.end(JSON.stringify({
+                token: worked
+            }));
+        } else {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end(JSON.stringify({
+                error: "User already exists"
+            }));
+        }
+    });
 }
 
 app.get('/therapists/:therapistID', getTherapist)
@@ -292,11 +487,15 @@ function getTherapist(req, res) {
             });
         } else if (req.headers['accept'].includes('application/json')) {
             if (info === false) {
-                res.status(403);
-                res.send("Bad request");
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
             } else {
-                res.status(200);
-                res.send(JSON.stringify(info));
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(info));
             }
         } else {
             //An unsupported request
@@ -311,11 +510,15 @@ function deleteTherpist(req, res) {
     var therapistID = req.params.therapistID;
     therapistDB.delete_therapist(therapistDB, function (worked) {
         if (worked) {
-            res.status(204);
-            res.send();
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         } else {
-            res.status(403);
-            res.send("Bad request");
+            res.writeHead(end, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         }
     })
     res.send("DELETE Therapist " + req.params['therapistID']);
@@ -331,11 +534,15 @@ function getTherapistPatients(req, res) {
             //Send therapist-patient info as HTML
         } else if (req.headers['accept'].includes('application/json')) {
             if (info === false) {
-                res.status(403);
-                res.send("Bad request");
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
             } else {
-                res.status(200);
-                res.send(JSON.stringify(info));
+                res.writeHead(200, {
+                    "Content-Type": "application/json"
+                });
+                res.end(JSON.stringify(info));
             }
         } else {
             //An unsupported request
@@ -348,14 +555,18 @@ app.post('/therapists/:therapistID/patients', addPatientTherapist);
 
 function addPatientTherapist(req, res) {
     var therapistID = req.params.therapistID;
-    var patientID = req.body.id;
-    patientDB.assign_to_therapist(patientID, therapistID, new Date(), function(worked) {
-        if(worked) {
-            res.status(204);
-            res.send();
+    var patientID = req.body.patientID;
+    patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
+        if (worked) {
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         } else {
-            res.status(403);
-            res.send("Bad request");
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         }
     });
 }
@@ -366,13 +577,17 @@ function removePatientTherapist(req, res) {
     console.log("here!");
     var therapistID = req.params.therapistID;
     var patientID = req.params.patientID;
-    patientDB.unassign_to_therapist(patientID, therapistID, function(worked) {
-        if(worked) {
-            res.status(204);
-            res.send();
+    patientDB.unassign_to_therapist(patientID, therapistID, new Date(), function (worked) {
+        if (worked) {
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         } else {
-            res.status(403);
-            res.send("Bad request");
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
         }
     });
 }

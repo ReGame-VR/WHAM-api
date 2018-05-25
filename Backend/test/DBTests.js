@@ -249,13 +249,13 @@ describe("DB Tests", function () {
     describe("JointDB", function () {
         describe("#send_patient_a_message()", function () {
             it("should give true if the message was sucessfully added", function (done) {
-                therapistDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
+                patientDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
                     expect(worked).to.be.equal(true);
-                    therapistDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
+                    patientDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
                         expect(worked).to.be.equal(false);
-                        therapistDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
+                        patientDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
                             expect(worked).to.be.equal(false);
-                            therapistDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04", function (worked) {
+                            patientDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04", function (worked) {
                                 expect(worked).to.be.equal(true);
                                 done();
                             });

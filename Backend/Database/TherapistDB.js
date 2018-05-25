@@ -38,7 +38,7 @@ class TherapistDB {
                     callback(false);
                 } else {
                     connection.release();
-                    callback(true);
+                    callback(salt);
                 }
             });
         });
@@ -49,27 +49,6 @@ class TherapistDB {
     // False given an incorrect login
     login(username, unencrypt_password, callback) {
         this.authorizer.therapist_login(username, unencrypt_password, callback);
-    }
-
-    // String String String String (Boolean -> Void) -> Void
-    // Adds a message to this patients database entry
-    // Calls the callback with the sucess of the querry
-    send_patient_a_message(patientID, therapistID, message, time, callback) {
-        var sql = "INSERT INTO PATIENT_MESSAGE (patientID, therapistID, message, date_sent, is_read) VALUES (?, ?, ?, ?, false)";
-        var inserts = [patientID, therapistID, message, time];
-        sql = mysql.format(sql, inserts);
-        this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
-            connection.query(sql, function (error, results, fields) {
-                if (error) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    connection.release();
-                    callback(true);
-                }
-            });
-        });
     }
 
     // String
