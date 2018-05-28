@@ -25,11 +25,11 @@ describe("DB Tests", function () {
         describe('#add_therapist()', function (done) {
             it("should give true if the addding worked", function (done) {
                 therapistDB.add_therapist("therapist1", "test_password1", function (worked) {
-                    expect(worked).to.be.equal(true);
+                    expect(worked).to.be.a('string');
                     therapistDB.add_therapist("therapist1", "test_password2", function (worked) {
                         expect(worked).to.be.equal(false);
                         therapistDB.add_therapist("therapist2", "test_password3", function (worked) {
-                            expect(worked).to.be.equal(true);
+                            expect(worked).to.be.a('string');
                             done();
                         });
                     });
@@ -122,8 +122,8 @@ describe("DB Tests", function () {
         describe('#get_all_patient_info()', function () {
             it('should return every patient username', function (done) {
                 patientDB.get_all_patient_info(function (result) {
-                    expect(result[0]['username']).to.be.equal("bob");
-                    expect(result).to.be.deep.equal(result, ['bob', 'tim', 'cole', 'mary', 'jessy']);
+                    expect(result[1]['username']).to.be.equal("bob");
+                    expect(result).to.be.deep.equal(result, ['admin', 'bob', 'tim', 'cole', 'mary', 'jessy']);
                     done();
                 });
             });
@@ -198,7 +198,7 @@ describe("DB Tests", function () {
 
         describe("#delete_patient_session()", function () {
             it("should return true if the session is sucessful deleted", function (done) {
-                patientDB.delete_patient_session("cole", '2012-03-04 4:1:02', function (worked) {
+                patientDB.delete_patient_session("cole", 2, function (worked) {
                     expect(worked).to.be.equal(true);
                     done();
                 });
@@ -207,7 +207,7 @@ describe("DB Tests", function () {
 
         describe('#get_patient_session_specific()', function () {
             it("should return the score of the given session time", function (done) {
-                patientDB.get_patient_session_specific("cole", '2012-03-04 4:1:04', function (score) {
+                patientDB.get_patient_session_specific("cole", 4, function (score) {
                     expect(score).to.be.equal(25);
                     done();
                 });
@@ -271,6 +271,7 @@ describe("DB Tests", function () {
                     var expectation = [];
                     expectation.push({
                         therapistID: "therapist1",
+                        patientID: 'tim',
                         message: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 0,
@@ -278,6 +279,7 @@ describe("DB Tests", function () {
                     });
                     expectation.push({
                         therapistID: "therapist2",
+                        patientID: 'tim',
                         message: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
@@ -304,6 +306,7 @@ describe("DB Tests", function () {
                     var expectation = [];
                     expectation.push({
                         therapistID: "therapist1",
+                        patientID: 'tim',
                         message: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
@@ -311,6 +314,7 @@ describe("DB Tests", function () {
                     });
                     expectation.push({
                         therapistID: "therapist2",
+                        patientID: 'tim',
                         message: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
@@ -327,6 +331,7 @@ describe("DB Tests", function () {
                 therapistDB.get_all_messages_from("therapist1", function (messages) {
                     expect(messages).to.be.deep.equal([{
                         patientID: "tim",
+                        therapistID: "therapist1",
                         message: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
@@ -338,21 +343,6 @@ describe("DB Tests", function () {
         })
     });
 
-    describe("TherapistDB Pt 2", function () {
-        describe("#get_all_therapists()", function () {
-            it("should return every therapist and the number of patients they have", function (done) {
-                therapistDB.get_all_therapists(function (all) {
-                    expect(all).to.be.deep.equal([{
-                        username: "therapist1"
-                    }, {
-                        username: "therapist2"
-                    }]);
-                    done();
-                });
-            });
-        });
-    });
-
     describe("JointDB Pt 2", function () {
         describe("#assign_to_therapist()", function () {
             it("should return true if the pair is sucessful", function (done) {
@@ -362,6 +352,23 @@ describe("DB Tests", function () {
                 })
             });
         })
+    });
+
+    describe("TherapistDB Pt 2", function () {
+        describe("#get_all_therapists()", function () {
+            it("should return every therapist and the number of patients they have", function (done) {
+                therapistDB.get_all_therapists(function (all) {
+                    expect(all).to.be.deep.equal([{
+                        num_patients: 0,
+                        username: "therapist1"
+                    }, {
+                        num_patients: 1,
+                        username: "therapist2"
+                    }]);
+                    done();
+                });
+            });
+        });
     });
 
 });
