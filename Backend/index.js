@@ -14,6 +14,20 @@ var authorizer = new AuthenticationDB("WHAM_TEST");
 var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 
+var api = require("./main/api.js")
+var login = require("./main/login/login.js")
+var all_patients = require("./main/patients/all_patients.js")
+var single_patient = require("./main/patients/id/single_patient.js")
+var patient_sessions = require("./main/patients/id/sessions/patient_sessions.js")
+var single_session = require("./main/patients/id/sessions/id/single_session.js")
+var patient_messages = require("./main/patients/id/messages/patient_messages.js")
+var single_message = require("./main/patients/id/messages/id/single_message.js")
+var all_therapists = require("./main/therapists/all_therapists.js")
+var single_therapist = require("./main/therapists/id/single_therapist.js")
+var therapist_patients = require("./main/therapists/id/patients/therapist_patients.js")
+var therapist_patient = require("./main/therapists/id/patients/id/therapist_patient.js")
+var therapist_messages = require("./main/therapists/id/messages/therapist_messages.js")
+
 app.engine('handlebars', exphbs({
     defaultLayout: false,
     helpers: {
@@ -30,606 +44,98 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-app.get('', showAPI);
+app.get('', api.showAPI);
 
 app.use(methodOverride('_method'))
 
-function showAPI(req, res) {
-    if (req.headers['accept'].includes('text/html')) {
-        res.render('api');
-    } else if (req.headers['accept'].includes('application/json')) {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end();
-    } else {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end();
-    }
-}
+app.get('/login', login.show_login);
 
-app.get('/login', show_login);
+app.post('/login', function (req, res) {
+    login.login(req, res, patientDB, therapistDB)
+});
 
-function show_login(req, res) {
-    res.render('login');
-}
+app.get('/patients', function (req, res) {
+    all_patients.getPatients(req, res, patientDB, authorizer)
+})
 
-app.post('/login', login);
+app.post('/patients', function (req, res) {
+    all_patients.addPatient(req, res, patientDB)
+})
 
-function login(req, res) {
-    patientDB.login(req.body.username, req.body.password, function (sucess) {
-        if (sucess) {
-            res.writeHead(200, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
-                token: sucess
-            }));
-        } else {
-            therapistDB.login(req.body.username, req.body.password, function (sucess) {
-                if (sucess) {
-                    res.writeHead(200, {
-                        "Content-Type": "application/json"
-                    });
-                    res.end(JSON.stringify({
-                        token: sucess
-                    }));
-                } else {
-                    res.writeHead(403, {
-                        "Content-Type": "application/json"
-                    });
-                    res.end(JSON.stringify({
-                        error: "Invalid password"
-                    }));
-                }
-            });
-        }
-    });
-}
+app.get('/patients/:patientID', function (req, res) {
+    single_patient.getPatient(req, res, patientDB)
+})
 
-app.get('/patients', getPatients)
+app.delete('/patients/:patientID', function (req, res) {
+    single_patient.deletePatient(req, res, patientDB)
+})
 
-//Gives all patient info in either JSON or HTML form
-function getPatients(req, res) {
-    if (req.query === undefined || req.query.auth_token === undefined) {
-        if (req.headers['accept'].includes('text/html')) {
-            show_login(req, res);
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    } else {
-        authorizer.get_auth_level(req.query.auth_token, "PATIENT", function (auth_level, username) {
-            if (auth_level !== "3") {
-                if (req.headers['accept'].includes('text/html')) {
-                    show_login(req, res);
-                } else {
-                    res.writeHead(403, {
-                        "Content-Type": "application/json"
-                    });
-                    res.end();
-                }
-            } else {
-                patientDB.get_all_patient_info(function (info) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        //Send therapist info as HTML
-                        res.render('patient-overview', {
-                            patients: info
-                        });
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        res.writeHead(200, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end(JSON.stringify(info));
-                    } else {
-                        res.writeHead(403);
-                        res.end();
-                    }
-                });
-            }
-        });
-    }
-}
+app.get('/patients/:patientID/sessions', function (req, res) {
+    patient_sessions.getPatientSessions(req, res, patientDB)
+})
 
-app.post('/patients', addPatient)
+app.post('/patients/:patientID/sessions', function (req, res) {
+    patient_sessions.addPatientSession(req, res, patientDB)
+})
 
-//Adds the patient to the database
-function addPatient(req, res) {
-    // Username, password, DOB, Weight, Height, (?) Information
-    var username = req.body.username
-    if (username.includes(" ")) {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end(JSON.stringify({
-            error: "User already exists"
-        }));
-        return;
-    }
-    var unencrypt_password = req.body.password
-    var dob = req.body.dob
-    var weight = req.body.weight
-    var height = req.body.height
-    var information = req.body.information
-    patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
-        if (worked !== false) {
-            res.writeHead(200, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
-                token: worked
-            }));
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
-                error: "User already exists"
-            }));
-        }
-    });
-}
+app.get('/patients/:patientID/sessions/:sessionID', function (req, res) {
+    single_session.getSession(req, res, patientDB)
+})
 
-app.get('/patients/:patientID', getPatient)
+app.delete('/patients/:patientID/sessions/:sessionID', function (req, res) {
+    single_session.deletePatientSession(req, res, patientDB)
+})
 
-//Returns the info for a single patient
-function getPatient(req, res) {
-    var id = req.params.patientID
-    patientDB.get_patient_info(id, function (info, sessions, messages) {
-        if (req.headers['accept'].includes('text/html')) {
-            res.render('patient-detail', {
-                info: info,
-                sessions: sessions,
-                messages: messages
-            });
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (info === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify({
-                    error: "User does not exist"
-                }));
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify({
-                    info: info,
-                    sessions: sessions,
-                    messages: messages
-                }));
-            }
-            //Send patient info as JSON
-        } else {
-            //An unsupported request
-        }
-    });
-}
+app.post('/patients/:patientID/messages', function (req, res) {
+    patient_messages.addPatientMessage(req, res, patientDB)
+});
 
-app.delete('/patients/:patientID', deletePatient)
+app.get('/patients/:patientID/messages', function (req, res) {
+    patient_messages.getPatientMessages(req, res, patientDB)
+});
 
-//Deletes this patient from the database
-function deletePatient(req, res) {
-    patientDB.delete_patient(req.params.patientID, function (worked) {
-        if (worked === false) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
+app.put('/patients/:patientID/messages/:messageID', function (req, res) {
+    single_message.markMessageAsRead(req, res, patientDB)
+});
 
-app.get('/patients/:patientID/sessions', getPatientSessions)
+app.get('/patients/:patientID/messages/:messageID', function (req, res) {
+    single_message.getMessage(req, res, patientDB)
+});
 
-//Returns the info for a patients activity sessions
-function getPatientSessions(req, res) {
-    patientDB.get_patient_sessions(req.params.patientID, function (sessions) {
-        if (req.headers['accept'].includes('text/html')) {
-            res.render('patient-session-overview', {
-                username: req.params.patientID,
-                sessions: sessions
-            });
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (sessions === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(sessions));
-            }
-        } else {
-            //An unsupported request
-        }
-    });
-}
+app.delete('/patients/:patientID/messages/:messageID', function (req, res) {
+    single_message.deletePatientMessage(req, res, patientDB)
+});
 
-app.post('/patients/:patientID/sessions', addPatientSession)
+app.get('/therapists', function(req, res) {
+    all_therapists.getAllTherapists(req, res, therapistDB)
+})
 
-//Adds the session for the given patient to the database
-function addPatientSession(req, res) {
-    var patientID = req.params.patientID;
-    var score = req.body.score;
-    var time = req.body.time;
-    patientDB.add_patient_session(patientID, score, time, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
+app.post('/therapists', function(req, res) {
+    all_therapists.addTherapist(req, res, therapistDB)
+})
 
-app.get('/patients/:patientID/sessions/:sessionID', getSession)
+app.get('/therapists/:therapistID', function(req, res) {
+    single_therapist.getTherapist(req, res, therapistDB)
+})
 
-//Returns the info for a single patient session
-function getSession(req, res) {
-    var patientID = req.params.patientID;
-    var sessionID = req.params.sessionID;
-    patientDB.get_patient_session_specific(patientID, sessionID, function (sessionInfo) {
-        if (req.headers['accept'].includes('text/html')) {
-            res.send("Getting this session");
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (sessionInfo === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(sessionInfo));
-            }
-        } else {
-            //An unsupported request
-        }
-    })
-}
+app.delete('/therapists/:therapistID', function(req, res) {
+    single_therapist.deleteTherapist(req, res, therapistDB)
+})
 
-app.delete('/patients/:patientID/sessions/:sessionID', deletePatientSession)
+app.get('/therapists/:therapistID/patients', function(req, res) {
+    therapist_patients.getTherapistPatients(req, res, therapistDB)
+})
 
-//Deletes this patient session from the database
-function deletePatientSession(req, res) {
-    var patientID = req.params.patientID;
-    var sessionID = req.params.sessionID;
-    patientDB.delete_patient_session(patientID, sessionID, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
+app.post('/therapists/:therapistID/patients', function(req, res) {
+    therapist_patients.addPatientTherapist(req, res, patientDB)
+});
 
-app.post('/patients/:patientID/messages', addPatientMessage);
+app.delete('/therapists/:therapistID/patients/:patientID', function(req, res) {
+    therapist_patient.removePatientTherapist(req, res, patientDB)
+});
 
-function addPatientMessage(req, res) {
-    var patientID = req.params.patientID;
-    var therapistID = req.body.therapistID;
-    var message_content = req.body.message_content;
-    var date_sent = req.body.date_sent;
-    patientDB.send_patient_a_message(patientID, therapistID, message_content, date_sent, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
-
-app.get('/patients/:patientID/messages', getPatientMessages);
-
-function getPatientMessages(req, res) {
-    var patientID = req.params.patientID;
-    patientDB.get_all_messages_for(patientID, function(messages) {
-        if (req.headers['accept'].includes('text/html')) {
-            res.send("Getting these messages");
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (messages === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(messages));
-            }
-        } else {
-            //An unsupported request
-        }
-    });
-}
-
-app.put('/patients/:patientID/messages/:messageID', markMessageAsRead);
-
-function markMessageAsRead(req, res) {
-    var patientID = req.params.patientID;
-    var messageID = req.params.messageID;
-    patientDB.mark_message_as_read(patientID, messageID, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
-
-app.get('/patients/:patientID/messages/:messageID', getMessage);
-
-function getMessage(req, res) {
-    var patientID = req.params.patientID;
-    var messageID = req.params.messageID;
-    patientDB.get_specific_message(patientID, messageID, function(message_content) {
-        if (req.headers['accept'].includes('text/html')) {
-            res.send("Getting this message");
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (message_content === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(message_content));
-            }
-        } else {
-            //An unsupported request
-        }
-    });
-}
-
-app.delete('/patients/:patientID/messages/:messageID', deletePatientMessage);
-
-function deletePatientMessage(req, res) {
-    var patientID = req.params.patientID;
-    var messageID = req.params.messageID;
-    patientDB.delete_message(patientID, messageID, function(worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    })
-}
-
-app.get('/therapists', getAllTherapists)
-
-//Gives all therapist info in either JSON or HTML form
-function getAllTherapists(req, res) {
-    therapistDB.get_all_therapists(function (therapists) {
-        if (req.headers['accept'].includes('text/html')) {
-            res.render('therapist-overview', {
-                therapists: therapists
-            });
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (therapists == false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(therapists));
-            }
-        } else {
-            //An unsupported request
-        }
-    });
-}
-
-app.post('/therapists', addTherapist)
-
-//Adds the therapist to the database
-function addTherapist(req, res) {
-    // Username, password, DOB, Weight, Height, (?) Information
-    var username = req.body.username
-    var unencrypt_password = req.body.password
-    therapistDB.add_therapist(username, unencrypt_password, function (worked) {
-        if (worked !== false) {
-            res.writeHead(200, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
-                token: worked
-            }));
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
-                error: "User already exists"
-            }));
-        }
-    });
-}
-
-app.get('/therapists/:therapistID', getTherapist)
-
-//Returns the info for a single therapist
-function getTherapist(req, res) {
-    therapistDB.get_specific_therapist(req.params.therapistID, function (info) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist info as HTML
-            res.render('therapist-detail', {
-                patients: info,
-                therapistID: req.params.therapistID
-            });
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (info === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(info));
-            }
-        } else {
-            //An unsupported request
-        }
-    });
-}
-
-app.delete('/therapists/:therapistID', deleteTherpist)
-
-//Deletes this therapist from the database
-function deleteTherpist(req, res) {
-    var therapistID = req.params.therapistID;
-    therapistDB.delete_therapist(therapistID, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    })
-}
-
-app.get('/therapists/:therapistID/patients', getTherapistPatients)
-
-//Returns the info for all patients of this therapist
-function getTherapistPatients(req, res) {
-    var therapistID = req.params.therapistID;
-    therapistDB.get_all_patients(therapistID, function (info) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist-patient info as HTML
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (info === false) {
-                res.writeHead(403);
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(info));
-            }
-        } else {
-            //An unsupported request
-        }
-    })
-}
-
-app.post('/therapists/:therapistID/patients', addPatientTherapist);
-
-function addPatientTherapist(req, res) {
-    var therapistID = req.params.therapistID;
-    var patientID = req.body.patientID;
-    patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
-
-app.delete('/therapists/:therapistID/patients/:patientID', removePatientTherapist);
-
-function removePatientTherapist(req, res) {
-    var therapistID = req.params.therapistID;
-    var patientID = req.params.patientID;
-    patientDB.unassign_to_therapist(patientID, therapistID, new Date(), function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
-    });
-}
-
-app.get('/therapists/:therapistID/messages', getMessagesFromTherapist);
-
-function getMessagesFromTherapist(req, res) {
-    var therapistID = req.params.therapistID;
-    therapistDB.get_all_messages_from(therapistID, function (messages) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist-patient info as HTML
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (messages === false) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(messages));
-            }
-        } else {
-            //An unsupported request
-        }
-    })
-}
+app.get('/therapists/:therapistID/messages', function(req, res) {
+    therapist_messages.getMessagesFromTherapist(req, res, therapistDB)
+});
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'))

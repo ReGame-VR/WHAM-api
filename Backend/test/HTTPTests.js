@@ -1091,6 +1091,4 @@ describe("HTTPTests", function () {
                 })
         });
     });
-
-
 });
