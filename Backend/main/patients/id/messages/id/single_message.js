@@ -1,3 +1,5 @@
+// Marks the given message as read
+// Request Response PatientDB -> Void
 exports.markMessageAsRead = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var messageID = req.params.messageID;
@@ -16,6 +18,8 @@ exports.markMessageAsRead = function(req, res, patientDB) {
     });
 }
 
+// Returns info about the given message
+// Request Response PatientDB -> Void
 exports.getMessage = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var messageID = req.params.messageID;
@@ -40,6 +44,8 @@ exports.getMessage = function(req, res, patientDB) {
     });
 }
 
+// Totally deletes the given message
+// Request Response PatientDB -> Void
 exports.deletePatientMessage = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var messageID = req.params.messageID;

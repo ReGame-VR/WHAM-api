@@ -1,4 +1,5 @@
 //Returns the info for a single patient
+// Request Response PatientDB -> Void
 exports.getPatient = function(req, res, patientDB) {
     var id = req.params.patientID
     patientDB.get_patient_info(id, function (info, sessions, messages) {
@@ -34,6 +35,7 @@ exports.getPatient = function(req, res, patientDB) {
 }
 
 //Deletes this patient from the database
+// Request Response PatientDB -> Void
 exports.deletePatient = function(req, res, patientDB) {
     patientDB.delete_patient(req.params.patientID, function (worked) {
         if (worked === false) {

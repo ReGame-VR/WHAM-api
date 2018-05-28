@@ -1,3 +1,5 @@
+// Marks this therapist-patient pair as expired
+// Request Response PatientDb -> Void
 exports.removePatientTherapist = function(req, res, patientDB) {
     var therapistID = req.params.therapistID;
     var patientID = req.params.patientID;

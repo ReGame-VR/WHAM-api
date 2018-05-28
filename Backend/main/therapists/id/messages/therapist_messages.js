@@ -1,3 +1,5 @@
+// Returns every message this therapist has sent
+// Request Response TherapistDB -> Void
 exports.getMessagesFromTherapist = function(req, res, therapistDB) {
     var therapistID = req.params.therapistID;
     therapistDB.get_all_messages_from(therapistID, function (messages) {

@@ -516,6 +516,7 @@ class PatientDB {
 
     // String String Date (Boolean -> Void) -> Void
     // Unpairs this therapist and patinet in the PATIENT_THERAPIST DB
+    // DOES NOT delete this pair, simply marks its date_removed as the given date
     unassign_to_therapist(patientID, therapistID, date_removed, callback) {
         var sql = "UPDATE PATIENT_THERAPIST SET date_removed = ? WHERE patientID = ? AND therapistID = ?";
         var inserts = [date_removed, patientID, therapistID];

@@ -1,3 +1,6 @@
+// Request Response PatientDB TherapistDB -> Void
+// Tests the login given by the patient or therapist
+// Will send the auth token for this user when done
 exports.login =  function(req, res, patientDB, therapistDB) {
     patientDB.login(req.body.username, req.body.password, function (sucess) {
         if (sucess) {
@@ -29,6 +32,8 @@ exports.login =  function(req, res, patientDB, therapistDB) {
     });
 }
 
+// Renders the login page for a user
+// Request Response -> Void
 exports.show_login =  function(req, res) {
     res.render('login');
 }

@@ -4,7 +4,6 @@ var fs = require('fs');
 
 class DBReseter {
 
-
     constructor(dbName) {
         this.connection = mysql.createConnection({
             host: process.env.DB_HOST,

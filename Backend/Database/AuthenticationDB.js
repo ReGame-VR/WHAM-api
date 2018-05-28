@@ -28,6 +28,7 @@ class AuthenticationDB {
     }
 
     // String String String (Maybe-String -> Void) -> Void
+    // Tests whether the given login info is valid for the given table
     general_login(table_name, username, unencrypt_password, callback) {
         var get_salt_sql = "SELECT salt FROM " + table_name + " T WHERE T.username = ?";
         var get_salt_insert = [username];

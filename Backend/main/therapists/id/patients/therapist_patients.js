@@ -1,4 +1,5 @@
 //Returns the info for all patients of this therapist
+// Request Response TherapistDB -> Void
 exports.getTherapistPatients = function(req, res, therapistDB) {
     var therapistID = req.params.therapistID;
     therapistDB.get_all_patients(therapistID, function (info) {
@@ -20,6 +21,8 @@ exports.getTherapistPatients = function(req, res, therapistDB) {
     })
 }
 
+// Adds the given patient to this patient-therapist pair
+// Request Response PatientDB -> Void
 exports.addPatientTherapist = function(req, res, patientDB) {
     var therapistID = req.params.therapistID;
     var patientID = req.body.patientID;

@@ -1,4 +1,5 @@
 //Shows the API as HTML form
+// Request Response -> Void
 exports.showAPI = function(req, res) {
     if (req.headers['accept'].includes('text/html')) {
         res.render('api');

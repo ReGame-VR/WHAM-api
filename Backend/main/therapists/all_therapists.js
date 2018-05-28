@@ -1,4 +1,5 @@
 //Gives all therapist info in either JSON or HTML form
+// Request Response TherapistDB -> Void
 exports.getAllTherapists = function(req, res, therapistDB) {
     therapistDB.get_all_therapists(function (therapists) {
         if (req.headers['accept'].includes('text/html')) {
@@ -24,6 +25,7 @@ exports.getAllTherapists = function(req, res, therapistDB) {
 }
 
 //Adds the therapist to the database
+// Request Response TherapistDB -> Void
 exports.addTherapist = function(req, res, therapistDB) {
     // Username, password, DOB, Weight, Height, (?) Information
     var username = req.body.username

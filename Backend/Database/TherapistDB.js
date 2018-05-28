@@ -195,6 +195,7 @@ class TherapistDB {
     }
 
     // String (Listof Patient-Session -> Void) -> Void
+    // Return every patient this therapist has
     get_all_patients(therapistID, callback) {
         var sql =
             `SELECT username, dob, weight, height, information, 

@@ -1,3 +1,5 @@
+// Sends the given message to the patient
+// Request Response PatientDB -> Void
 exports.addPatientMessage = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var therapistID = req.body.therapistID;
@@ -18,7 +20,8 @@ exports.addPatientMessage = function(req, res, patientDB) {
     });
 }
 
-
+// Returns all message this patient has recieved
+// Request Response PatientDB -> Void
 exports.getPatientMessages = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     patientDB.get_all_messages_for(patientID, function(messages) {

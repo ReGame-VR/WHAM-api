@@ -1,4 +1,5 @@
 //Returns the info for a patients activity sessions
+// Request Response PatientDB -> Void
 exports.getPatientSessions = function(req, res, patientDB) {
     patientDB.get_patient_sessions(req.params.patientID, function (sessions) {
         if (req.headers['accept'].includes('text/html')) {
@@ -25,6 +26,7 @@ exports.getPatientSessions = function(req, res, patientDB) {
 }
 
 //Adds the session for the given patient to the database
+// Request Response PatientDB -> Void
 exports.addPatientSession = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var score = req.body.score;

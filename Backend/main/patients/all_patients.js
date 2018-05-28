@@ -1,4 +1,5 @@
-//Gives all patient info in either JSON or HTML form
+// Gives all patient info in either JSON or HTML form
+// Request Response PatientDB AuthorizationDB -> Void
 exports.getPatients = function(req, res, patientDB, authorizer) {
     if (req.query === undefined || req.query.auth_token === undefined) {
         if (req.headers['accept'].includes('text/html')) {
@@ -42,7 +43,8 @@ exports.getPatients = function(req, res, patientDB, authorizer) {
     }
 }
 
-//Adds the patient to the database
+// Adds the patient to the database
+// Request Response PatientDB -> Void
 exports.addPatient = function(req, res, patientDB) {
     var username = req.body.username
     if (username.includes(" ")) {

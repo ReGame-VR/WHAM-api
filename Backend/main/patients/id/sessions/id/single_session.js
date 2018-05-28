@@ -1,4 +1,5 @@
 //Returns the info for a single patient session
+// Request Response PatientDB -> Void
 exports.getSession = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var sessionID = req.params.sessionID;
@@ -24,6 +25,7 @@ exports.getSession = function(req, res, patientDB) {
 }
 
 //Deletes this patient session from the database
+// Request Response PatientDB -> Void
 exports.deletePatientSession = function(req, res, patientDB) {
     var patientID = req.params.patientID;
     var sessionID = req.params.sessionID;

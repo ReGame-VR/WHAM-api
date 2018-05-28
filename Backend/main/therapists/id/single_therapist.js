@@ -1,4 +1,5 @@
 //Returns the info for a single therapist
+// Request Response TherapistDB -> Void
 exports.getTherapist = function(req, res, therapistDB) {
     therapistDB.get_specific_therapist(req.params.therapistID, function (info) {
         if (req.headers['accept'].includes('text/html')) {
@@ -26,6 +27,7 @@ exports.getTherapist = function(req, res, therapistDB) {
 }
 
 //Deletes this therapist from the database
+// Request Response TherapistDB -> Void
 exports.deleteTherapist = function(req, res, therapistDB) {
     var therapistID = req.params.therapistID;
     therapistDB.delete_therapist(therapistID, function (worked) {
