@@ -164,13 +164,13 @@ app.get('/therapists/:therapistID/patients', function(req, res) {
 
 // Pairs the given patient with this therapist
 app.post('/therapists/:therapistID/patients', function(req, res) {
-    therapist_patients.addPatientTherapist(req, res, patientDB)
+    therapist_patients.addPatientTherapist(req, res, patientDB, authorizer)
 });
 
 // Unpairs this therapist from this patient
 // DOES NOT delete the pair, simply marks its "date_removed" as today
 app.delete('/therapists/:therapistID/patients/:patientID', function(req, res) {
-    therapist_patient.removePatientTherapist(req, res, patientDB)
+    therapist_patient.removePatientTherapist(req, res, patientDB, authorizer)
 });
 
 // Returns every message this therapist has sent

@@ -2,14 +2,10 @@
 // Request Response PatientDB AuthorizationDB -> Void
 exports.getPatients = function(req, res, patientDB, authorizer) {
     if (req.query === undefined || req.query.auth_token === undefined) {
-        if (req.headers['accept'].includes('text/html')) {
-            show_login(req, res);
-        } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        }
+        res.writeHead(403, {
+            "Content-Type": "application/json"
+        });
+        res.end();
     } else {
         authorizer.get_auth_level(req.query.auth_token, "PATIENT", function (auth_level, username) {
             if (auth_level !== "3") {

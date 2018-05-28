@@ -983,7 +983,7 @@ describe("HTTPTests", function () {
     describe("Get all therapist patients after a de-pair", function () {
         it("should return info about every patient this therpist has and their info", function (done) {
             chai.request(app)
-                .get('/therapists/therapistt/patients')
+                .get('/therapists/therapist2/patients')
                 .accept("application/json")
                 .query({
                     auth_token: admin_auth_token
