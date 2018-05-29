@@ -47,9 +47,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 
 // Gives express the ability to parse query parameters
-app.use(bodyParser.urlencoded({
-    extended: true,
-}));
+app.use(bodyParser.urlencoded({extended: true}));
 
 // If the user goes to /api it will render the API HTML
 app.get('/api', api.showAPI);
