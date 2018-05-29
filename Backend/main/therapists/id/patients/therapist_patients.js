@@ -24,19 +24,37 @@ exports.getTherapistPatients = function (req, res, therapistDB) {
 // Adds the given patient to this patient-therapist pair
 // Request Response PatientDB -> Void
 exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
-    var therapistID = req.params.therapistID;
-    var patientID = req.body.patientID;
-    patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
             res.writeHead(403, {
                 "Content-Type": "application/json"
             });
             res.end();
+            return;
         }
+        var therapistID = req.params.therapistID;
+        var patientID = req.params.patientID;
+        authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
+            if (can_view) {
+                patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
+                    if (worked) {
+                        res.writeHead(204, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    } else {
+                        res.writeHead(403, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    }
+                });
+            } else {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            }
+        })
     });
 }

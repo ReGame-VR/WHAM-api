@@ -65,7 +65,8 @@ class AuthenticationDB {
                             var token = jwt.sign({
                                 data: {
                                     username: username,
-                                    password_hash: password
+                                    password_hash: password,
+                                    type: table_name
                                 }
                             }, process.env.JWT_SECRET, {
                                 expiresIn: '10d'
@@ -143,13 +144,52 @@ class AuthenticationDB {
                     callback(result[0].patientID !== null || result[0].auth_level == 3);
                 }
             });
-        })
+        });
     }
     
     // Any Any Any -> Void
     // Adds these permissions to acl
     allow(user, stuff, able) {
         this.acl.allow(user, stuff, able);
+    }
+
+    // Any Any Any -> Void
+    // removed these permissions from acl
+    removeAllow(user, stuff, able) {
+        this.acl.removeAllow(user, stuff, able);
+    }
+
+    // Any Any Any Callback -> Void
+    // Passes to acl
+    isAllowed(user, stuff, able, callback) {
+        this.acl.isAllowed(user, stuff, able, callback);
+    }
+
+    // Any Any -> Void
+    // Adds this role
+    addUserRoles(name, role) {
+        this.acl.addUserRoles(name, role);
+    }
+
+    // String (Maybe-String -> Void)
+    // Verifies this jwt and checks if the hash matches the patient id
+    // Gives the username if valid
+    verifyJWT(token, callback) {
+        var decoded = jwt.verify(token, process.env.JWT_SECRET);
+        var sql = "SELECT * FROM " + decoded.data.type + " WHERE username = ? AND password = ?";
+        sql = mysql.format(sql, [decoded.data.username, decoded.data.password_hash]);
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                (callback(false))
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error || result.length == 0) {
+                    callback(false);
+                } else {
+                    callback(decoded.data.username);
+                }
+            });
+        })
     }
 
 }

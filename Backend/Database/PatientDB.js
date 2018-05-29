@@ -203,11 +203,13 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
+                    authorizer.addUserRoles(username, username)
                     authorizer.allow(username, username, '*') // this user can do anything to themselves they want
                     var token = jwt.sign({
                         data: {
                             username: username,
-                            password_hash: password
+                            password_hash: password,
+                            type: "PATIENT"
                         }
                     }, process.env.JWT_SECRET, {
                         expiresIn: '10d'
@@ -534,6 +536,7 @@ class PatientDB {
         var sql = "UPDATE PATIENT_THERAPIST SET date_removed = ? WHERE patientID = ? AND therapistID = ?";
         var inserts = [date_removed, patientID, therapistID];
         sql = mysql.format(sql, inserts);
+        var authorizer = this.authorizer
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
@@ -544,6 +547,7 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
+                    authorizer.removeAllow(therapistID, patientID, "*");
                     connection.release();
                     callback(true);
                 }

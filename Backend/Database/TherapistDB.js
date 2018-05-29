@@ -42,11 +42,13 @@ class TherapistDB {
                     connection.release();
                     callback(false);
                 } else {
+                    authorizer.addUserRoles(username, username)
                     authorizer.allow(username, username, '*') // this user can do anything to themselves they want
                     var token = jwt.sign({
                         data: {
                             username: username,
-                            password_hash: password
+                            password_hash: password,
+                            type: "THERAPIST"
                         }
                     }, process.env.JWT_SECRET, {
                         expiresIn: '10d'
