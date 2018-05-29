@@ -2,7 +2,7 @@ const chai = require("chai");
 var expect = chai.expect;
 var chaiHttp = require('chai-http');
 chai.use(chaiHttp);
-var app = 'localhost:3000';
+const app = require('../index');
 const DBReseter = require('../Database/ResetDB.js');
 var resetDB = new DBReseter("WHAM_TEST");
 
@@ -336,7 +336,7 @@ describe("PermTests", function () {
                     done();
                 });
         });
-        
+
         it("should allow the admin to get their info", function (done) {
             chai.request(app)
                 .get('/therapists/therapist2/patients')
