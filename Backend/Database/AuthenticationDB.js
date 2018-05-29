@@ -2,6 +2,8 @@ const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
+var jwt = require('jsonwebtoken');
+
 class AuthenticationDB {
 
     constructor(db_object) {
@@ -34,7 +36,9 @@ class AuthenticationDB {
         var get_salt_insert = [username];
         get_salt_sql = mysql.format(get_salt_sql, get_salt_insert);
         this.pool.getConnection(function (err, connection) {
-            if(err) { callback(false); }
+            if (err) {
+                callback(false);
+            }
             connection.query(get_salt_sql, function (error, results, fields) {
                 if (error || results.length == 0) {
                     callback(false);
@@ -49,11 +53,22 @@ class AuthenticationDB {
                         if (error) {
                             callback(error, false);
                             connection.release();
-                        } else if(results.length == 0) {
+                        } else if (results.length == 0) {
                             callback(null, false)
                             connection.release();
                         } else {
-                            callback(null, {token: salt});
+                            var token = jwt.sign({
+                                data: {
+                                    username: username,
+                                    password_hash: password
+                                }
+                            }, process.env.JWT_SECRET, {
+                                expiresIn: '10d'
+                            });
+
+                            callback(null, {
+                                token: token
+                            });
                             connection.release();
                         }
                     });
@@ -74,11 +89,13 @@ class AuthenticationDB {
     get_auth_level_help(salt = 0, table_name, callback, pool) {
         var sql = "SELECT auth_level, username FROM " + table_name + " WHERE salt = ?";
         sql = mysql.format(sql, [salt]);
-        pool.getConnection(function(err, connection) {
-            if(err){ (callback(false, false))}
-            connection.query(sql, function(error, result, fields) {
-                if(error || result.length == 0) { 
-                    callback(false, false); 
+        pool.getConnection(function (err, connection) {
+            if (err) {
+                (callback(false, false))
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error || result.length == 0) {
+                    callback(false, false);
                 } else {
                     callback(result[0].auth_level, result[0].username);
                 }
@@ -92,11 +109,11 @@ class AuthenticationDB {
     can_view_patient_and_edit_join_and_messages(auth_level, patientID, callback) {
         var get_auth_level_help = this.get_auth_level_help;
         var pool = this.pool;
-        this.therapist_can_view_patient(auth_level, patientID, function(can_do) {
-            if(can_do) {
+        this.therapist_can_view_patient(auth_level, patientID, function (can_do) {
+            if (can_do) {
                 callback(true);
             } else {
-                get_auth_level_help(auth_level, "PATIENT", function(auth_level, username) {
+                get_auth_level_help(auth_level, "PATIENT", function (auth_level, username) {
                     callback(username === patientID || auth_level === 3);
                 }, pool);
             }
@@ -110,11 +127,13 @@ class AuthenticationDB {
                     (SELECT therapistID, patientID FROM PATIENT_THERAPIST PT WHERE PT.patientID = ?) PT
                     ON T.username = PT.therapistID WHERE T.salt = ?`;
         sql = mysql.format(sql, [patientID, therapist_auth_token])
-        this.pool.getConnection(function(err, connection) {
-            if(err){ (callback(false))}
-            connection.query(sql, function(error, result, fields) {
-                if(error || result.length == 0) { 
-                    callback(false); 
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                (callback(false))
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error || result.length == 0) {
+                    callback(false);
                 } else {
                     callback(result[0].patientID !== null || result[0].auth_level == 3);
                 }

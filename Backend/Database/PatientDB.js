@@ -2,6 +2,7 @@ require('dotenv').config();
 const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+var jwt = require('jsonwebtoken');
 
 class PatientDB {
 
@@ -201,8 +202,16 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
+                    var token = jwt.sign({
+                        data: {
+                            username: username,
+                            password_hash: password
+                        }
+                    }, process.env.JWT_SECRET, {
+                        expiresIn: '10d'
+                    });
                     connection.release();
-                    callback(salt);
+                    callback(token);
                 }
             });
         });
