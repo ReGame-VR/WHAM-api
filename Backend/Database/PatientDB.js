@@ -202,6 +202,7 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
+                    acl.allow(username, username, '*') // this user can do anything to themselves they want
                     var token = jwt.sign({
                         data: {
                             username: username,
@@ -516,6 +517,7 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
+                    acl.allow(therapistID, patientID, '*') // this user can do anything to this patient they want
                     connection.release();
                     callback(true);
                 }

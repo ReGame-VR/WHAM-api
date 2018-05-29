@@ -4,6 +4,10 @@ const saltRounds = 10;
 
 var jwt = require('jsonwebtoken');
 
+var acl = require('acl');
+acl = new acl(new acl.memoryBackend());
+acl.allow('admin', '*', '*') // the admin can do anything
+
 class AuthenticationDB {
 
     constructor(db_object) {

@@ -41,6 +41,7 @@ class TherapistDB {
                     connection.release();
                     callback(false);
                 } else {
+                    acl.allow(username, username, '*') // this user can do anything to themselves they want
                     var token = jwt.sign({
                         data: {
                             username: username,
