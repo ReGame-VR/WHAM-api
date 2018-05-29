@@ -4,9 +4,7 @@ const saltRounds = 10;
 
 var jwt = require('jsonwebtoken');
 
-var acl = require('acl');
-acl = new acl(new acl.memoryBackend());
-acl.allow('admin', '*', '*') // the admin can do anything
+var ACL = require('acl');
 
 class AuthenticationDB {
 
@@ -17,6 +15,9 @@ class AuthenticationDB {
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
+
+        this.acl = new ACL(new ACL.memoryBackend());
+        this.acl.allow('admin', '*', '*') // the admin can do anything
     }
 
     // String String (Maybe-Error Maybe-User -> Void) -> Void
@@ -143,7 +144,12 @@ class AuthenticationDB {
                 }
             });
         })
-
+    }
+    
+    // Any Any Any -> Void
+    // Adds these permissions to acl
+    allow(user, stuff, able) {
+        this.acl.allow(user, stuff, able);
     }
 
 }

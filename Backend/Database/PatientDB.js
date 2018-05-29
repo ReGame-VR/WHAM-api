@@ -192,6 +192,7 @@ class PatientDB {
 
         var inserts = [username, password, salt, dob, weight, height, information];
         sql = mysql.format(sql, inserts);
+        var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
@@ -202,7 +203,7 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
-                    acl.allow(username, username, '*') // this user can do anything to themselves they want
+                    authorizer.allow(username, username, '*') // this user can do anything to themselves they want
                     var token = jwt.sign({
                         data: {
                             username: username,
@@ -507,6 +508,7 @@ class PatientDB {
         var sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null)";
         var inserts = [patientID, therapistID, date_added];
         sql = mysql.format(sql, inserts);
+        var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
@@ -517,7 +519,7 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
-                    acl.allow(therapistID, patientID, '*') // this user can do anything to this patient they want
+                    authorizer.allow(therapistID, patientID, '*') // this user can do anything to this patient they want
                     connection.release();
                     callback(true);
                 }

@@ -31,6 +31,7 @@ class TherapistDB {
 
         var inserts = [username, password, salt];
         sql = mysql.format(sql, inserts);
+        var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
@@ -41,7 +42,7 @@ class TherapistDB {
                     connection.release();
                     callback(false);
                 } else {
-                    acl.allow(username, username, '*') // this user can do anything to themselves they want
+                    authorizer.allow(username, username, '*') // this user can do anything to themselves they want
                     var token = jwt.sign({
                         data: {
                             username: username,
