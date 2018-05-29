@@ -369,7 +369,7 @@ class PatientDB {
         });
     }
 
-    // String String (Maybe-String -> Void) -> Void
+    // String String (Maybe-Error Maybe-User -> Void) -> Void
     // Calls the callback with true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password, callback) {

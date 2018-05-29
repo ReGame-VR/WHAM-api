@@ -13,21 +13,21 @@ class AuthenticationDB {
         });
     }
 
-    // String String (Maybe-String -> Void) -> Void
+    // String String (Maybe-Error Maybe-User -> Void) -> Void
     // Logs this patient in
     // If sucess, gives the salt
     patient_login(username, unencrypt_password, callback) {
         this.general_login("PATIENT", username, unencrypt_password, callback);
     }
 
-    // String String (Maybe-String -> Void) -> Void
+    // String String (Maybe-Error Maybe-User -> Void) -> Void
     // Logs this therapist in
     // If sucess, gives the salt
     therapist_login(username, unencrypt_password, callback) {
         this.general_login("THERAPIST", username, unencrypt_password, callback);
     }
 
-    // String String String (Maybe-String -> Void) -> Void
+    // String String String (Error Maybe-User -> Void) -> Void
     // Tests whether the given login info is valid for the given table
     general_login(table_name, username, unencrypt_password, callback) {
         var get_salt_sql = "SELECT salt FROM " + table_name + " T WHERE T.username = ?";
@@ -46,11 +46,14 @@ class AuthenticationDB {
                     var login_insert = [username, password];
                     login_sql = mysql.format(login_sql, login_insert);
                     connection.query(login_sql, function (error, results, fields) {
-                        if (error || results.length == 0) {
-                            callback(false);
+                        if (error) {
+                            callback(error, false);
+                            connection.release();
+                        } else if(results.length == 0) {
+                            callback(null, false)
                             connection.release();
                         } else {
-                            callback(salt);
+                            callback(null, {token: salt});
                             connection.release();
                         }
                     });

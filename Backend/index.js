@@ -7,6 +7,8 @@ const PatientDB = require('./Database/PatientDB.js');
 const TherapistDB = require('./Database/TherapistDB.js');
 const AuthenticationDB = require('./Database/AuthenticationDB.js');
 const methodOverride = require('method-override');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 
 // The database used to authenticate transactions
 const authorizer = new AuthenticationDB('WHAM_TEST');
@@ -46,11 +48,58 @@ app.set('view engine', 'handlebars');
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Sets up the passport authenticators
+// use two LocalStrategies, registered under patient and therapist
+passport.use('patient', new LocalStrategy(
+    function (username, password, cb) {
+        patientDB.login(username, password, function (error, user) {
+            if (error) {
+                return cb(error, false);
+            }
+            if (!user) {
+                return cb(null, false);
+            }
+            return cb(null, user);
+        });
+    }
+));
+
+passport.use('therapist', new LocalStrategy(
+    function (username, password, cb) {
+        therapistDB.login(username, password, function (error, user) {
+            if (error) {
+                return cb(error, false);
+            }
+            if (!user) {
+                return cb(null, false);
+            }
+            return cb(null, user);
+        });
+    }
+));
+
+passport.serializeUser(function (user, cb) {
+    cb(null, user.token);
+});
+
+passport.deserializeUser(function (id, cb) {
+    cb(null, {
+        token: id
+    });
+});
+
+// Initialize Passport and restore authentication state, if any, from the
+// session.
+app.use(passport.initialize());
+
+
 // Gives express the ability to parse JSON
 app.use(bodyParser.json());
 
 // Gives express the ability to parse query parameters
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 
 // If the user goes to /api it will render the API HTML
 app.get('/api', api.showAPI);
@@ -68,127 +117,147 @@ app.get('/login', login.show_login);
 
 // Logs this patient
 // Will give back the users authenticaiton token
-app.post('/login/patient', function(req, res) {
-    patient_login.patient_login(req, res, patientDB);
-});
+app.post('/login/patient',
+    passport.authenticate('patient', {
+        failureRedirect: '/login'
+    }),
+    function (req, res) {
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+        });
+        res.end(JSON.stringify({
+            token: req.user.token,
+        }));
+    }
+);
 
 // Renders the patient login screen as HTML
 app.get('/login/patient', patient_login.show_login);
 
 // Logs this therapist
 // Will give back the users authenticaiton token
-app.post('/login/therapist', function(req, res) {
-    therapist_login.therapist_login(req, res, therapistDB);
-});
+app.post('/login/therapist',
+    passport.authenticate('therapist', {
+        failureRedirect: '/login'
+    }),
+    function (req, res) {
+        res.writeHead(200, {
+            'Content-Type': 'application/json',
+        });
+        res.end(JSON.stringify({
+            token: req.user.token,
+        }));
+    }
+);
 
 // Renders the therapist login screen as HTML
 app.get('/login/therapist', therapist_login.show_login);
 
 // Returns info about every patient
-app.get('/patients', function(req, res) {
+app.get('/patients', function (req, res) {
     all_patients.getPatients(req, res, patientDB, authorizer);
 });
 
 // Adds a patient to the DB (create an account)
 // Will give back the users authenticaiton token
-app.post('/patients', function(req, res) {
+app.post('/patients', function (req, res) {
     all_patients.addPatient(req, res, patientDB);
 });
 
 // Returns info about this patient
-app.get('/patients/:patientID', function(req, res) {
+app.get('/patients/:patientID', function (req, res) {
     single_patient.getPatient(req, res, patientDB);
 });
 
 // Deletes this patient and all associated information
-app.delete('/patients/:patientID', function(req, res) {
+app.delete('/patients/:patientID', function (req, res) {
     single_patient.deletePatient(req, res, patientDB);
 });
 
 // Returns info about every session this patient has logged
-app.get('/patients/:patientID/sessions', function(req, res) {
+app.get('/patients/:patientID/sessions', function (req, res) {
     patient_sessions.getPatientSessions(req, res, patientDB);
 });
 
 // Adds a session to this patients log
-app.post('/patients/:patientID/sessions', function(req, res) {
+app.post('/patients/:patientID/sessions', function (req, res) {
     patient_sessions.addPatientSession(req, res, patientDB);
 });
 
 // Returns informaiton about this specific session
-app.get('/patients/:patientID/sessions/:sessionID', function(req, res) {
+app.get('/patients/:patientID/sessions/:sessionID', function (req, res) {
     single_session.getSession(req, res, patientDB);
 });
 
 // Deletes this specific session
-app.delete('/patients/:patientID/sessions/:sessionID', function(req, res) {
+app.delete('/patients/:patientID/sessions/:sessionID', function (req, res) {
     single_session.deletePatientSession(req, res, patientDB);
 });
 
 // Sends a message to this patient
-app.post('/patients/:patientID/messages', function(req, res) {
+app.post('/patients/:patientID/messages', function (req, res) {
     patient_messages.addPatientMessage(req, res, patientDB);
 });
 
 // Returns every message this patient has recieved
-app.get('/patients/:patientID/messages', function(req, res) {
+app.get('/patients/:patientID/messages', function (req, res) {
     patient_messages.getPatientMessages(req, res, patientDB);
 });
 
 // Marks this message as read
-app.put('/patients/:patientID/messages/:messageID', function(req, res) {
+app.put('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.markMessageAsRead(req, res, patientDB);
 });
 
 // Return info about this message in specific
-app.get('/patients/:patientID/messages/:messageID', function(req, res) {
+app.get('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.getMessage(req, res, patientDB);
 });
 
 // Deletes this message from the DB
-app.delete('/patients/:patientID/messages/:messageID', function(req, res) {
+app.delete('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.deletePatientMessage(req, res, patientDB);
 });
 
 // Returns info about every therapist
-app.get('/therapists', function(req, res) {
+app.get('/therapists', function (req, res) {
     all_therapists.getAllTherapists(req, res, therapistDB);
 });
 
 // Adds a therapist to the DB
 // Will give back the users authenticaiton token
-app.post('/therapists', function(req, res) {
+app.post('/therapists', function (req, res) {
     all_therapists.addTherapist(req, res, therapistDB);
 });
 
 // Returns info about this therapist in particuliar
-app.get('/therapists/:therapistID', function(req, res) {
+app.get('/therapists/:therapistID', function (req, res) {
     single_therapist.getTherapist(req, res, therapistDB);
 });
 
 // Removed this therapist and all assicated information from the server
-app.delete('/therapists/:therapistID', function(req, res) {
+app.delete('/therapists/:therapistID', function (req, res) {
     single_therapist.deleteTherapist(req, res, therapistDB);
 });
 
 // Returns info about this therapists patients
-app.get('/therapists/:therapistID/patients', function(req, res) {
+app.get('/therapists/:therapistID/patients', function (req, res) {
     therapist_patients.getTherapistPatients(req, res, therapistDB);
 });
 
 // Pairs the given patient with this therapist
-app.post('/therapists/:therapistID/patients', function(req, res) {
+app.post('/therapists/:therapistID/patients', function (req, res) {
     therapist_patients.addPatientTherapist(req, res, patientDB, authorizer);
 });
 
 // Unpairs this therapist from this patient
 // DOES NOT delete the pair, simply marks its "date_removed" as today
-app.delete('/therapists/:therapistID/patients/:patientID', function(req, res) {
+app.delete('/therapists/:therapistID/patients/:patientID', function (req, res) {
     therapist_patient.removePatientTherapist(req, res, patientDB, authorizer);
 });
 
 // Returns every message this therapist has sent
-app.get('/therapists/:therapistID/messages', function(req, res) {
+app.get('/therapists/:therapistID/messages', function (req, res) {
     therapist_messages.getMessagesFromTherapist(req, res, therapistDB);
 });
 
