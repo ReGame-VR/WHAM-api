@@ -23,6 +23,7 @@ describe('HTTPTests', function() {
         it('should return the patient salt given a sucessful create account', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'ryan',
                     password: 'test_password',
@@ -42,6 +43,7 @@ describe('HTTPTests', function() {
         it('should return the patient salt given a sucessful create account', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'timmy',
                     password: 'this is a valid password',
@@ -60,6 +62,7 @@ describe('HTTPTests', function() {
         it('does not allow invalid dates', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'timmy2',
                     password: 'password',
@@ -77,6 +80,7 @@ describe('HTTPTests', function() {
         it('does not allow invalid dates', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'timmy3',
                     password: 'password',
@@ -94,6 +98,7 @@ describe('HTTPTests', function() {
         it('does not allow spaces in usernames', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'this is a bad username',
                     password: 'password',
@@ -111,6 +116,7 @@ describe('HTTPTests', function() {
         it('should return the patient salt given a sucessful create account', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'cole',
                     password: 'enrique',
@@ -129,6 +135,7 @@ describe('HTTPTests', function() {
         it('should return 403 if the patient already exists', function(done) {
             chai.request(app)
                 .post('/patients')
+                .accept('application/json')
                 .send({
                     username: 'ryan',
                     password: 'test_password',
@@ -149,7 +156,8 @@ describe('HTTPTests', function() {
     describe('Logs patient in', function() {
         it('should return the patient salt given a sucessful login', function(done) {
             chai.request(app)
-                .post('/login')
+                .post('/login/patient')
+                .accept('application/json')
                 .send({
                     username: 'ryan',
                     password: 'test_password',
@@ -163,7 +171,8 @@ describe('HTTPTests', function() {
 
         it('should return 403 status given a false login', function(done) {
             chai.request(app)
-                .post('/login')
+                .post('/login/patient')
+                .accept('application/json')
                 .send({
                     username: 'ryan',
                     password: 'akojsfnkjsnmfklsmn',
@@ -177,7 +186,8 @@ describe('HTTPTests', function() {
 
         it('should return 403 status given a false login', function(done) {
             chai.request(app)
-                .post('/login')
+                .post('/login/patient')
+                .accept('application/json')
                 .send({
                     username: 'lasksmnfdlskmf',
                     password: 'test_password',
@@ -194,6 +204,7 @@ describe('HTTPTests', function() {
         it('should return the therapist salt given a sucessful adding', function(done) {
             chai.request(app)
                 .post('/therapists')
+                .accept('application/json')
                 .send({
                     username: 'therapist1',
                     password: 'passworddddd',
@@ -208,6 +219,7 @@ describe('HTTPTests', function() {
         it('should return an error if therapist name was taken', function(done) {
             chai.request(app)
                 .post('/therapists')
+                .accept('application/json')
                 .send({
                     username: 'therapist1',
                     password: 'passworddddd',
@@ -222,6 +234,7 @@ describe('HTTPTests', function() {
         it('should return the therapist salt given a sucessful adding', function(done) {
             chai.request(app)
                 .post('/therapists')
+                .accept('application/json')
                 .send({
                     username: 'therapist2',
                     password: 'password',
@@ -236,6 +249,7 @@ describe('HTTPTests', function() {
         it('should return the therapist salt given a sucessful adding', function(done) {
             chai.request(app)
                 .post('/therapists')
+                .accept('application/json')
                 .send({
                     username: 'therapist3',
                     password: 'test',
@@ -251,7 +265,8 @@ describe('HTTPTests', function() {
     describe('Logs therapist in', function() {
         it('should return the patient salt given a sucessful login', function(done) {
             chai.request(app)
-                .post('/login')
+                .post('/login/therapist')
+                .accept('application/json')
                 .send({
                     username: 'therapist3',
                     password: 'test',
@@ -265,7 +280,8 @@ describe('HTTPTests', function() {
 
         it('should return 403 status given a false login', function(done) {
             chai.request(app)
-                .post('/login')
+                .post('/login/therapist')
+                .accept('application/json')
                 .send({
                     username: 'therapist3',
                     password: 'akojsfnkjsnmfklsmn',
@@ -279,7 +295,8 @@ describe('HTTPTests', function() {
 
         it('should return 403 status given a false login', function(done) {
             chai.request(app)
-                .post('/login')
+                .post('/login/therapist')
+                .accept('application/json')
                 .send({
                     username: 'lasksmnfdlskmf',
                     password: 'test_password',
@@ -296,6 +313,7 @@ describe('HTTPTests', function() {
         it('should give status 204 if the pair was sucessful', function(done) {
             chai.request(app)
                 .post('/therapists/therapist1/patients')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -311,6 +329,7 @@ describe('HTTPTests', function() {
         it('should give status 403 if the pair was unsucessful', function(done) {
             chai.request(app)
                 .post('/therapists/therapist1/patients')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -326,6 +345,7 @@ describe('HTTPTests', function() {
         it('should give status 403 if the pair was unsucessful', function(done) {
             chai.request(app)
                 .post('/therapists/therapist1555/patients')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -341,6 +361,7 @@ describe('HTTPTests', function() {
         it('should give status 204 if the pair was sucessful', function(done) {
             chai.request(app)
                 .post('/therapists/therapist2/patients')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -360,6 +381,7 @@ describe('HTTPTests', function() {
                 it('should give status 204 if the session add was sucessful', function(done) {
                     chai.request(app)
                         .post('/patients/ryan/sessions')
+                        .accept('application/json')
                         .query({
                             auth_token: admin_auth_token,
                         })
@@ -379,6 +401,7 @@ describe('HTTPTests', function() {
         it('should give status 403 if the session add was unsucessful', function(done) {
             chai.request(app)
                 .post('/patients/hello/sessions')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -397,6 +420,7 @@ describe('HTTPTests', function() {
         it('should give status 204 if the message was sucessfully added', function(done) {
             chai.request(app)
                 .post('/patients/ryan/messages')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -414,6 +438,7 @@ describe('HTTPTests', function() {
         it('should give status 204 if the message was sucessfully added', function(done) {
             chai.request(app)
                 .post('/patients/timmy/messages')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -431,6 +456,7 @@ describe('HTTPTests', function() {
         it('should give status 403 if the message was sucessfully added', function(done) {
             chai.request(app)
                 .post('/patients/ryan/messages')
+                .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -448,6 +474,7 @@ describe('HTTPTests', function() {
         it('should give status 403 if the message was sucessfully added', function(done) {
             chai.request(app)
                 .post('/patients/askjmndqkls/messages')
+                .accept('application/json')
                 .send({
                     therapistID: 'therapist1',
                     message_content: 'This is a message',
@@ -555,6 +582,7 @@ describe('HTTPTests', function() {
                 });
         });
 
+        /*
         it('should return general info for every patient', function(done) {
             chai.request(app)
                 .get('/patients')
@@ -567,6 +595,7 @@ describe('HTTPTests', function() {
                     done();
                 });
         });
+        */
     });
 
     describe('Get all individual patient info', function() {

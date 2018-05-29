@@ -26,33 +26,17 @@ exports.getTherapistPatients = function (req, res, therapistDB) {
 exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
     var therapistID = req.params.therapistID;
     var patientID = req.body.patientID;
-    if (req.query === undefined || req.query.auth_token === undefined) {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end();
-    } else {
-        authorizer.get_auth_level(req.query.auth_token, "THERAPIST", function (auth_level, username) {
-            if (username !== therapistID && auth_level !== 3) {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
-            } else {
-                patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
-                    if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
-                    } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
-                    }
-                });
-            }
-        });
-    }
+    patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
+        if (worked) {
+            res.writeHead(204, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        } else {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+        }
+    });
 }

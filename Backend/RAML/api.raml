@@ -190,27 +190,59 @@ resourceTypes:
               badPassword:
                 error: "Password must be at least 8 characters long."
 
+/register:
+  get:
+    description: Shows the user registration screen.
+
 /login:
-  post:
-    description: Returns the authentication token  if there is a sucessful login.
-    body:
-      application/json:
-        type: UserLogin
-    responses: 
-      200:
-        description: Returns the authentication token.
-        body:
-          application/json:
-            properties:
-              token: string
-      
-      403:
-        description: Bad request.
-        body:
-          application/json:
-            properties:
-              error: string
-          example: {"error": "Invalid password"}
+  get:
+    description: Returns the HTML code for the login chooser.
+
+  /therapist:
+    get:
+      description: Returns the HTML for the therapist login.
+    post:
+      description: Returns the authentication token  if there is a sucessful login.
+      body:
+        application/json:
+          type: UserLogin
+      responses: 
+        200:
+          description: Returns the authentication token.
+          body:
+            application/json:
+              properties:
+                token: string
+        403:
+          description: Bad request.
+          body:
+            application/json:
+              properties:
+                error: string
+            example: {"error": "Invalid password"}
+
+  /patient:
+    get:
+      description: Returns the HTML for the patients login.
+    post:
+      description: Returns the authentication token if there is a sucessful login.
+      body:
+        application/json:
+          type: UserLogin
+      responses: 
+        200:
+          description: Returns the authentication token.
+          body:
+            application/json:
+              properties:
+                token: string
+        403:
+          description: Bad request.
+          body:
+            application/json:
+              properties:
+                error: string
+            example: {"error": "Invalid password"}
 
 /patients:
   type:  { UserCollection: {newItem : NewPatient, item : Patient} }

@@ -18,7 +18,10 @@ const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
 // All the JS files that handle specific requests
 // The file structure indicates which request URL every file handles
 const api = require('./main/api.js');
+const register = require('./main/register/register.js');
 const login = require('./main/login/login.js');
+const patient_login = require('./main/login/patient/patient_login.js');
+const therapist_login = require('./main/login/therapist/therapist_login.js');
 const all_patients = require('./main/patients/all_patients.js');
 const single_patient = require('./main/patients/id/single_patient.js');
 const patient_sessions = require('./main/patients/id/sessions/patient_sessions.js');
@@ -57,14 +60,29 @@ app.get('/api', api.showAPI);
 // the existing method (probably POST) is.
 app.use(methodOverride('_method'));
 
-// Renders the login screen as HTML
+// Renders the registration screen as HTML
+app.get('/register', register.show_register);
+
+// Renders the login choosing screen as HTML
 app.get('/login', login.show_login);
 
-// Logs this user in (either patient or therapist, we don't care)
+// Logs this patient
 // Will give back the users authenticaiton token
-app.post('/login', function(req, res) {
-    login.login(req, res, patientDB, therapistDB);
+app.post('/login/patient', function(req, res) {
+    patient_login.patient_login(req, res, patientDB);
 });
+
+// Renders the patient login screen as HTML
+app.get('/login/patient', patient_login.show_login);
+
+// Logs this therapist
+// Will give back the users authenticaiton token
+app.post('/login/therapist', function(req, res) {
+    therapist_login.therapist_login(req, res, therapistDB);
+});
+
+// Renders the therapist login screen as HTML
+app.get('/login/therapist', therapist_login.show_login);
 
 // Returns info about every patient
 app.get('/patients', function(req, res) {
