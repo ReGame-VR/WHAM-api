@@ -119,7 +119,7 @@ app.get('/login', login.show_login);
 // Will give back the users authenticaiton token
 app.post('/login/patient',
     passport.authenticate('patient', {
-        failureRedirect: '/login'
+        failureRedirect: '/login/patient'
     }),
     function (req, res) {
         res.writeHead(200, {
@@ -138,7 +138,7 @@ app.get('/login/patient', patient_login.show_login);
 // Will give back the users authenticaiton token
 app.post('/login/therapist',
     passport.authenticate('therapist', {
-        failureRedirect: '/login'
+        failureRedirect: '/login/therapist'
     }),
     function (req, res) {
         res.writeHead(200, {
