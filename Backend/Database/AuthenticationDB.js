@@ -162,7 +162,11 @@ class AuthenticationDB {
     // Any Any Any Callback -> Void
     // Passes to acl
     isAllowed(user, stuff, able, callback) {
-        this.acl.isAllowed(user, stuff, able, callback);
+        if(user == "admin") {
+            callback(true);
+        } else {
+            this.acl.isAllowed(user, stuff, able, callback);
+        }
     }
 
     // Any Any -> Void
@@ -185,8 +189,10 @@ class AuthenticationDB {
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
                     callback(false);
+                    connection.release();
                 } else {
                     callback(decoded.data.username);
+                    connection.release();
                 }
             });
         })

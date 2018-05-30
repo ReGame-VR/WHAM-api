@@ -33,7 +33,7 @@ exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
             return;
         }
         var therapistID = req.params.therapistID;
-        var patientID = req.params.patientID;
+        var patientID = req.body.patientID;
         authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
             if (can_view) {
                 patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {

@@ -181,7 +181,7 @@ app.get('/patients/:patientID/sessions', function (req, res) {
 
 // Adds a session to this patients log
 app.post('/patients/:patientID/sessions', function (req, res) {
-    patient_sessions.addPatientSession(req, res, patientDB);
+    patient_sessions.addPatientSession(req, res, patientDB, authorizer);
 });
 
 // Returns informaiton about this specific session

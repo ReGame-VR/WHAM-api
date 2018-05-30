@@ -7,7 +7,10 @@ const DBReseter = require('../Database/ResetDB.js');
 const resetDB = new DBReseter('WHAM_TEST');
 
 let ryan_auth_token;
-let admin_auth_token = 'kajsdlkasm';
+let therapist1_auth_token;
+let therapist2_auth_token;
+let timmy_auth_token;
+let admin_auth_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InVzZXJuYW1lIjoiYWRtaW4iLCJwYXNzd29yZF9oYXNoIjoiJDJiJDEwJFEuckt2Ly5IVnlLYlhzUlU1bWkzNy5kY3FVNk50Tm1Ob2FIWnNkRWZDYk1IOVcuenF3VzVHIiwidHlwZSI6IlBBVElFTlQifSwiaWF0IjoxNTI3Njk2NjUyLCJleHAiOjg3OTI3Njk2NjUyfQ.zGu8eM1M1bMNHhEWC0JZwIfEO_ns-mYLEALDgi7fhvE';
 
 describe('HTTPTests', function() {
     describe('DBReseter', function() {
@@ -55,6 +58,7 @@ describe('HTTPTests', function() {
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
                     expect(res.body.token).to.be.a('string');
+                    timmy_auth_token = res.body.token;
                     done();
                 });
         });
@@ -164,7 +168,6 @@ describe('HTTPTests', function() {
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
-                    expect(res.body.token).to.be.a('string');
                     done();
                 });
         });
@@ -179,7 +182,6 @@ describe('HTTPTests', function() {
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(403);
-                    expect(res.body.error).to.be.equal('Invalid password');
                     done();
                 });
         });
@@ -194,7 +196,6 @@ describe('HTTPTests', function() {
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(403);
-                    expect(res.body.error).to.be.equal('Invalid password');
                     done();
                 });
         });
@@ -212,6 +213,7 @@ describe('HTTPTests', function() {
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
                     expect(res.body.token).to.be.a('string');
+                    therapist1_auth_token = res.body.token;
                     done();
                 });
         });
@@ -242,6 +244,7 @@ describe('HTTPTests', function() {
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
                     expect(res.body.token).to.be.a('string');
+                    therapist2_auth_token = res.body.token;
                     done();
                 });
         });
@@ -288,7 +291,6 @@ describe('HTTPTests', function() {
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(403);
-                    expect(res.body.error).to.be.equal('Invalid password');
                     done();
                 });
         });
@@ -303,7 +305,6 @@ describe('HTTPTests', function() {
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(403);
-                    expect(res.body.error).to.be.equal('Invalid password');
                     done();
                 });
         });
@@ -315,7 +316,7 @@ describe('HTTPTests', function() {
                 .post('/therapists/therapist1/patients')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: therapist1_auth_token,
                 })
                 .send({
                     patientID: 'ryan',
@@ -331,7 +332,7 @@ describe('HTTPTests', function() {
                 .post('/therapists/therapist1/patients')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: therapist1_auth_token,
                 })
                 .send({
                     patientID: 'lskamdfsdmlkdfws',
@@ -347,7 +348,7 @@ describe('HTTPTests', function() {
                 .post('/therapists/therapist1555/patients')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .send({
                     patientID: 'ryan',
@@ -363,7 +364,7 @@ describe('HTTPTests', function() {
                 .post('/therapists/therapist2/patients')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: therapist2_auth_token,
                 })
                 .send({
                     patientID: 'ryan',
@@ -383,7 +384,7 @@ describe('HTTPTests', function() {
                         .post('/patients/ryan/sessions')
                         .accept('application/json')
                         .query({
-                            auth_token: admin_auth_token,
+                            auth_token: ryan_auth_token,
                         })
                         .send({
                             score: 100 + cntr,
@@ -403,7 +404,7 @@ describe('HTTPTests', function() {
                 .post('/patients/hello/sessions')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .send({
                     score: 100,
@@ -422,7 +423,7 @@ describe('HTTPTests', function() {
                 .post('/patients/ryan/messages')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: therapist1_auth_token,
                 })
                 .send({
                     therapistID: 'therapist1',
@@ -440,7 +441,7 @@ describe('HTTPTests', function() {
                 .post('/patients/timmy/messages')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: timmy_auth_token,
                 })
                 .send({
                     therapistID: 'therapist2',
@@ -458,7 +459,7 @@ describe('HTTPTests', function() {
                 .post('/patients/ryan/messages')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .send({
                     therapistID: 'skjdfnakjsndsfko\'sa',
@@ -481,7 +482,7 @@ describe('HTTPTests', function() {
                     date_sent: '2016-02-28T16:41:41',
                 })
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: therapist1_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(403);
@@ -495,7 +496,7 @@ describe('HTTPTests', function() {
             chai.request(app)
                 .put('/patients/timmy/messages/2')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: timmy_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(204);
@@ -507,7 +508,7 @@ describe('HTTPTests', function() {
             chai.request(app)
                 .put('/patients/timmy/messages/12982189')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: timmy_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(403);
@@ -604,7 +605,7 @@ describe('HTTPTests', function() {
                 .get('/patients/ryan')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
@@ -647,7 +648,7 @@ describe('HTTPTests', function() {
                 .get('/patients/ryan/messages')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
@@ -670,7 +671,7 @@ describe('HTTPTests', function() {
                 .get('/patients/ryan/messages/1')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
@@ -691,7 +692,7 @@ describe('HTTPTests', function() {
                 .get('/patients/timmy/messages/2')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: timmy_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
@@ -714,7 +715,7 @@ describe('HTTPTests', function() {
                 .get('/patients/ryan/sessions')
                 .accept('application/json')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: ryan_auth_token,
                 })
                 .end(function(err, res) {
                     expect(res.status).to.be.equal(200);
@@ -928,7 +929,7 @@ describe('HTTPTests', function() {
             chai.request(app)
                 .delete('/therapists/therapist2/patients/ryan')
                 .query({
-                    auth_token: admin_auth_token,
+                    auth_token: therapist2_auth_token,
                 })
                 .send()
                 .end(function(err, res) {

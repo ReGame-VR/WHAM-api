@@ -13,7 +13,8 @@ describe("PermTests", function () {
     var cole_auth_token;
     var therapist1_auth_token;
     var therapist2_auth_token;
-    var admin_auth_token = "kajsdlkasm";
+    let admin_auth_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InVzZXJuYW1lIjoiYWRtaW4iLCJwYXNzd29yZF9oYXNoIjoiJDJiJDEwJFEuckt2Ly5IVnlLYlhzUlU1bWkzNy5kY3FVNk50Tm1Ob2FIWnNkRWZDYk1IOVcuenF3VzVHIiwidHlwZSI6IlBBVElFTlQifSwiaWF0IjoxNTI3Njk2NjUyLCJleHAiOjg3OTI3Njk2NjUyfQ.zGu8eM1M1bMNHhEWC0JZwIfEO_ns-mYLEALDgi7fhvE';
+
 
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
@@ -196,21 +197,6 @@ describe("PermTests", function () {
                 .post('/patients/ryan/sessions')
                 .query({
                     auth_token: timmy_auth_token
-                })
-                .send({
-                    score: 100,
-                    time: "2016-02-28T16:41:11"
-                })
-                .end(function (err, res) {
-                    expect(res.status).to.be.equal(403);
-                    done();
-                });
-        });
-        it("should accept the admin", function (done) {
-            chai.request(app)
-                .post('/patients/ryan/sessions')
-                .query({
-                    auth_token: admin_auth_token
                 })
                 .send({
                     score: 100,
