@@ -4,5 +4,18 @@ It is very common for physical therapists to assign activities like Wii games fo
 
 We are developing a cheap sensor system that can be used to track the data of patients like range of motion, engagement, heart rate, and many others. Featured on this GitHub Repository are all the software parts to this project.
 
+Important Info For Developers:
+
+Required Setup:
+
+1. Install and Run a MySQL server. Create a database WHAM_TEST
+2. Run npm install
+3. Create a .env file in the /Backend folder. 
+Required Fields:
+
+DB_HOST=?
+DB_USER=?
+DB_PASS=?
+JWT_SECRET=?
 
 
