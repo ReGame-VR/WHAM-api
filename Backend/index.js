@@ -166,17 +166,17 @@ app.post('/patients', function (req, res) {
 
 // Returns info about this patient
 app.get('/patients/:patientID', function (req, res) {
-    single_patient.getPatient(req, res, patientDB);
+    single_patient.getPatient(req, res, patientDB, authorizer);
 });
 
 // Deletes this patient and all associated information
 app.delete('/patients/:patientID', function (req, res) {
-    single_patient.deletePatient(req, res, patientDB);
+    single_patient.deletePatient(req, res, patientDB, authorizer);
 });
 
 // Returns info about every session this patient has logged
 app.get('/patients/:patientID/sessions', function (req, res) {
-    patient_sessions.getPatientSessions(req, res, patientDB);
+    patient_sessions.getPatientSessions(req, res, patientDB, authorizer);
 });
 
 // Adds a session to this patients log
@@ -191,7 +191,7 @@ app.get('/patients/:patientID/sessions/:sessionID', function (req, res) {
 
 // Deletes this specific session
 app.delete('/patients/:patientID/sessions/:sessionID', function (req, res) {
-    single_session.deletePatientSession(req, res, patientDB);
+    single_session.deletePatientSession(req, res, patientDB, authorizer);
 });
 
 // Sends a message to this patient
@@ -201,17 +201,17 @@ app.post('/patients/:patientID/messages', function (req, res) {
 
 // Returns every message this patient has recieved
 app.get('/patients/:patientID/messages', function (req, res) {
-    patient_messages.getPatientMessages(req, res, patientDB);
+    patient_messages.getPatientMessages(req, res, patientDB, authorizer);
 });
 
 // Marks this message as read
 app.put('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.markMessageAsRead(req, res, patientDB);
+    single_message.markMessageAsRead(req, res, patientDB, authorizer);
 });
 
 // Return info about this message in specific
 app.get('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.getMessage(req, res, patientDB);
+    single_message.getMessage(req, res, patientDB, authorizer);
 });
 
 // Deletes this message from the DB
@@ -232,7 +232,7 @@ app.post('/therapists', function (req, res) {
 
 // Returns info about this therapist in particuliar
 app.get('/therapists/:therapistID', function (req, res) {
-    single_therapist.getTherapist(req, res, therapistDB);
+    single_therapist.getTherapist(req, res, therapistDB, authorizer);
 });
 
 // Removed this therapist and all assicated information from the server
@@ -258,7 +258,7 @@ app.delete('/therapists/:therapistID/patients/:patientID', function (req, res) {
 
 // Returns every message this therapist has sent
 app.get('/therapists/:therapistID/messages', function (req, res) {
-    therapist_messages.getMessagesFromTherapist(req, res, therapistDB);
+    therapist_messages.getMessagesFromTherapist(req, res, therapistDB, authorizer);
 });
 
 app.listen(3000, () => console.log('WHAM listening on port 3000!'));

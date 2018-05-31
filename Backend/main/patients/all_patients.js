@@ -1,21 +1,37 @@
 // Gives all patient info in either JSON or HTML form
 // Request Response PatientDB AuthorizationDB -> Void
 exports.getPatients = function (req, res, patientDB, authorizer) {
-    patientDB.get_all_patient_info(function (info) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist info as HTML
-            res.render('patient-overview', {
-                patients: info
-            });
-        } else if (req.headers['accept'].includes('application/json')) {
-            res.writeHead(200, {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
+            res.writeHead(403, {
                 "Content-Type": "application/json"
             });
-            res.end(JSON.stringify(info));
-        } else {
-            res.writeHead(403);
             res.end();
+            return;
         }
+        authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
+            if (can_view) {
+                patientDB.get_all_patient_info(function (info) {
+                    if (req.headers['accept'].includes('text/html')) {
+                        //Send therapist info as HTML
+                        res.render('patient-overview', {
+                            patients: info
+                        });
+                    } else if (req.headers['accept'].includes('application/json')) {
+                        res.writeHead(200, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end(JSON.stringify(info));
+                    } else {
+                        res.writeHead(403);
+                        res.end();
+                    }
+                });
+            } else {
+                res.writeHead(403);
+                res.end();
+            }
+        });
     });
 }
 

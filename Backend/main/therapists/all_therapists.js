@@ -9,7 +9,6 @@ exports.getAllTherapists = function (req, res, therapistDB, authorizer) {
             res.end();
             return;
         }
-        console.log(verified);
         authorizer.isAllowed(verified, "/therapist", '*', function (err, can_view) {
             if (can_view) {
                 therapistDB.get_all_therapists(function (therapists) {

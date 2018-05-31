@@ -1,6 +1,6 @@
 //Returns the info for a single patient session
 // Request Response PatientDB -> Void
-exports.getSession = function(req, res, patientDB) {
+exports.getSession = function (req, res, patientDB) {
     var patientID = req.params.patientID;
     var sessionID = req.params.sessionID;
     patientDB.get_patient_session_specific(patientID, sessionID, function (sessionInfo) {
@@ -26,20 +26,38 @@ exports.getSession = function(req, res, patientDB) {
 
 //Deletes this patient session from the database
 // Request Response PatientDB -> Void
-exports.deletePatientSession = function(req, res, patientDB) {
-    var patientID = req.params.patientID;
-    var sessionID = req.params.sessionID;
-    patientDB.delete_patient_session(patientID, sessionID, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
+exports.deletePatientSession = function (req, res, patientDB, authorizer) {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
             res.writeHead(403, {
                 "Content-Type": "application/json"
             });
             res.end();
+            return;
         }
+        var patientID = req.params.patientID;
+        var sessionID = req.params.sessionID;
+        authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
+            if (can_view) {
+                patientDB.delete_patient_session(patientID, sessionID, function (worked) {
+                    if (worked) {
+                        res.writeHead(204, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    } else {
+                        res.writeHead(403, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    }
+                });
+            } else {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            }
+        });
     });
 }

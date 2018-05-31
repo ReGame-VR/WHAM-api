@@ -1,28 +1,47 @@
 //Returns the info for a single therapist
 // Request Response TherapistDB -> Void
-exports.getTherapist = function (req, res, therapistDB) {
-    therapistDB.get_specific_therapist(req.params.therapistID, function (info) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist info as HTML
-            res.render('therapist-detail', {
-                patients: info,
-                therapistID: req.params.therapistID
+exports.getTherapist = function (req, res, therapistDB, authorizer) {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
             });
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (info === false) {
+            res.end();
+            return;
+        }
+        var therapistID = req.params.therapistID;
+        authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
+            if (can_view) {
+                therapistDB.get_specific_therapist(therapistID, function (info) {
+                    if (req.headers['accept'].includes('text/html')) {
+                        //Send therapist info as HTML
+                        res.render('therapist-detail', {
+                            patients: info,
+                            therapistID: therapistID
+                        });
+                    } else if (req.headers['accept'].includes('application/json')) {
+                        if (info === false) {
+                            res.writeHead(403, {
+                                "Content-Type": "application/json"
+                            });
+                            res.end();
+                        } else {
+                            res.writeHead(200, {
+                                "Content-Type": "application/json"
+                            });
+                            res.end(JSON.stringify(info));
+                        }
+                    } else {
+                        //An unsupported request
+                    }
+                });
+            } else {
                 res.writeHead(403, {
                     "Content-Type": "application/json"
                 });
                 res.end();
-            } else {
-                res.writeHead(200, {
-                    "Content-Type": "application/json"
-                });
-                res.end(JSON.stringify(info));
             }
-        } else {
-            //An unsupported request
-        }
+        });
     });
 }
 
