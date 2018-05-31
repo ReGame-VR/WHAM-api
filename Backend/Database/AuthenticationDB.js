@@ -43,11 +43,12 @@ class AuthenticationDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
+                return;
             }
             connection.query(get_salt_sql, function (error, results, fields) {
                 if (error || results.length == 0) {
-                    callback(false);
                     connection.release();
+                    callback(false);
                 } else {
                     var salt = results[0].salt;
                     var password = bcrypt.hashSync(unencrypt_password, salt);
@@ -56,11 +57,11 @@ class AuthenticationDB {
                     login_sql = mysql.format(login_sql, login_insert);
                     connection.query(login_sql, function (error, results, fields) {
                         if (error) {
+                            connection.release();
                             callback(error, false);
-                            connection.release();
                         } else if (results.length == 0) {
-                            callback(null, false)
                             connection.release();
+                            callback(null, false)
                         } else {
                             var token = jwt.sign({
                                 data: {
@@ -72,10 +73,10 @@ class AuthenticationDB {
                                 expiresIn: '10d'
                             });
 
+                            connection.release();
                             callback(null, {
                                 token: token
                             });
-                            connection.release();
                         }
                     });
                 }
@@ -98,11 +99,14 @@ class AuthenticationDB {
         pool.getConnection(function (err, connection) {
             if (err) {
                 (callback(false, false))
+                return;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
+                    connection.release();
                     callback(false, false);
                 } else {
+                    connection.release();
                     callback(result[0].auth_level, result[0].username);
                 }
             });
@@ -119,6 +123,7 @@ class AuthenticationDB {
             if (can_do) {
                 callback(true);
             } else {
+                connection.release();
                 get_auth_level_help(auth_level, "PATIENT", function (auth_level, username) {
                     callback(username === patientID || auth_level === 3);
                 }, pool);
@@ -136,11 +141,14 @@ class AuthenticationDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 (callback(false))
+                return;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
+                    connection.release();
                     callback(false);
                 } else {
+                    connection.release();
                     callback(result[0].patientID !== null || result[0].auth_level == 3);
                 }
             });
@@ -162,8 +170,8 @@ class AuthenticationDB {
     // Any Any Any Callback -> Void
     // Passes to acl
     isAllowed(user, stuff, able, callback) {
-        if(user == "admin") {
-            callback(true);
+        if(user === 'admin') {
+            callback(null, true);
         } else {
             this.acl.isAllowed(user, stuff, able, callback);
         }
@@ -188,11 +196,11 @@ class AuthenticationDB {
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
+                    connection.release();
                     callback(false);
-                    connection.release();
                 } else {
-                    callback(decoded.data.username);
                     connection.release();
+                    callback(decoded.data.username);
                 }
             });
         })

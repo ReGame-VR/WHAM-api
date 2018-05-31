@@ -1,3 +1,4 @@
+require('dotenv').config();
 const chai = require("chai");
 var expect = chai.expect;
 var chaiHttp = require('chai-http');
@@ -5,6 +6,8 @@ chai.use(chaiHttp);
 const app = require('../index');
 const DBReseter = require('../Database/ResetDB.js');
 var resetDB = new DBReseter("WHAM_TEST");
+var jwt = require('jsonwebtoken');
+
 
 describe("PermTests", function () {
 
@@ -13,8 +16,15 @@ describe("PermTests", function () {
     var cole_auth_token;
     var therapist1_auth_token;
     var therapist2_auth_token;
-    let admin_auth_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InVzZXJuYW1lIjoiYWRtaW4iLCJwYXNzd29yZF9oYXNoIjoiJDJiJDEwJFEuckt2Ly5IVnlLYlhzUlU1bWkzNy5kY3FVNk50Tm1Ob2FIWnNkRWZDYk1IOVcuenF3VzVHIiwidHlwZSI6IlBBVElFTlQifSwiaWF0IjoxNTI3Njk2NjUyLCJleHAiOjg3OTI3Njk2NjUyfQ.zGu8eM1M1bMNHhEWC0JZwIfEO_ns-mYLEALDgi7fhvE';
-
+    let admin_auth_token = jwt.sign({
+        data: {
+            username: 'admin',
+            password_hash: 'password',
+            type: "PATIENT"
+        }
+    }, process.env.JWT_SECRET, {
+        expiresIn: '10d'
+    });
 
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
@@ -118,6 +128,21 @@ describe("PermTests", function () {
     });
 
     describe("Joins Patient to Therapist", function () {
+        it("should give status 204 if the pair was sucessful", function (done) {
+            chai.request(app)
+                .post('/therapists/therapist1/patients')
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .send({
+                    patientID: 'ryan'
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+        
         it("should give status 204 if the pair was sucessful", function (done) {
             chai.request(app)
                 .post('/therapists/therapist2/patients')

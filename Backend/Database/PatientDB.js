@@ -521,8 +521,8 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
-                    authorizer.allow(therapistID, patientID, '*') // this user can do anything to this patient they want
                     connection.release();
+                    authorizer.allow(therapistID, patientID, '*') // this user can do anything to this patient they want
                     callback(true);
                 }
             });
@@ -547,8 +547,8 @@ class PatientDB {
                     connection.release();
                     callback(false);
                 } else {
-                    authorizer.removeAllow(therapistID, patientID, "*");
                     connection.release();
+                    authorizer.removeAllow(therapistID, patientID, "*");
                     callback(true);
                 }
             });

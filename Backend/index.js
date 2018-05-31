@@ -196,7 +196,7 @@ app.delete('/patients/:patientID/sessions/:sessionID', function (req, res) {
 
 // Sends a message to this patient
 app.post('/patients/:patientID/messages', function (req, res) {
-    patient_messages.addPatientMessage(req, res, patientDB);
+    patient_messages.addPatientMessage(req, res, patientDB, authorizer);
 });
 
 // Returns every message this patient has recieved
@@ -221,7 +221,7 @@ app.delete('/patients/:patientID/messages/:messageID', function (req, res) {
 
 // Returns info about every therapist
 app.get('/therapists', function (req, res) {
-    all_therapists.getAllTherapists(req, res, therapistDB);
+    all_therapists.getAllTherapists(req, res, therapistDB, authorizer);
 });
 
 // Adds a therapist to the DB
@@ -237,12 +237,12 @@ app.get('/therapists/:therapistID', function (req, res) {
 
 // Removed this therapist and all assicated information from the server
 app.delete('/therapists/:therapistID', function (req, res) {
-    single_therapist.deleteTherapist(req, res, therapistDB);
+    single_therapist.deleteTherapist(req, res, therapistDB, authorizer);
 });
 
 // Returns info about this therapists patients
 app.get('/therapists/:therapistID/patients', function (req, res) {
-    therapist_patients.getTherapistPatients(req, res, therapistDB);
+    therapist_patients.getTherapistPatients(req, res, therapistDB, authorizer);
 });
 
 // Pairs the given patient with this therapist

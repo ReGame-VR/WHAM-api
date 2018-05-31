@@ -1,6 +1,6 @@
 //Returns the info for a single therapist
 // Request Response TherapistDB -> Void
-exports.getTherapist = function(req, res, therapistDB) {
+exports.getTherapist = function (req, res, therapistDB) {
     therapistDB.get_specific_therapist(req.params.therapistID, function (info) {
         if (req.headers['accept'].includes('text/html')) {
             //Send therapist info as HTML
@@ -28,19 +28,37 @@ exports.getTherapist = function(req, res, therapistDB) {
 
 //Deletes this therapist from the database
 // Request Response TherapistDB -> Void
-exports.deleteTherapist = function(req, res, therapistDB) {
-    var therapistID = req.params.therapistID;
-    therapistDB.delete_therapist(therapistID, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
+exports.deleteTherapist = function (req, res, therapistDB, authorizer) {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
             res.writeHead(403, {
                 "Content-Type": "application/json"
             });
             res.end();
+            return;
         }
-    })
+        var therapistID = req.params.therapistID;
+        authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
+            if (can_view) {
+                therapistDB.delete_therapist(therapistID, function (worked) {
+                    if (worked) {
+                        res.writeHead(204, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    } else {
+                        res.writeHead(403, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    }
+                });
+            } else {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            }
+        });
+    });
 }

@@ -1,24 +1,42 @@
 //Returns the info for all patients of this therapist
 // Request Response TherapistDB -> Void
-exports.getTherapistPatients = function (req, res, therapistDB) {
-    var therapistID = req.params.therapistID;
-    therapistDB.get_all_patients(therapistID, function (info) {
-        if (req.headers['accept'].includes('text/html')) {
-            //Send therapist-patient info as HTML
-        } else if (req.headers['accept'].includes('application/json')) {
-            if (info === false) {
-                res.writeHead(403);
-                res.end();
+exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
+            res.writeHead(403, {
+                "Content-Type": "application/json"
+            });
+            res.end();
+            return;
+        }
+        var therapistID = req.params.therapistID;
+        authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
+            if (can_view) {
+                therapistDB.get_all_patients(therapistID, function (info) {
+                    if (req.headers['accept'].includes('text/html')) {
+                        //Send therapist-patient info as HTML
+                    } else if (req.headers['accept'].includes('application/json')) {
+                        if (info === false) {
+                            res.writeHead(403);
+                            res.end();
+                        } else {
+                            res.writeHead(200, {
+                                "Content-Type": "application/json"
+                            });
+                            res.end(JSON.stringify(info));
+                        }
+                    } else {
+                        //An unsupported request
+                    }
+                });
             } else {
-                res.writeHead(200, {
+                res.writeHead(403, {
                     "Content-Type": "application/json"
                 });
-                res.end(JSON.stringify(info));
+                res.end();
             }
-        } else {
-            //An unsupported request
-        }
-    })
+        });
+    });
 }
 
 // Adds the given patient to this patient-therapist pair
