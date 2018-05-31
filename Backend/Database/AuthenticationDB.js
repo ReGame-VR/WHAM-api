@@ -51,7 +51,12 @@ class AuthenticationDB {
                     callback(false);
                 } else {
                     var salt = results[0].salt;
-                    var password = bcrypt.hashSync(unencrypt_password, salt);
+                    try {
+                        var password = bcrypt.hashSync(unencrypt_password, salt);
+                    } catch(err) {
+                        callback(false);
+                        return;
+                    }
                     var login_sql = "SELECT username FROM " + table_name + " T where T.username = ? AND T.password = ?";
                     var login_insert = [username, password];
                     login_sql = mysql.format(login_sql, login_insert);
