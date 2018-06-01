@@ -216,7 +216,7 @@ app.get('/patients/:patientID/messages/:messageID', function (req, res) {
 
 // Deletes this message from the DB
 app.delete('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.deletePatientMessage(req, res, patientDB);
+    single_message.deletePatientMessage(req, res, patientDB, authorizer);
 });
 
 // Returns info about every therapist

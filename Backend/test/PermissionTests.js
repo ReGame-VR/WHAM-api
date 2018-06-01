@@ -142,7 +142,7 @@ describe("PermTests", function () {
                     done();
                 });
         });
-        
+
         it("should give status 204 if the pair was sucessful", function (done) {
             chai.request(app)
                 .post('/therapists/therapist2/patients')
@@ -305,6 +305,62 @@ describe("PermTests", function () {
     });
 
     describe("Get all therapists", function () {
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get a message", function () {
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get all therapists", function () {
         it("should only accept the admin", function (done) {
             chai.request(app)
                 .get('/therapists')
@@ -331,6 +387,172 @@ describe("PermTests", function () {
                     done();
                 });
 
+        });
+    });
+
+    describe("Get all patients", function () {
+        it("should only accept the admin", function (done) {
+            chai.request(app)
+                .get('/patients')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+
+        });
+
+        it("should only accept the admin", function (done) {
+            chai.request(app)
+                .get('/patients')
+                .accept("application/json")
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get individual patient", function () {
+        it("should accept the admin", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+
+        });
+
+        it("should not accept a random user", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+
+        it("should accept this patient", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should accept this patients therapist", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+    });
+
+    describe("Get single therapists", function () {
+        it("should allow a therapist to get their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist2_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should allow the admin to get their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should not allow another therapist to get their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Get single therapists messages", function () {
+        it("should allow a therapist to get their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2/messages')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist2_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should allow the admin to get their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2/messages')
+                .accept("application/json")
+                .query({
+                    auth_token: admin_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should not allow another therapist to get their info", function (done) {
+            chai.request(app)
+                .get('/therapists/therapist2/messages')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
         });
     });
 
@@ -467,6 +689,62 @@ describe("PermTests", function () {
         });
     });
 
+    describe("Delete a message", function () {
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+    });
+
+    describe("Delete a session", function () {
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/sessions/1')
+                .accept("application/json")
+                .query({
+                    auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+
+        it("should only accept the user", function (done) {
+            chai.request(app)
+                .delete('/patients/ryan/sessions/1')
+                .accept("application/json")
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+    });
+
     describe("Get patient sessions", function () {
         it("should accept this user", function (done) {
             chai.request(app)
@@ -523,7 +801,7 @@ describe("PermTests", function () {
     });
 
     describe("Deletes a single patient", function () {
-        it("should allow a patinet to delete themseleves", function (done) {
+        it("should allow a patient to delete themseleves", function (done) {
             chai.request(app)
                 .delete('/patients/ryan')
                 .query({

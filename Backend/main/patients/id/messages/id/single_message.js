@@ -82,20 +82,38 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
 
 // Totally deletes the given message
 // Request Response PatientDB -> Void
-exports.deletePatientMessage = function (req, res, patientDB) {
-    var patientID = req.params.patientID;
-    var messageID = req.params.messageID;
-    patientDB.delete_message(patientID, messageID, function (worked) {
-        if (worked) {
-            res.writeHead(204, {
-                "Content-Type": "application/json"
-            });
-            res.end();
-        } else {
+exports.deletePatientMessage = function (req, res, patientDB, authorizer) {
+    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+        if (!verified) {
             res.writeHead(403, {
                 "Content-Type": "application/json"
             });
             res.end();
+            return;
         }
-    })
+        var patientID = req.params.patientID;
+        var messageID = req.params.messageID;
+        authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
+            if (can_view) {
+                patientDB.delete_message(patientID, messageID, function (worked) {
+                    if (worked) {
+                        res.writeHead(204, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    } else {
+                        res.writeHead(403, {
+                            "Content-Type": "application/json"
+                        });
+                        res.end();
+                    }
+                })
+            } else {
+                res.writeHead(403, {
+                    "Content-Type": "application/json"
+                });
+                res.end();
+            }
+        });
+    });
 }
