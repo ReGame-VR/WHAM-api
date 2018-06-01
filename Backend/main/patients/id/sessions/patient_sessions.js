@@ -3,10 +3,7 @@
 exports.getPatientSessions = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req.query.auth_token, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            res.redirect('../login');
             return;
         }
         var patientID = req.params.patientID;
@@ -49,10 +46,7 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer) {
 exports.addPatientSession = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req.query.auth_token, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            res.redirect('../login');
             return;
         }
         var patientID = req.params.patientID;

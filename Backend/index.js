@@ -186,7 +186,7 @@ app.post('/patients/:patientID/sessions', function (req, res) {
 
 // Returns informaiton about this specific session
 app.get('/patients/:patientID/sessions/:sessionID', function (req, res) {
-    single_session.getSession(req, res, patientDB);
+    single_session.getSession(req, res, patientDB, authorizer);
 });
 
 // Deletes this specific session

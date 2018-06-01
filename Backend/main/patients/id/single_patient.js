@@ -3,10 +3,7 @@
 exports.getPatient = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req.query.auth_token, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            res.redirect('../login');
             return;
         }
         var id = req.params.patientID
@@ -53,10 +50,7 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
 exports.deletePatient = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req.query.auth_token, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            res.redirect('../login');
             return;
         }
         authorizer.isAllowed(verified, req.params.patientID, '*', function (err, can_view) {

@@ -3,10 +3,7 @@
 exports.getMessagesFromTherapist = function (req, res, therapistDB, authorizer) {
     authorizer.verifyJWT(req.query.auth_token, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            res.redirect('../login');
             return;
         }
         var therapistID = req.params.therapistID;

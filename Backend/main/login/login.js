@@ -7,8 +7,6 @@ exports.show_login = function(req, res) {
         res.writeHead(403, {
             'Content-Type': 'application/json',
         });
-        res.end(JSON.stringify({
-            error: 'Invalid password'
-        }));
+        res.end();
     }
 };

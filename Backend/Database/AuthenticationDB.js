@@ -54,7 +54,6 @@ class AuthenticationDB {
                     var salt = results[0].salt;
                     try {
                         var password = bcrypt.hashSync(unencrypt_password, salt);
-                        console.log(password);
                     } catch(err) {
                         callback(false);
                         return;
@@ -194,6 +193,10 @@ class AuthenticationDB {
     // Verifies this jwt and checks if the hash matches the patient id
     // Gives the username if valid
     verifyJWT(token, callback) {
+        if(token === undefined) {
+            callback(false);
+            return;
+        }
         var decoded = jwt.verify(token, process.env.JWT_SECRET);
         var sql = "SELECT * FROM " + decoded.data.type + " WHERE username = ? AND password = ?";
         sql = mysql.format(sql, [decoded.data.username, decoded.data.password_hash]);

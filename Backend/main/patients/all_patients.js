@@ -3,10 +3,7 @@
 exports.getPatients = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req.query.auth_token, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            res.redirect('../login');
             return;
         }
         authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
