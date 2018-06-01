@@ -8,7 +8,7 @@ var ACL = require('acl');
 
 class AuthenticationDB {
 
-    constructor(db_object) {
+    constructor() {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
@@ -54,6 +54,7 @@ class AuthenticationDB {
                     var salt = results[0].salt;
                     try {
                         var password = bcrypt.hashSync(unencrypt_password, salt);
+                        console.log(password);
                     } catch(err) {
                         callback(false);
                         return;

@@ -4,7 +4,7 @@ var fs = require('fs');
 
 class DBReseter {
 
-    constructor(dbName) {
+    constructor(dbName, patientDB) {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
@@ -13,22 +13,24 @@ class DBReseter {
             socketPath: '/tmp/mysql.sock',
             multipleStatements: true
         });
+        this.patientDB = patientDB;
     }
 
     // (Boolean -> Void) -> Void
     // Sets the DB schema to the most current one and clears the data
     reset_db(callback) {
         var sql = fs.readFileSync(__dirname + '/Schemas' + '/schemas.sql').toString();
+        var patientDB = this.patientDB;
         this.pool.getConnection(function (err, connection) {
             if (err) {
-                callback(false);
+                callback(err, false);
                 throw err;
             }
             connection.query(sql, function (error, result) {
                 if (error) {
-                    callback(false);
+                    callback(null, false);
                 } else {
-                    callback(true);
+                    patientDB.add_patient("admin", process.env.ADMIN_PASSWORD, "1999-05-05", "160", "71", "", callback);
                 }
             });
         });

@@ -6,16 +6,15 @@ const chai = require("chai");
 var expect = chai.expect;
 
 var authorizer = new AuthenticationDB("WHAM_TEST");
-var resetDB = new DBReseter("WHAM_TEST");
 var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
-
+var resetDB = new DBReseter("WHAM_TEST", patientDB);
 describe("DBTests", function () {
 
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
             resetDB.reset_db(function (worked) {
-                expect(worked).to.be.equal(true);
+                expect(worked).to.be.a('string');
                 done();
             });
         });

@@ -4,8 +4,10 @@ var expect = chai.expect;
 var chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 const app = require('../index');
+const PatientDB = require('../Database/PatientDB.js');
+const AuthDB = require('../Database/AuthenticationDB.js');
 const DBReseter = require('../Database/ResetDB.js');
-var resetDB = new DBReseter("WHAM_TEST");
+var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", new AuthDB()));
 var jwt = require('jsonwebtoken');
 
 
@@ -16,20 +18,13 @@ describe("PermTests", function () {
     var cole_auth_token;
     var therapist1_auth_token;
     var therapist2_auth_token;
-    let admin_auth_token = jwt.sign({
-        data: {
-            username: 'admin',
-            password_hash: '$2b$10$pBRyPugN6uaLe1M858AoF.xpFLk90A/NxOX0EmRmlFj68gdtN69XS',
-            type: "PATIENT"
-        }
-    }, process.env.JWT_SECRET, {
-        expiresIn: '10d'
-    });
+    var admin_auth_token;
 
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
-            resetDB.reset_db(function (worked) {
-                expect(worked).to.be.equal(true);
+            resetDB.reset_db(function (token) {
+                expect(token).to.be.a('string');
+                admin_auth_token = token;
                 done();
             });
         });
