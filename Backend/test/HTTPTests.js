@@ -11,7 +11,7 @@ var jwt = require('jsonwebtoken');
 let admin_auth_token = jwt.sign({
     data: {
         username: 'admin',
-        password_hash: 'password',
+        password_hash: '$2b$10$pBRyPugN6uaLe1M858AoF.xpFLk90A/NxOX0EmRmlFj68gdtN69XS',
         type: "PATIENT"
     }
 }, process.env.JWT_SECRET, {

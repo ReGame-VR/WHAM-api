@@ -17,6 +17,7 @@ class PatientDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
+            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
         this.authorizer = authorizer;
@@ -31,7 +32,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
@@ -80,7 +81,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
@@ -127,7 +128,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(info_query, function (error1, info_results, fields) {
                 if (error1 || info_results.length == 0) {
@@ -196,7 +197,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
@@ -233,7 +234,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results) {
                 if (error) {
@@ -284,7 +285,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(session_query, function (error2, session_results, fields) {
                 if (error2) {
@@ -318,7 +319,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
@@ -344,7 +345,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {
@@ -368,7 +369,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
@@ -399,7 +400,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
@@ -424,7 +425,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
@@ -459,7 +460,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {
@@ -483,7 +484,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length === 0) {
@@ -514,7 +515,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
@@ -540,7 +541,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {
@@ -563,7 +564,7 @@ class PatientDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {

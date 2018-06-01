@@ -10,7 +10,7 @@ var resetDB = new DBReseter("WHAM_TEST");
 var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 
-describe("DB Tests", function () {
+describe("DBTests", function () {
 
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
@@ -39,11 +39,11 @@ describe("DB Tests", function () {
 
         describe('#login()', function () {
             it("should return true if the login was sucessful", function (done) {
-                therapistDB.login("therapist1", "test_password1", function (worked) {
+                therapistDB.login("therapist1", "test_password1", function (err, worked) {
                     expect(worked).to.be.not.equal(false);
-                    therapistDB.login("therapist15", "test_password1", function (worked) {
-                        expect(worked).to.be.equal(false);
-                        therapistDB.login("therapist1", "test_password67", function (worked) {
+                    therapistDB.login("therapist15", "test_password1", function (err, worked) {
+                        expect(err).to.be.not.equal(null);
+                        therapistDB.login("therapist1", "test_password67", function (err, worked) {
                             expect(worked).to.be.equal(false);
                             done();
                         });
@@ -137,12 +137,12 @@ describe("DB Tests", function () {
                 });
             });
             it('should return false given a wrong login', function (done) {
-                patientDB.login("bob", "password16", function (result) {
+                patientDB.login("bob", "password16", function (err, result) {
                     expect(result).to.be.equal(false);
-                    patientDB.login("tim", "password4", function (result) {
+                    patientDB.login("tim", "password4", function (err, result) {
                         expect(result).to.be.equal(false);
-                        patientDB.login("asjkaskjsa", "password1", function (result) {
-                            expect(result).to.be.equal(false);
+                        patientDB.login("asjkaskjsa", "password1", function (err, result) {
+                            expect(err).to.be.not.equal(null);
                             done();
                         });
                     });

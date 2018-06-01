@@ -19,7 +19,7 @@ describe("PermTests", function () {
     let admin_auth_token = jwt.sign({
         data: {
             username: 'admin',
-            password_hash: 'password',
+            password_hash: '$2b$10$pBRyPugN6uaLe1M858AoF.xpFLk90A/NxOX0EmRmlFj68gdtN69XS',
             type: "PATIENT"
         }
     }, process.env.JWT_SECRET, {
@@ -494,7 +494,6 @@ describe("PermTests", function () {
         });
     });
 
-    /*
     describe("Deletes a single therapist", function () {
         it("should allow a therapist to delete themselves", function (done) {
             chai.request(app)
@@ -550,6 +549,5 @@ describe("PermTests", function () {
                 });
         });
     });
-    */
 
 });

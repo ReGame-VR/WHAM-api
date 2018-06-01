@@ -10,6 +10,7 @@ class DBReseter {
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: "WHAM_TEST",
+            socketPath: '/tmp/mysql.sock',
             multipleStatements: true
         });
     }
@@ -21,11 +22,10 @@ class DBReseter {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result) {
                 if (error) {
-                    throw error;
                     callback(false);
                 } else {
                     callback(true);

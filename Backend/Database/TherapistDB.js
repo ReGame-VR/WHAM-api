@@ -17,6 +17,7 @@ class TherapistDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
+            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
         this.authorizer = authorizer;
@@ -35,7 +36,7 @@ class TherapistDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
@@ -78,7 +79,7 @@ class TherapistDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error) {
@@ -116,7 +117,7 @@ class TherapistDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error || results.length === 0) {
@@ -145,7 +146,7 @@ class TherapistDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {
@@ -179,7 +180,7 @@ class TherapistDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(deleteMessageSQL, function (error, result, fields) {
                 if (error) {
@@ -221,7 +222,7 @@ class TherapistDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(sql, function (error, results, fields) {
                 if (error) {

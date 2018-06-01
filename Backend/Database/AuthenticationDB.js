@@ -13,6 +13,7 @@ class AuthenticationDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
+            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
 
@@ -43,7 +44,7 @@ class AuthenticationDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
-                return;
+                throw err;
             }
             connection.query(get_salt_sql, function (error, results, fields) {
                 if (error || results.length == 0) {
@@ -104,7 +105,7 @@ class AuthenticationDB {
         pool.getConnection(function (err, connection) {
             if (err) {
                 (callback(false, false))
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
@@ -146,7 +147,7 @@ class AuthenticationDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 (callback(false))
-                return;
+                throw err;
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
@@ -198,6 +199,7 @@ class AuthenticationDB {
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 (callback(false))
+                throw err
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.length == 0) {
