@@ -211,38 +211,60 @@ class TherapistDB {
     // String (Listof Patient-Session -> Void) -> Void
     // Return every patient this therapist has
     get_all_patients(therapistID, callback) {
-        var sql =
-            `SELECT username, dob, weight, height, information, 
-        (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time DESC LIMIT 1) as score, 
-        (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY PS.time DESC LIMIT 1) as time 
+        var safe_sql = `SELECT username, dob, weight, height, information
         FROM PATIENT P, PATIENT_THERAPIST PT
         WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL`;
         var inserts = [therapistID];
-        sql = mysql.format(sql, inserts);
+        safe_sql = mysql.format(safe_sql, inserts);
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, results, fields) {
+            connection.query(safe_sql, function (error, results1, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
+                } else if(results1.length === 0) {
+                    callback([]);
                 } else {
                     var toReturn = [];
-                    for (var i = 0; i < results.length; i += 1) {
-                        toReturn.push({
-                            username: results[i].username,
-                            dob: results[i].dob,
-                            weight: results[i].weight,
-                            height: results[i].height,
-                            information: results[i].information,
-                            last_score: results[i].score,
-                            last_activity_time: results[i].time
+                    var sqlPt2 = "SELECT score, time FROM PATIENT P JOIN PATIENT_SESSION PS ON P.username = PS.patientID WHERE P.username = ? ORDER BY PS.time DESC";
+                    for (var i = 0; i < results1.length; i += 1) {
+                        var username = results1[i].username;
+                        var dob = results1[i].dob;
+                        var weight = results1[i].weight;
+                        var height = results1[i].height;
+                        var information = results1[i].information;
+                        sqlPt2 = mysql.format(sqlPt2, [username]);
+                        connection.query(sqlPt2, function (error, results2, fields) {
+                            if (error) {
+                                connection.release();
+                                callback(false);
+                                return;
+                            }
+                            var score = undefined;
+                            var time = undefined;
+                            if(results2.length > 0) {
+                                score = results2[0].score;
+                                time = results2[0].time;
+                            }
+                            toReturn.push({
+                                username: username,
+                                dob: dob,
+                                weight: weight,
+                                height: height,
+                                information: information,
+                                last_score: score,
+                                last_activity_time: time
+                            });
+                            console.log(i);
+                            if(i === results1.length) {
+                                connection.release();
+                                callback(toReturn);
+                            }
                         });
                     }
-                    connection.release();
-                    callback(toReturn);
                 }
             });
         });
