@@ -1,7 +1,7 @@
 // Returns the info for a single patient session
 // Request Response PatientDB -> Void
 exports.getSession = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -42,7 +42,7 @@ exports.getSession = function (req, res, patientDB, authorizer) {
 //Deletes this patient session from the database
 // Request Response PatientDB -> Void
 exports.deletePatientSession = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

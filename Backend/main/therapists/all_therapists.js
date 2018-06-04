@@ -1,7 +1,7 @@
 //Gives all therapist info in either JSON or HTML form
 // Request Response TherapistDB -> Void
 exports.getAllTherapists = function (req, res, therapistDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

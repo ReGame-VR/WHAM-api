@@ -1,7 +1,7 @@
 // Marks this therapist-patient pair as expired
 // Request Response PatientDb -> Void
 exports.removePatientTherapist = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

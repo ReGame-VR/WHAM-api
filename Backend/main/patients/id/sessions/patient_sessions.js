@@ -1,7 +1,7 @@
 //Returns the info for a patients activity sessions
 // Request Response PatientDB -> Void
 exports.getPatientSessions = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -44,7 +44,7 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer) {
 //Adds the session for the given patient to the database
 // Request Response PatientDB -> Void
 exports.addPatientSession = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

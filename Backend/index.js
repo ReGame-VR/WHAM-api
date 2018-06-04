@@ -2,6 +2,7 @@ const express = require('express');
 const exphbs = require('express-handlebars');
 const app = express();
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser')
 const path = require('path');
 const PatientDB = require('./Database/PatientDB.js');
 const TherapistDB = require('./Database/TherapistDB.js');
@@ -96,10 +97,19 @@ app.use(passport.initialize());
 // Gives express the ability to parse JSON
 app.use(bodyParser.json());
 
+// Gives the ability to read cookies (for auth_token from browser)
+app.use(cookieParser())
+
 // Gives express the ability to parse query parameters
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+authorizer.load_all_permissions(function(worked) {
+    if(!worked) {
+        console.log("badddd");
+    }
+});
 
 // If the user goes to /api it will render the API HTML
 app.get('/api', api.showAPI);
@@ -122,12 +132,17 @@ app.post('/login/patient',
         failureRedirect: '/login/patient'
     }),
     function (req, res) {
-        res.writeHead(200, {
-            'Content-Type': 'application/json',
-        });
-        res.end(JSON.stringify({
-            token: req.user.token,
-        }));
+        if(req.headers['accept'].includes("text/html")) {
+            res.cookie('auth_token', req.user.token);
+            res.redirect('../patients/' + req.body.username);
+        } else {
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({
+                token: req.user.token,
+            }));
+        }
     }
 );
 

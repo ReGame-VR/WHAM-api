@@ -1,7 +1,7 @@
 // Gives all patient info in either JSON or HTML form
 // Request Response PatientDB AuthorizationDB -> Void
 exports.getPatients = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

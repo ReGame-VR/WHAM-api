@@ -1,7 +1,7 @@
 // Marks the given message as read
 // Request Response PatientDB -> Void
 exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.writeHead(403, {
                 "Content-Type": "application/json"
@@ -39,7 +39,7 @@ exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
 // Returns info about the given message
 // Request Response PatientDB -> Void
 exports.getMessage = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -80,7 +80,7 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
 // Totally deletes the given message
 // Request Response PatientDB -> Void
 exports.deletePatientMessage = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

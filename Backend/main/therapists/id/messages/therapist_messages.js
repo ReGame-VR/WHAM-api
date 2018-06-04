@@ -1,7 +1,7 @@
 // Returns every message this therapist has sent
 // Request Response TherapistDB -> Void
 exports.getMessagesFromTherapist = function (req, res, therapistDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

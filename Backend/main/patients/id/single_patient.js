@@ -1,7 +1,7 @@
 //Returns the info for a single patient
 // Request Response PatientDB -> Void
 exports.getPatient = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -48,7 +48,7 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
 //Deletes this patient from the database
 // Request Response PatientDB -> Void
 exports.deletePatient = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

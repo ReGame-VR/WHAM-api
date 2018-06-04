@@ -1,7 +1,7 @@
 // Sends the given message to the patient
 // Request Response PatientDB -> Void
 exports.addPatientMessage = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -38,7 +38,7 @@ exports.addPatientMessage = function (req, res, patientDB, authorizer) {
 // Returns all message this patient has recieved
 // Request Response PatientDB -> Void
 exports.getPatientMessages = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

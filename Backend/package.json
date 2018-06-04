@@ -9,6 +9,7 @@
     "body-parser": "^1.18.3",
     "chai": "^4.1.2",
     "chai-http": "^4.0.0",
+    "cookie-parser": "^1.4.3",
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
@@ -21,7 +22,6 @@
     "raml2html": "^7.1.0",
     "save": "^2.3.2"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "mocha",
     "start": "node index.js"

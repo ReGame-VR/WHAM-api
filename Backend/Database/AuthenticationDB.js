@@ -52,8 +52,9 @@ class AuthenticationDB {
                     callback(false);
                 } else {
                     var salt = results[0].salt;
+                    var password;
                     try {
-                        var password = bcrypt.hashSync(unencrypt_password, salt);
+                        password = bcrypt.hashSync(unencrypt_password, salt);
                     } catch(err) {
                         callback(false);
                         return;
@@ -118,48 +119,6 @@ class AuthenticationDB {
             });
         });
     }
-
-    // Says if this user (patient or therapist) can view this patients info
-    // and add messages and change the patient-therapist join info
-    // String String (Boolean -> Void) -> Void
-    can_view_patient_and_edit_join_and_messages(auth_level, patientID, callback) {
-        var get_auth_level_help = this.get_auth_level_help;
-        var pool = this.pool;
-        this.therapist_can_view_patient(auth_level, patientID, function (can_do) {
-            if (can_do) {
-                callback(true);
-            } else {
-                connection.release();
-                get_auth_level_help(auth_level, "PATIENT", function (auth_level, username) {
-                    callback(username === patientID || auth_level === 3);
-                }, pool);
-            }
-        })
-    }
-
-    // String String (Boolean -> Void)
-    // Says whether this therapist is authorized to look at this patient
-    therapist_can_view_patient(therapist_auth_token, patientID, callback) {
-        var sql = `SELECT auth_level, patientID FROM THERAPIST T LEFT JOIN 
-                    (SELECT therapistID, patientID FROM PATIENT_THERAPIST PT WHERE PT.patientID = ?) PT
-                    ON T.username = PT.therapistID WHERE T.salt = ?`;
-        sql = mysql.format(sql, [patientID, therapist_auth_token])
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                (callback(false))
-                throw err;
-            }
-            connection.query(sql, function (error, result, fields) {
-                if (error || result.length == 0) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    connection.release();
-                    callback(result[0].patientID !== null || result[0].auth_level == 3);
-                }
-            });
-        });
-    }
     
     // Any Any Any -> Void
     // Adds these permissions to acl
@@ -192,7 +151,14 @@ class AuthenticationDB {
     // String (Maybe-String -> Void)
     // Verifies this jwt and checks if the hash matches the patient id
     // Gives the username if valid
-    verifyJWT(token, callback) {
+    verifyJWT(req, callback) {
+        var token;
+        if(req.query !== undefined && req.query.auth_token !== undefined) {
+            token = req.query.auth_token;
+        } else if(req.cookies !== undefined) {
+            var cookies = req.headers.cookie;
+            token = req.cookies.auth_token;
+        }
         if(token === undefined) {
             callback(false);
             return;
@@ -214,8 +180,58 @@ class AuthenticationDB {
                     callback(decoded.data.username);
                 }
             });
-        })
+        });
     }
+
+    // When the server is shut down, all permissions are cleared from ACL
+    // This method loads them back in based on what is written in the DB
+    load_all_permissions(callback) {
+        var patients_sql = "SELECT username FROM PATIENT";
+        var therapist_sql = "SELECT username FROM THERAPIST";
+        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST";
+        var acl = this.acl;
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                (callback(false))
+                throw err
+            }
+            connection.query(patients_sql, function (error, result, fields) {
+                if (error) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    for(var i = 0; i < result.length; i += 1) {
+                        acl.addUserRoles(result[i].username, result[i].username);
+                        acl.allow(result[i].username, result[i].username, '*')
+                    }
+                    connection.query(therapist_sql, function (error, result, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            for(var i = 0; i < result.length; i += 1) {
+                                acl.addUserRoles(result[i].username, result[i].username);
+                                acl.allow(result[i].username, result[i].username, '*')
+                            }
+                            connection.query(join_sql, function (error, result, fields) {
+                                if (error) {
+                                    connection.release();
+                                    callback(false);
+                                } else {
+                                    for(var i = 0; i < result.length; i += 1) {
+                                        acl.allow(result[i].therapistID, result[i].patientID, '*')
+                                    }
+                                    callback(true);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+
 
 }
 

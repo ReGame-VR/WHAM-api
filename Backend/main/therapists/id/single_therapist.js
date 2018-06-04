@@ -1,7 +1,7 @@
 //Returns the info for a single therapist
 // Request Response TherapistDB -> Void
 exports.getTherapist = function (req, res, therapistDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -45,7 +45,7 @@ exports.getTherapist = function (req, res, therapistDB, authorizer) {
 //Deletes this therapist from the database
 // Request Response TherapistDB -> Void
 exports.deleteTherapist = function (req, res, therapistDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;

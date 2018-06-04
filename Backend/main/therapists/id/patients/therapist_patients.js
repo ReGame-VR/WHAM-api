@@ -1,7 +1,7 @@
 //Returns the info for all patients of this therapist
 // Request Response TherapistDB -> Void
 exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
@@ -39,7 +39,7 @@ exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
 // Adds the given patient to this patient-therapist pair
 // Request Response PatientDB -> Void
 exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
-    authorizer.verifyJWT(req.query.auth_token, function (verified) {
+    authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
             res.redirect('../login');
             return;
