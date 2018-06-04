@@ -119,7 +119,7 @@ class PatientDB {
         var info_query = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
         info_query = mysql.format(info_query, inserts);
 
-        var session_query = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
+        var session_query = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ? ORDER BY time DESC";
         session_query = mysql.format(session_query, inserts);
 
         var message_query = "SELECT therapistID, message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
@@ -280,7 +280,7 @@ class PatientDB {
     get_patient_sessions(patientID, callback) {
         var inserts = [patientID];
 
-        var session_query = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ?";
+        var session_query = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ? ORDER BY time DESC";
         session_query = mysql.format(session_query, inserts);
         this.pool.getConnection(function (err, connection) {
             if (err) {

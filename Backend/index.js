@@ -37,13 +37,17 @@ const therapist_patients = require('./main/therapists/id/patients/therapist_pati
 const therapist_patient = require('./main/therapists/id/patients/id/therapist_patient.js');
 const therapist_messages = require('./main/therapists/id/messages/therapist_messages.js');
 
-// Loads the handlebars rendering engine
-app.engine('handlebars', exphbs({
-    defaultLayout: false,
+var hbs = exphbs.create({
+    // Specify helpers which are only registered on this instance.
     helpers: {
-        concat: (...args) => args.slice(0, -1).join(''),
-    },
-}));
+        json: function(context) {
+            return JSON.stringify(context);
+        }
+    }
+});
+
+// Loads the handlebars rendering engine
+app.engine('handlebars', hbs.engine);
 
 app.set('view engine', 'handlebars');
 
@@ -156,12 +160,17 @@ app.post('/login/therapist',
         failureRedirect: '/login/therapist'
     }),
     function (req, res) {
-        res.writeHead(200, {
-            'Content-Type': 'application/json',
-        });
-        res.end(JSON.stringify({
-            token: req.user.token,
-        }));
+        if(req.headers['accept'].includes("text/html")) {
+            res.cookie('auth_token', req.user.token);
+            res.redirect('../patients/' + req.body.username);
+        } else {
+            res.writeHead(200, {
+                'Content-Type': 'application/json',
+            });
+            res.end(JSON.stringify({
+                token: req.user.token,
+            }));
+        }
     }
 );
 

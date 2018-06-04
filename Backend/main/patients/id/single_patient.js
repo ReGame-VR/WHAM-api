@@ -11,9 +11,13 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_patient_info(id, function (info, sessions, messages) {
                     if (req.headers['accept'].includes('text/html')) {
+                        var realSessions = [];
+                        for (var i = 0; i < sessions.length; i += 1) {
+                            realSessions.push([sessions[i].time, sessions[i].score]);
+                        }
                         res.render('patient-detail', {
                             info: info,
-                            sessions: sessions,
+                            sessions: realSessions,
                             messages: messages
                         });
                     } else if (req.headers['accept'].includes('application/json')) {

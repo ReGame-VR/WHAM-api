@@ -5,19 +5,54 @@
   <title>WHAM</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+    crossorigin="anonymous">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <script>
+    var sessionsText = "{{sessions}}".split(",");
+    var sessions = [];
+    for(var i = 0; i < sessionsText.length; i += 2) {
+      console.log(new Date(sessionsText[i]), Number(sessionsText[i+1]));
+      sessions.push([new Date(sessionsText[i]), Number(sessionsText[i+1])]);
+    }
+    console.log(sessions);
+    google.charts.load('current', {
+      'packages': ['corechart']
+    });
+    google.charts.setOnLoadCallback(drawChart);
+
+
+    // Draw the chart and set the chart values
+    function drawChart() {
+      sessions.unshift([{type: 'date', label: 'Session Time'}, {type: 'number', label: 'Session Score'}]);
+      var data = google.visualization.arrayToDataTable(sessions);
+
+      // Optional; add a title and set the width and height of the chart
+      var options = {
+        'title': 'Sessions Over Time',
+        'width': 500,
+        'height': 300
+      };
+
+      // Display the chart inside the <div> element with id="piechart"
+      var chart = new google.visualization.ScatterChart(document.getElementById('graph'));
+      chart.draw(data, options);
+    }
+  </script>
 </head>
 
 <body>
-
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand">WHAM</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
-        <span class="navbar-toggler-icon"></span>
+      <span class="navbar-toggler-icon"></span>
     </button>
     <div class="navbar-collapse collapse justify-content-stretch" id="navbar">
       <div class="navbar-nav ml-auto">
-        <a class="nav-item nav-link" href="#">Profile<span class="sr-only">(current)</span></a>
+        <a class="nav-item nav-link" href="#">Profile
+          <span class="sr-only">(current)</span>
+        </a>
         <a class="nav-item nav-link" href="#">Sign out</a>
       </div>
     </div>
@@ -26,6 +61,7 @@
     <a>Back to patient list</a>
     <h2>{{info.username}}</h2>
   </div>
+  <div id="graph"></div>
 </body>
 
 </html>
