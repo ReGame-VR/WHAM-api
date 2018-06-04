@@ -9,7 +9,7 @@ exports.getTherapist = function (req, res, therapistDB, authorizer) {
         var therapistID = req.params.therapistID;
         authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
             if (can_view) {
-                therapistDB.get_specific_therapist(therapistID, function (info) {
+                therapistDB.get_all_patients(therapistID, function (info) {
                     if (req.headers['accept'].includes('text/html')) {
                         //Send therapist info as HTML
                         res.render('therapist-detail', {

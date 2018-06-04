@@ -25,27 +25,15 @@
       </thead>
       <tbody>
         {{#each patients}}
-        <form action={{concat "/therapists/" ../therapistID "/patients/" username "?_method=DELETE"}} method = "POST">
-          <input type="hidden" name="_method" value="DELETE">
-          <button type = "submit">Remove</button>
-        </form>
         <tr class="click-row" onclick={{concat "window.location='/patients/" username "'"}}>
           <td>{{username}}</td>
-          <td>{{time}}</td>
-          <td>{{score}}</td>
+          <td>{{last_activity_time}}</td>
+          <td>{{last_score}}</td>
         </tr>
         {{/each}}
       </tbody>
     </table>
   </div>
-
-  <form action={{concat "/therapists/" therapistID "/patients" }} method="POST">
-    Patient Username:
-    <br>
-    <input type="text" name="id" value="username">
-    <br>
-    <input type="submit" value="Submit">
-  </form>
 </body>
 
 </html>

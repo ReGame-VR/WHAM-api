@@ -258,7 +258,6 @@ class TherapistDB {
                                 last_score: score,
                                 last_activity_time: time
                             });
-                            console.log(i);
                             if(i === results1.length) {
                                 connection.release();
                                 callback(toReturn);

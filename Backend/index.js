@@ -42,7 +42,8 @@ var hbs = exphbs.create({
     helpers: {
         json: function(context) {
             return JSON.stringify(context);
-        }
+        },
+        concat: (...args) => args.slice(0, -1).join('')
     }
 });
 
@@ -162,7 +163,7 @@ app.post('/login/therapist',
     function (req, res) {
         if(req.headers['accept'].includes("text/html")) {
             res.cookie('auth_token', req.user.token);
-            res.redirect('../patients/' + req.body.username);
+            res.redirect('../therapists/' + req.body.username);
         } else {
             res.writeHead(200, {
                 'Content-Type': 'application/json',
