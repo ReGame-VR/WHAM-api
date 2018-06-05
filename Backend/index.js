@@ -113,7 +113,7 @@ app.use(bodyParser.urlencoded({
 
 authorizer.load_all_permissions(function(worked) {
     if(!worked) {
-        console.log("badddd");
+        throw new Error("This shouldn't fail");
     }
 });
 

@@ -13,10 +13,8 @@
     var sessionsText = "{{sessions}}".split(",");
     var sessions = [];
     for(var i = 0; i < sessionsText.length; i += 2) {
-      console.log(new Date(sessionsText[i]), Number(sessionsText[i+1]));
       sessions.push([new Date(sessionsText[i]), Number(sessionsText[i+1])]);
     }
-    console.log(sessions);
     google.charts.load('current', {
       'packages': ['corechart']
     });

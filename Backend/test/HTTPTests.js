@@ -625,7 +625,7 @@ describe('HTTPTests', function () {
                     message_expectation.push({
                         'date_sent': '2016-02-28T21:41:41.000Z',
                         'is_read': 0,
-                        'message': 'This is a message',
+                        'message_content': 'This is a message',
                         'therapistID': 'therapist1',
                     });
                     let expectation = {
@@ -652,7 +652,7 @@ describe('HTTPTests', function () {
                     expect(res.body).to.be.deep.equal([{
                         therapistID: 'therapist1',
                         patientID: 'ryan',
-                        message: 'This is a message',
+                        message_content: 'This is a message',
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
                         messageID: 1,
@@ -675,7 +675,7 @@ describe('HTTPTests', function () {
                     expect(res.body).to.be.deep.equal({
                         therapistID: 'therapist1',
                         patientID: 'ryan',
-                        message: 'This is a message',
+                        message_content: 'This is a message',
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
                         messageID: 1,
@@ -696,7 +696,7 @@ describe('HTTPTests', function () {
                     expect(res.body).to.be.deep.equal({
                         therapistID: 'therapist2',
                         patientID: 'timmy',
-                        message: 'This is a very good message',
+                        message_content: 'This is a very good message',
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 1,
                         messageID: 2,
@@ -800,7 +800,7 @@ describe('HTTPTests', function () {
                             therapistID: 'therapist1',
                             date_sent: '2016-02-28T21:41:41.000Z',
                             is_read: 0,
-                            message: 'This is a message',
+                            message_content: 'This is a message',
                             messageID: 1,
                         }]);
                     done();

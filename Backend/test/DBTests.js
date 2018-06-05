@@ -275,7 +275,7 @@ describe("DBTests", function () {
                     expectation.push({
                         therapistID: "therapist1",
                         patientID: 'tim',
-                        message: "You are a cool dude.",
+                        message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 0,
                         messageID: 1
@@ -283,7 +283,7 @@ describe("DBTests", function () {
                     expectation.push({
                         therapistID: "therapist2",
                         patientID: 'tim',
-                        message: "You are a very cool dude.",
+                        message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
                         messageID: 4
@@ -310,7 +310,7 @@ describe("DBTests", function () {
                     expectation.push({
                         therapistID: "therapist1",
                         patientID: 'tim',
-                        message: "You are a cool dude.",
+                        message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
                         messageID: 1
@@ -318,7 +318,7 @@ describe("DBTests", function () {
                     expectation.push({
                         therapistID: "therapist2",
                         patientID: 'tim',
-                        message: "You are a very cool dude.",
+                        message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
                         messageID: 4
@@ -335,7 +335,7 @@ describe("DBTests", function () {
                     expect(messages).to.be.deep.equal([{
                         patientID: "tim",
                         therapistID: "therapist1",
-                        message: "You are a cool dude.",
+                        message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
                         messageID: 1

@@ -45,7 +45,10 @@ exports.getPatientMessages = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_all_messages_for(patientID, function (messages) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.send("Getting these messages");
+                        res.render('patient/patient-message-overview', {
+                            patientID: patientID,
+                            messages: messages
+                        });
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (messages === false) {
                             res.writeHead(403, {

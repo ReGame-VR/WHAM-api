@@ -236,7 +236,7 @@ class AuthenticationDB {
             res.writeHead(403);
             res.end();
         } else if (req.headers['accept'].includes('text/html')) {
-            res.render('not-allowed');
+            res.render('account/not-allowed');
         } else if (req.headers['accept'].includes('application/json')) {
             res.writeHead(403);
             res.end();

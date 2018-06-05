@@ -90,7 +90,7 @@ class TherapistDB {
                     for (var i = 0; i < result.length; i += 1) {
                         toSend.push({
                             patientID: result[i].patientID,
-                            message: result[i].message,
+                            message_content: result[i].message,
                             date_sent: result[i].date_sent,
                             is_read: result[i].is_read,
                             messageID: result[i].messageID,

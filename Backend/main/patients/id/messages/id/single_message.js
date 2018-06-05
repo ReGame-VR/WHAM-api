@@ -47,7 +47,7 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_specific_message(patientID, messageID, function (message_content) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.send("Getting this message");
+                        res.render('patient/patient-message-detail', message_content);
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (message_content === false) {
                             res.writeHead(403, {

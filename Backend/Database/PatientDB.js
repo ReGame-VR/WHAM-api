@@ -164,7 +164,7 @@ class PatientDB {
                                     for (var i = 0; i < message_results.length; i += 1) {
                                         message_info.push({
                                             therapistID: message_results[i].therapistID,
-                                            message: message_results[i].message,
+                                            message_content: message_results[i].message,
                                             date_sent: message_results[i].date_sent,
                                             is_read: message_results[i].is_read
                                         });
@@ -377,7 +377,6 @@ class PatientDB {
                     callback(false);
                 } else {
                     connection.release();
-                    console.log(sql);
                     callback({
                         activityLevel: result[0].score,
                         time: result[0].time,
@@ -442,7 +441,7 @@ class PatientDB {
                         toSend.push({
                             therapistID: result[i].therapistID,
                             patientID: patientID,
-                            message: result[i].message,
+                            message_content: result[i].message,
                             date_sent: result[i].date_sent,
                             is_read: result[i].is_read,
                             messageID: result[i].messageID
@@ -500,7 +499,7 @@ class PatientDB {
                     callback({
                         therapistID: result[0].therapistID,
                         patientID: patientID,
-                        message: result[0].message,
+                        message_content: result[0].message,
                         date_sent: result[0].date_sent,
                         is_read: result[0].is_read,
                         messageID: result[0].messageID
