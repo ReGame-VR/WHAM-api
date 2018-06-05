@@ -23,6 +23,7 @@ const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
 const api = require('./main/api.js');
 const register = require('./main/register/register.js');
 const login = require('./main/login/login.js');
+const logout = require('./main/logout/logout.js');
 const patient_login = require('./main/login/patient/patient_login.js');
 const therapist_login = require('./main/login/therapist/therapist_login.js');
 const all_patients = require('./main/patients/all_patients.js');
@@ -127,6 +128,9 @@ app.use(methodOverride('_method'));
 // Renders the registration screen as HTML
 app.get('/register', register.show_register);
 
+// Clears the cookies and shows the logout screen
+app.get('/logout', logout.show_logout);
+
 // Renders the login choosing screen as HTML
 app.get('/login', login.show_login);
 
@@ -136,19 +140,7 @@ app.post('/login/patient',
     passport.authenticate('patient', {
         failureRedirect: '/login/patient'
     }),
-    function (req, res) {
-        if(req.headers['accept'].includes("text/html")) {
-            res.cookie('auth_token', req.user.token);
-            res.redirect('../patients/' + req.body.username);
-        } else {
-            res.writeHead(200, {
-                'Content-Type': 'application/json',
-            });
-            res.end(JSON.stringify({
-                token: req.user.token,
-            }));
-        }
-    }
+    patient_login.patient_login
 );
 
 // Renders the patient login screen as HTML
@@ -160,19 +152,7 @@ app.post('/login/therapist',
     passport.authenticate('therapist', {
         failureRedirect: '/login/therapist'
     }),
-    function (req, res) {
-        if(req.headers['accept'].includes("text/html")) {
-            res.cookie('auth_token', req.user.token);
-            res.redirect('../therapists/' + req.body.username);
-        } else {
-            res.writeHead(200, {
-                'Content-Type': 'application/json',
-            });
-            res.end(JSON.stringify({
-                token: req.user.token,
-            }));
-        }
-    }
+    therapist_login.therapist_login
 );
 
 // Renders the therapist login screen as HTML

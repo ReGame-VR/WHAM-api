@@ -614,7 +614,7 @@ describe('HTTPTests', function () {
                         weight: 160,
                     };
                     let session_expectation = [];
-                    for (let i = 10; i < 30; i++) {
+                    for (let i = 29; i >= 10; i--) {
                         session_expectation.push({
                             sessionID: i - 9,
                             score: 100 + i,
@@ -717,7 +717,7 @@ describe('HTTPTests', function () {
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
                     let session_expectation = [];
-                    for (let i = 10; i < 30; i++) {
+                    for (let i = 29; i >= 10; i--) {
                         session_expectation.push({
                             sessionID: i - 9,
                             score: 100 + i,
@@ -768,10 +768,17 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
-                    expect(res.body).to.be.deep.equal({
-                        username: 'therapist1',
-                        num_patients: 1,
-                    });
+                    expect(res.body).to.be.deep.equal([
+                        {
+                            dob: "1999-05-05T04:00:00.000Z",
+                            height: 71,
+                            information: "He is a developer of this app!",
+                            last_activity_time: "2016-02-28T21:41:29.000Z",
+                            last_score: 129,
+                            username: "ryan",
+                            weight: 160
+                        }
+                    ]);
                     done();
                 });
         });
@@ -865,7 +872,7 @@ describe('HTTPTests', function () {
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
                     let session_expectation = [];
-                    for (let i = 11; i < 30; i++) {
+                    for (let i = 29; i >= 11; i--) {
                         session_expectation.push({
                             sessionID: i - 9,
                             score: 100 + i,
@@ -987,10 +994,7 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
-                    expect(res.body).to.be.deep.equal({
-                        username: 'therapist2',
-                        num_patients: 0,
-                    });
+                    expect(res.body).to.be.deep.equal([]);
                     done();
                 });
         });

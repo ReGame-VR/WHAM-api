@@ -25,8 +25,7 @@ exports.getPatients = function (req, res, patientDB, authorizer) {
                     }
                 });
             } else {
-                res.writeHead(403);
-                res.end();
+                authorizer.report_not_authorized(req, res);
             }
         });
     });

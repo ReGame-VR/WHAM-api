@@ -24,10 +24,7 @@ exports.removePatientTherapist = function (req, res, patientDB, authorizer) {
                     }
                 });
             } else {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
+                authorizer.report_not_authorized(req, res);
             }
         });
     });

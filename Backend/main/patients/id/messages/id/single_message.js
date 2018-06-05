@@ -27,10 +27,7 @@ exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
                     }
                 });
             } else {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
+                authorizer.report_not_authorized(req, res);
             }
         });
     });
@@ -63,15 +60,10 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
                             });
                             res.end(JSON.stringify(message_content));
                         }
-                    } else {
-                        //An unsupported request
                     }
                 });
             } else {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
+                authorizer.report_not_authorized(req, res);
             }
         });
     });

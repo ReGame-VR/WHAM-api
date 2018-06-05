@@ -231,6 +231,18 @@ class AuthenticationDB {
         });
     }
 
+    report_not_authorized(req, res) {
+        if(req.headers['accept'] === undefined) {
+            res.writeHead(403);
+            res.end();
+        } else if (req.headers['accept'].includes('text/html')) {
+            res.render('not-allowed');
+        } else if (req.headers['accept'].includes('application/json')) {
+            res.writeHead(403);
+            res.end();
+        }
+    }
+
 
 
 }

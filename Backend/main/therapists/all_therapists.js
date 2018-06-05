@@ -28,10 +28,7 @@ exports.getAllTherapists = function (req, res, therapistDB, authorizer) {
                     }
                 });
             } else {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
+                authorizer.report_not_authorized(req, res);
             }
         });
     });
