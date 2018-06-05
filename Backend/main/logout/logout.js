@@ -8,6 +8,6 @@ exports.show_logout = function(req, res) {
         res.end();
     } else {
         res.clearCookie("auth_token");
-        res.render('logout');
+        res.render('account/logout');
     }
 };

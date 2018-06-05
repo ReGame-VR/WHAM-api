@@ -3,7 +3,7 @@
 exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var therapistID = req.params.therapistID;
@@ -38,7 +38,7 @@ exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
 exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var therapistID = req.params.therapistID;

@@ -38,7 +38,7 @@ exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
 exports.getMessage = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var patientID = req.params.patientID;
@@ -74,7 +74,7 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
 exports.deletePatientMessage = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var patientID = req.params.patientID;

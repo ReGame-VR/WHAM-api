@@ -342,6 +342,18 @@ resourceTypes:
         type:  { Member: {item : PatientSession} }
         description: A specific patient session.
 
+        get:
+          description: Returns info about one session.
+          responses: 
+            200:
+              description: Gives the info.
+              body:
+                application/json:
+                  type: PatientSession
+            403:
+              description: Bad request          
+              
+
 /therapists:
   type:  { UserCollection: {newItem : NewTherapist, item : Therapist} }
   description: A collection of all therapists in the system.

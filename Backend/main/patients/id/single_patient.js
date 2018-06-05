@@ -3,7 +3,7 @@
 exports.getPatient = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var id = req.params.patientID
@@ -15,7 +15,7 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
                         for (var i = 0; i < sessions.length; i += 1) {
                             realSessions.push([sessions[i].time, sessions[i].score]);
                         }
-                        res.render('patient-detail', {
+                        res.render('patient/patient-detail', {
                             info: info,
                             sessions: realSessions,
                             messages: messages
@@ -53,7 +53,7 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
 exports.deletePatient = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         authorizer.isAllowed(verified, req.params.patientID, '*', function (err, can_view) {

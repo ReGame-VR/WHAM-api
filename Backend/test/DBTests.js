@@ -207,7 +207,11 @@ describe("DBTests", function () {
         describe('#get_patient_session_specific()', function () {
             it("should return the score of the given session time", function (done) {
                 patientDB.get_patient_session_specific("cole", 4, function (score) {
-                    expect(score).to.be.equal(25);
+                    expect(score).to.be.deep.equal({
+                        activityLevel: 25,
+                        id: 4, 
+                        time: new Date('2012-03-04T09:01:04.000Z')
+                    });
                     done();
                 });
             });

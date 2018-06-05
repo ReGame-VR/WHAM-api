@@ -7,7 +7,7 @@ exports.show_login = function(req, res) {
         });
         res.end();
     } else {
-        res.render('login-therapist');
+        res.render('account/login-therapist');
     }
 };
 

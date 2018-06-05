@@ -3,7 +3,7 @@
 exports.getSession = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var patientID = req.params.patientID;
@@ -12,7 +12,7 @@ exports.getSession = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_patient_session_specific(patientID, sessionID, function (sessionInfo) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.send("Getting this session");
+                        res.render('patient/patient-session-details', sessionInfo);
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (sessionInfo === false) {
                             res.writeHead(403, {
@@ -41,7 +41,7 @@ exports.getSession = function (req, res, patientDB, authorizer) {
 exports.deletePatientSession = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var patientID = req.params.patientID;

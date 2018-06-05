@@ -3,14 +3,14 @@
 exports.getAllTherapists = function (req, res, therapistDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         authorizer.isAllowed(verified, "/therapist", '*', function (err, can_view) {
             if (can_view) {
                 therapistDB.get_all_therapists(function (therapists) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.render('therapist-overview', {
+                        res.render('therapist/therapist-overview', {
                             therapists: therapists
                         });
                     } else if (req.headers['accept'].includes('application/json')) {

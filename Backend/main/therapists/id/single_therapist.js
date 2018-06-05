@@ -3,7 +3,7 @@
 exports.getTherapist = function (req, res, therapistDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var therapistID = req.params.therapistID;
@@ -12,7 +12,7 @@ exports.getTherapist = function (req, res, therapistDB, authorizer) {
                 therapistDB.get_all_patients(therapistID, function (info) {
                     if (req.headers['accept'].includes('text/html')) {
                         //Send therapist info as HTML
-                        res.render('therapist-detail', {
+                        res.render('therapist/therapist-detail', {
                             patients: info,
                             therapistID: therapistID
                         });
@@ -44,7 +44,7 @@ exports.getTherapist = function (req, res, therapistDB, authorizer) {
 exports.deleteTherapist = function (req, res, therapistDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var therapistID = req.params.therapistID;

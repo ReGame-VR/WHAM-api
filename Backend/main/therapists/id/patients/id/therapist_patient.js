@@ -3,7 +3,7 @@
 exports.removePatientTherapist = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var therapistID = req.params.therapistID;

@@ -362,7 +362,7 @@ class PatientDB {
     // String String ([Number] -> Void) -> Void
     // Gives the score for the session at the given time/sessionID (accepts both)
     get_patient_session_specific(patientID, sessionID, callback) {
-        var sql = "SELECT score FROM PATIENT_SESSION WHERE patientID = ? AND (sessionID = ? or time = ?)"
+        var sql = "SELECT score, sessionID, time FROM PATIENT_SESSION WHERE patientID = ? AND (sessionID = ? or time = ?)"
         var inserts = [patientID, sessionID, sessionID];
 
         sql = mysql.format(sql, inserts);
@@ -377,7 +377,12 @@ class PatientDB {
                     callback(false);
                 } else {
                     connection.release();
-                    callback(result[0].score);
+                    console.log(sql);
+                    callback({
+                        activityLevel: result[0].score,
+                        time: result[0].time,
+                        id: result[0].sessionID
+                    });
                 }
             });
         });

@@ -3,7 +3,7 @@
 exports.getPatientSessions = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var patientID = req.params.patientID;
@@ -11,7 +11,7 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_patient_sessions(patientID, function (sessions) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.render('patient-session-overview', {
+                        res.render('patient/patient-session-overview', {
                             username: patientID,
                             sessions: sessions
                         });
@@ -43,7 +43,7 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer) {
 exports.addPatientSession = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var patientID = req.params.patientID;

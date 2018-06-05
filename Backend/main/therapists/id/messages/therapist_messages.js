@@ -3,7 +3,7 @@
 exports.getMessagesFromTherapist = function (req, res, therapistDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         var therapistID = req.params.therapistID;

@@ -3,7 +3,7 @@
 exports.getPatients = function (req, res, patientDB, authorizer) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect('../login');
+            res.redirect(req.baseUrl + '/login');
             return;
         }
         authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
@@ -11,7 +11,7 @@ exports.getPatients = function (req, res, patientDB, authorizer) {
                 patientDB.get_all_patient_info(function (info) {
                     if (req.headers['accept'].includes('text/html')) {
                         //Send therapist info as HTML
-                        res.render('patient-overview', {
+                        res.render('patient/patient-overview', {
                             patients: info
                         });
                     } else if (req.headers['accept'].includes('application/json')) {
