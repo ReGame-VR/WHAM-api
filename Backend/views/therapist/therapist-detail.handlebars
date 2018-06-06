@@ -8,18 +8,19 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
     crossorigin="anonymous">
   <link rel="stylesheet" href="/css/style.css">
-
 </head>
 
 <body>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand">WHAM</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
-        <span class="navbar-toggler-icon"></span>
+      <span class="navbar-toggler-icon"></span>
     </button>
     <div class="navbar-collapse collapse justify-content-stretch" id="navbar">
       <div class="navbar-nav ml-auto">
-        <a class="nav-item nav-link" href="#">Profile<span class="sr-only">(current)</span></a>
+        <a class="nav-item nav-link" href="#">Profile
+          <span class="sr-only">(current)</span>
+        </a>
         <a class="nav-item nav-link" href="/logout">Sign out</a>
       </div>
     </div>
@@ -36,10 +37,15 @@
       </thead>
       <tbody>
         {{#each patients}}
-        <tr class="click-row" onclick={{concat "window.location='/patients/" username "'"}}>
-          <td>{{username}}</td>
-          <td>{{last_activity_time}}</td>
-          <td>{{last_score}}</td>
+        <tr>
+          <td class="click-cell" onclick={{concat "window.location='/patients/" username "'"}}>{{username}}</td>
+          <td class="click-cell" onclick={{concat "window.location='/patients/" username "'"}}>{{last_activity_time}}</td>
+          <td class="click-cell" onclick={{concat "window.location='/patients/" username "'"}}>{{last_score}}</td>
+          <td>
+            <form action={{concat "/therapists/" ../therapistID "/patients/" username "?_method=DELETE"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
+              <button type="submit">Remove</button>
+            </form>
+          </td>
         </tr>
         {{/each}}
       </tbody>
