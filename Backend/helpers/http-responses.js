@@ -103,7 +103,7 @@ class HTTPResponses {
 
     report_sucess(req, res, json_info, url, html_info) {
         if (req.headers['accept'].includes('text/html')) {
-            this.render(req, res, url, {html_info})
+            this.render(req, res, url, html_info)
         } else if (req.headers['accept'].includes('application/json')) {
             this.report_sucess_with_info(req, res, json_info);
         } else {
