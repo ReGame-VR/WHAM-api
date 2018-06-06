@@ -1,3 +1,6 @@
+// A Helper class that every HTTP method should delegate its responses to 
+// Created to give a single point of control for things like changing error messages and 
+// response codes. 
 class HTTPResponses {
 
     constructor() {
@@ -101,6 +104,10 @@ class HTTPResponses {
         }));
     }
 
+    // Req Res Object String Object -> Void
+    // Given the JSON response and the HTML response (for a GET call)
+    // Will check which one the user is looking for and report the apporpiate information
+    // If the reqest is not supported, will notify
     report_sucess(req, res, json_info, url, html_info) {
         if (req.headers['accept'].includes('text/html')) {
             this.render(req, res, url, html_info)
