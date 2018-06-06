@@ -10,18 +10,13 @@ exports.getTherapist = function (req, res, therapistDB, authorizer, responder) {
         authorizer.isAllowed(verified, therapistID, '*', function (err, can_view) {
             if (can_view) {
                 therapistDB.get_all_patients(therapistID, function (info) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        //Send therapist info as HTML
-                        responder.render(req, res, 'therapist/therapist-detail', {
+                    if (info === false) {
+                        responder.report_not_found(req, res);
+                    } else {
+                        responder.report_sucess(req, res, info, 'therapist/therapist-detail', {
                             patients: info,
                             therapistID: therapistID
-                        });
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        if (info === false) {
-                            responder.report_not_found(req, res);
-                        } else {
-                            responder.report_sucess_with_info(req, res, info);
-                        }
+                        })
                     }
                 });
             } else {

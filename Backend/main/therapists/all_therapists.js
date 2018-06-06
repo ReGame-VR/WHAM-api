@@ -9,16 +9,12 @@ exports.getAllTherapists = function (req, res, therapistDB, authorizer, responde
         authorizer.isAllowed(verified, "/therapist", '*', function (err, can_view) {
             if (can_view) {
                 therapistDB.get_all_therapists(function (therapists) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        responder.render(req, res, 'therapist/therapist-overview', {
+                    if (therapists == false) {
+                        responder.report_not_found(req, res);
+                    } else {
+                        responder.report_sucess(req, res, therapists, 'therapist/therapist-overview', {
                             therapists: therapists
                         });
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        if (therapists == false) {
-                            responder.report_not_found(req, res);
-                        } else {
-                            responder.report_sucess_with_info(req, res, therapists);
-                        }
                     }
                 });
             } else {

@@ -38,17 +38,13 @@ exports.getPatientMessages = function (req, res, patientDB, authorizer, responde
         authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
             if (can_view) {
                 patientDB.get_all_messages_for(patientID, function (messages) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        responder.render(req, res, 'patient/patient-message-overview', {
+                    if (messages === false) {
+                        responder.report_not_found(req, res);
+                    } else {
+                        responder.report_sucess(req, res, messages, 'patient/patient-message-overview', {
                             patientID: patientID,
                             messages: messages
                         });
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        if (messages === false) {
-                            responder.report_not_found(req, res);
-                        } else {
-                            responder.report_sucess_with_info(req, res, messages);
-                        }
                     }
                 });
             } else {

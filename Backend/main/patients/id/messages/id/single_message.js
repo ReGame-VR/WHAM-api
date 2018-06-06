@@ -37,15 +37,11 @@ exports.getMessage = function (req, res, patientDB, authorizer, responder) {
         authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
             if (can_view) {
                 patientDB.get_specific_message(patientID, messageID, function (message_content) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        responder.render(req, res, 'patient/patient-message-detail', message_content);
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        if (message_content === false) {
-                            responder.report_not_found(req, res);
-                        } else {
-                            responder.report_sucess_with_info(req, res, message_content);
-                        }
-                    }
+                    if (message_content === false) {
+                        responder.report_not_found(req, res);
+                    } else {
+                        responder.report_sucess(req, res, message_content, 'patient/patient-message-detail', message_content)
+                    } 
                 });
             } else {
                 responder.report_not_authorized(req, res);

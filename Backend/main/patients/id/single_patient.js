@@ -10,28 +10,22 @@ exports.getPatient = function (req, res, patientDB, authorizer, responder) {
         authorizer.isAllowed(verified, id, '*', function (err, can_view) {
             if (can_view) {
                 patientDB.get_patient_info(id, function (info, sessions, messages) {
-                    if (req.headers['accept'].includes('text/html')) {
+                    if (info === false) {
+                        responder.report_not_found(req, res);
+                    } else {
                         var realSessions = [];
                         for (var i = 0; i < sessions.length; i += 1) {
                             realSessions.push([sessions[i].time, sessions[i].score]);
                         }
-                        
-                        responder.render(req, res, 'patient/patient-detail', {
+                        responder.report_sucess(req, res, {
+                            info: info,
+                            sessions: sessions,
+                            messages: messages
+                        }, 'patient/patient-detail', {
                             info: info,
                             sessions: realSessions,
                             messages: messages
-                        });
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        if (info === false) {
-                            responder.report_not_found(req, res);
-                        } else {
-                            responder.report_sucess_with_info(req, res, {
-                                info: info,
-                                sessions: sessions,
-                                messages: messages
-                            })
-                        }
-                        //Send patient info as JSON
+                        })
                     }
                 });
             } else {

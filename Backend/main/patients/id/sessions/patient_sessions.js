@@ -10,17 +10,13 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer, responde
         authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
             if (can_view) {
                 patientDB.get_patient_sessions(patientID, function (sessions) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        responder.render(req, res, 'patient/patient-session-overview', {
+                    if (sessions === false) {
+                        responder.report_not_found(req, res);
+                    } else {
+                        responder.report_sucess(req, res, sessions, 'patient/patient-session-overview', {
                             username: patientID,
                             sessions: sessions
                         });
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        if (sessions === false) {
-                            responder.report_not_found(req, res);
-                        } else {
-                            responder.report_sucess_with_info(req, res, sessions);
-                        }
                     }
                 });
             } else {

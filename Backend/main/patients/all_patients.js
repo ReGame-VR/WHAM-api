@@ -9,16 +9,7 @@ exports.getPatients = function (req, res, patientDB, authorizer, responder) {
         authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
             if (can_view) {
                 patientDB.get_all_patient_info(function (info) {
-                    if (req.headers['accept'].includes('text/html')) {
-                        //Send therapist info as HTML
-                        responder.render(req, res, 'patient/patient-overview', {
-                            patients: info
-                        })
-                    } else if (req.headers['accept'].includes('application/json')) {
-                        responder.report_sucess_with_info(req, res, info);
-                    } else {
-                        responder.report_not_found(req, res);
-                    }
+                    responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
                 });
             } else {
                 responder.report_not_authorized(req, res);
@@ -46,7 +37,6 @@ exports.addPatient = function (req, res, patientDB, responder) {
             responder.report_sucess_with_info(req, res, {
                 token: worked
             })
-
         } else {
             responder.report_fail_with_message(req, res, "User already exists");
         }
