@@ -1,7 +1,7 @@
-const PatientDB = require('../Database/PatientDB.js');
-const TherapistDB = require('../Database/TherapistDB.js');
-const AuthenticationDB = require('../Database/AuthenticationDB.js');
-const DBReseter = require('../Database/ResetDB.js');
+const PatientDB = require('../database/PatientDB.js');
+const TherapistDB = require('../database/TherapistDB.js');
+const AuthenticationDB = require('../database/AuthenticationDB.js');
+const DBReseter = require('../database/ResetDB.js');
 const chai = require("chai");
 var expect = chai.expect;
 

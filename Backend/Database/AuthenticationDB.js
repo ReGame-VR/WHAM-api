@@ -55,7 +55,7 @@ class AuthenticationDB {
                     var password;
                     try {
                         password = bcrypt.hashSync(unencrypt_password, salt);
-                    } catch(err) {
+                    } catch (err) {
                         callback(false);
                         return;
                     }
@@ -119,7 +119,7 @@ class AuthenticationDB {
             });
         });
     }
-    
+
     // Any Any Any -> Void
     // Adds these permissions to acl
     allow(user, stuff, able) {
@@ -135,7 +135,7 @@ class AuthenticationDB {
     // Any Any Any Callback -> Void
     // Passes to acl
     isAllowed(user, stuff, able, callback) {
-        if(user === 'admin') {
+        if (user === 'admin') {
             callback(null, true);
         } else {
             this.acl.isAllowed(user, stuff, able, callback);
@@ -153,34 +153,39 @@ class AuthenticationDB {
     // Gives the username if valid
     verifyJWT(req, callback) {
         var token;
-        if(req.query !== undefined && req.query.auth_token !== undefined) {
+        if (req.query !== undefined && req.query.auth_token !== undefined) {
             token = req.query.auth_token;
-        } else if(req.cookies !== undefined) {
+        } else if (req.cookies !== undefined) {
             var cookies = req.headers.cookie;
             token = req.cookies.auth_token;
         }
-        if(token === undefined) {
+        if (token === undefined) {
             callback(false);
             return;
         }
-        var decoded = jwt.verify(token, process.env.JWT_SECRET);
-        var sql = "SELECT * FROM " + decoded.data.type + " WHERE username = ? AND password = ?";
-        sql = mysql.format(sql, [decoded.data.username, decoded.data.password_hash]);
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                (callback(false))
-                throw err
-            }
-            connection.query(sql, function (error, result, fields) {
-                if (error || result.length == 0) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    connection.release();
-                    callback(decoded.data.username);
+        try {
+            var decoded = jwt.verify(token, process.env.JWT_SECRET);
+            var sql = "SELECT * FROM " + decoded.data.type + " WHERE username = ? AND password = ?";
+            sql = mysql.format(sql, [decoded.data.username, decoded.data.password_hash]);
+            this.pool.getConnection(function (err, connection) {
+                if (err) {
+                    (callback(false))
+                    throw err
                 }
+                connection.query(sql, function (error, result, fields) {
+                    if (error || result.length == 0) {
+                        connection.release();
+                        callback(false);
+                    } else {
+                        connection.release();
+                        callback(decoded.data.username);
+                    }
+                });
             });
-        });
+        } catch (err) { // The JWT was malformed (probably a fake)
+            callback(false);
+            return;
+        }
     }
 
     // When the server is shut down, all permissions are cleared from ACL
@@ -200,7 +205,7 @@ class AuthenticationDB {
                     connection.release();
                     callback(false);
                 } else {
-                    for(var i = 0; i < result.length; i += 1) {
+                    for (var i = 0; i < result.length; i += 1) {
                         acl.addUserRoles(result[i].username, result[i].username);
                         acl.allow(result[i].username, result[i].username, '*')
                     }
@@ -209,7 +214,7 @@ class AuthenticationDB {
                             connection.release();
                             callback(false);
                         } else {
-                            for(var i = 0; i < result.length; i += 1) {
+                            for (var i = 0; i < result.length; i += 1) {
                                 acl.addUserRoles(result[i].username, result[i].username);
                                 acl.allow(result[i].username, result[i].username, '*')
                             }
@@ -218,7 +223,7 @@ class AuthenticationDB {
                                     connection.release();
                                     callback(false);
                                 } else {
-                                    for(var i = 0; i < result.length; i += 1) {
+                                    for (var i = 0; i < result.length; i += 1) {
                                         acl.allow(result[i].therapistID, result[i].patientID, '*')
                                     }
                                     callback(true);
@@ -230,21 +235,6 @@ class AuthenticationDB {
             });
         });
     }
-
-    report_not_authorized(req, res) {
-        if(req.headers['accept'] === undefined) {
-            res.writeHead(403);
-            res.end();
-        } else if (req.headers['accept'].includes('text/html')) {
-            res.render('account/not-allowed');
-        } else if (req.headers['accept'].includes('application/json')) {
-            res.writeHead(403);
-            res.end();
-        }
-    }
-
-
-
 }
 
 module.exports = AuthenticationDB;

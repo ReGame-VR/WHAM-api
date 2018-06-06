@@ -1,9 +1,9 @@
 //Returns the info for all patients of this therapist
 // Request Response TherapistDB -> Void
-exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
+exports.getTherapistPatients = function (req, res, therapistDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var therapistID = req.params.therapistID;
@@ -14,20 +14,14 @@ exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
                         //Send therapist-patient info as HTML
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (info === false) {
-                            res.writeHead(403);
-                            res.end();
+                            responder.report_not_found(req, res);
                         } else {
-                            res.writeHead(200, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify(info));
+                            responder.report_sucess_with_info(req, res, info);
                         }
-                    } else {
-                        //An unsupported request
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -35,10 +29,10 @@ exports.getTherapistPatients = function (req, res, therapistDB, authorizer) {
 
 // Adds the given patient to this patient-therapist pair
 // Request Response PatientDB -> Void
-exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
+exports.addPatientTherapist = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var therapistID = req.params.therapistID;
@@ -47,19 +41,13 @@ exports.addPatientTherapist = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.assign_to_therapist(patientID, therapistID, new Date(), function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         })
     });

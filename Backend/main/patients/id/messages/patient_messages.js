@@ -1,9 +1,9 @@
 // Sends the given message to the patient
 // Request Response PatientDB -> Void
-exports.addPatientMessage = function (req, res, patientDB, authorizer) {
+exports.addPatientMessage = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -14,19 +14,13 @@ exports.addPatientMessage = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.send_patient_a_message(patientID, therapistID, message_content, date_sent, function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -34,10 +28,10 @@ exports.addPatientMessage = function (req, res, patientDB, authorizer) {
 
 // Returns all message this patient has recieved
 // Request Response PatientDB -> Void
-exports.getPatientMessages = function (req, res, patientDB, authorizer) {
+exports.getPatientMessages = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -45,28 +39,20 @@ exports.getPatientMessages = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_all_messages_for(patientID, function (messages) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.render('patient/patient-message-overview', {
+                        responder.render(req, res, 'patient/patient-message-overview', {
                             patientID: patientID,
                             messages: messages
                         });
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (messages === false) {
-                            res.writeHead(403, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end();
+                            responder.report_not_found(req, res);
                         } else {
-                            res.writeHead(200, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify(messages));
+                            responder.report_sucess_with_info(req, res, messages);
                         }
-                    } else {
-                        //An unsupported request
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });

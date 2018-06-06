@@ -1,9 +1,9 @@
 //Returns the info for a single patient
 // Request Response PatientDB -> Void
-exports.getPatient = function (req, res, patientDB, authorizer) {
+exports.getPatient = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var id = req.params.patientID
@@ -15,34 +15,27 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
                         for (var i = 0; i < sessions.length; i += 1) {
                             realSessions.push([sessions[i].time, sessions[i].score]);
                         }
-                        res.render('patient/patient-detail', {
+                        
+                        responder.render(req, res, 'patient/patient-detail', {
                             info: info,
                             sessions: realSessions,
                             messages: messages
                         });
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (info === false) {
-                            res.writeHead(403, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify({
-                                error: "User does not exist"
-                            }));
+                            responder.report_not_found(req, res);
                         } else {
-                            res.writeHead(200, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify({
+                            responder.report_sucess_with_info(req, res, {
                                 info: info,
                                 sessions: sessions,
                                 messages: messages
-                            }));
+                            })
                         }
                         //Send patient info as JSON
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -50,29 +43,23 @@ exports.getPatient = function (req, res, patientDB, authorizer) {
 
 //Deletes this patient from the database
 // Request Response PatientDB -> Void
-exports.deletePatient = function (req, res, patientDB, authorizer) {
+exports.deletePatient = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         authorizer.isAllowed(verified, req.params.patientID, '*', function (err, can_view) {
             if (can_view) {
                 patientDB.delete_patient(req.params.patientID, function (worked) {
                     if (worked === false) {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     } else {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });

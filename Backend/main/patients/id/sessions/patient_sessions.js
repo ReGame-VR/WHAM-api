@@ -1,9 +1,9 @@
 //Returns the info for a patients activity sessions
 // Request Response PatientDB -> Void
-exports.getPatientSessions = function (req, res, patientDB, authorizer) {
+exports.getPatientSessions = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -11,28 +11,20 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_patient_sessions(patientID, function (sessions) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.render('patient/patient-session-overview', {
+                        responder.render(req, res, 'patient/patient-session-overview', {
                             username: patientID,
                             sessions: sessions
                         });
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (sessions === false) {
-                            res.writeHead(403, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end();
+                            responder.report_not_found(req, res);
                         } else {
-                            res.writeHead(200, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify(sessions));
+                            responder.report_sucess_with_info(req, res, sessions);
                         }
-                    } else {
-                        //An unsupported request
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -40,10 +32,10 @@ exports.getPatientSessions = function (req, res, patientDB, authorizer) {
 
 //Adds the session for the given patient to the database
 // Request Response PatientDB -> Void
-exports.addPatientSession = function (req, res, patientDB, authorizer) {
+exports.addPatientSession = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -53,19 +45,13 @@ exports.addPatientSession = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.add_patient_session(patientID, score, time, function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });

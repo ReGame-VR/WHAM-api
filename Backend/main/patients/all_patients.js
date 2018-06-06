@@ -1,9 +1,9 @@
 // Gives all patient info in either JSON or HTML form
 // Request Response PatientDB AuthorizationDB -> Void
-exports.getPatients = function (req, res, patientDB, authorizer) {
+exports.getPatients = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
@@ -11,21 +11,17 @@ exports.getPatients = function (req, res, patientDB, authorizer) {
                 patientDB.get_all_patient_info(function (info) {
                     if (req.headers['accept'].includes('text/html')) {
                         //Send therapist info as HTML
-                        res.render('patient/patient-overview', {
+                        responder.render(req, res, 'patient/patient-overview', {
                             patients: info
-                        });
+                        })
                     } else if (req.headers['accept'].includes('application/json')) {
-                        res.writeHead(200, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end(JSON.stringify(info));
+                        responder.report_sucess_with_info(req, res, info);
                     } else {
-                        res.writeHead(403);
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -34,15 +30,10 @@ exports.getPatients = function (req, res, patientDB, authorizer) {
 
 // Adds the patient to the database
 // Request Response PatientDB -> Void
-exports.addPatient = function (req, res, patientDB) {
+exports.addPatient = function (req, res, patientDB, responder) {
     var username = req.body.username
     if (username.includes(" ")) {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end(JSON.stringify({
-            error: "User already exists"
-        }));
+        responder.report_fail_with_message(req, res, "Bad Username");
         return;
     }
     var unencrypt_password = req.body.password
@@ -52,19 +43,12 @@ exports.addPatient = function (req, res, patientDB) {
     var information = req.body.information
     patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
         if (worked !== false) {
-            res.writeHead(200, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
+            responder.report_sucess_with_info(req, res, {
                 token: worked
-            }));
+            })
+
         } else {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end(JSON.stringify({
-                error: "User already exists"
-            }));
+            responder.report_fail_with_message(req, res, "User already exists");
         }
     });
 }

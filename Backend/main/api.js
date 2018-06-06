@@ -1,17 +1,9 @@
 //Shows the API as HTML form
 // Request Response -> Void
-exports.showAPI = function(req, res) {
+exports.showAPI = function(req, res, responder) {
     if (req.headers['accept'].includes('text/html')) {
-        res.render('api');
-    } else if (req.headers['accept'].includes('application/json')) {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end();
+        responder.render(req, res, 'api', {});
     } else {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end();
+        responder.report_request_not_supported(req, res);
     }
 }

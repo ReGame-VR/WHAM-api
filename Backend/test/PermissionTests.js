@@ -4,9 +4,9 @@ var expect = chai.expect;
 var chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 const app = require('../index');
-const PatientDB = require('../Database/PatientDB.js');
-const AuthDB = require('../Database/AuthenticationDB.js');
-const DBReseter = require('../Database/ResetDB.js');
+const PatientDB = require('../database/PatientDB.js');
+const AuthDB = require('../database/AuthenticationDB.js');
+const DBReseter = require('../database/ResetDB.js');
 var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", new AuthDB()));
 var jwt = require('jsonwebtoken');
 
@@ -816,6 +816,21 @@ describe("PermTests", function () {
                     auth_token: cole_auth_token
                 })
                 .send()
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Should reject a forged token", function () {
+        it("should reject", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: "asjhdnasndkjasndfkdsjnfkjsnfs"
+                })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(403);
                     done();

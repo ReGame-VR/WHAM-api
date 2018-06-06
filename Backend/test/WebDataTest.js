@@ -4,9 +4,9 @@ const expect = chai.expect;
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 const app = require('../index');
-const PatientDB = require('../Database/PatientDB.js');
-const AuthDB = require('../Database/AuthenticationDB.js');
-const DBReseter = require('../Database/ResetDB.js');
+const PatientDB = require('../database/PatientDB.js');
+const AuthDB = require('../database/AuthenticationDB.js');
+const DBReseter = require('../database/ResetDB.js');
 var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", new AuthDB()));
 var jwt = require('jsonwebtoken');
 

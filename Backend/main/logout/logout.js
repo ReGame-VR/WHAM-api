@@ -1,13 +1,10 @@
 // Renders the login page for a patient
-// Request Response -> Void
-exports.show_logout = function(req, res) {
+// Request Response HTTPResponses -> Void
+exports.show_logout = function(req, res, responder) {
     if(req.headers['accept'].includes('application/json')) {
-        res.writeHead(200, {
-            "Content-Type": "application/json"
-        });
-        res.end();
+        responder.report_sucess_no_info();
     } else {
         res.clearCookie("auth_token");
-        res.render('account/logout');
+        responder.render(req, res, 'account/logout', {});
     }
 };

@@ -19,7 +19,7 @@ class DBReseter {
     // (Boolean -> Void) -> Void
     // Sets the DB schema to the most current one and clears the data
     reset_db(callback) {
-        var sql = fs.readFileSync(__dirname + '/Schemas' + '/schemas.sql').toString();
+        var sql = fs.readFileSync(__dirname + '/schemas' + '/schemas.sql').toString();
         var patientDB = this.patientDB;
         this.pool.getConnection(function (err, connection) {
             if (err) {

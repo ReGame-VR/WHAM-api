@@ -1,9 +1,9 @@
 // Marks this therapist-patient pair as expired
 // Request Response PatientDb -> Void
-exports.removePatientTherapist = function (req, res, patientDB, authorizer) {
+exports.removePatientTherapist = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var therapistID = req.params.therapistID;
@@ -12,19 +12,13 @@ exports.removePatientTherapist = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.unassign_to_therapist(patientID, therapistID, new Date(), function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });

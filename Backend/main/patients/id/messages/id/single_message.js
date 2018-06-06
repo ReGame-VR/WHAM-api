@@ -1,12 +1,9 @@
 // Marks the given message as read
 // Request Response PatientDB -> Void
-exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
+exports.markMessageAsRead = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.writeHead(403, {
-                "Content-Type": "application/json"
-            });
-            res.end();
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -15,19 +12,13 @@ exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.mark_message_as_read(patientID, messageID, function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -35,10 +26,10 @@ exports.markMessageAsRead = function (req, res, patientDB, authorizer) {
 
 // Returns info about the given message
 // Request Response PatientDB -> Void
-exports.getMessage = function (req, res, patientDB, authorizer) {
+exports.getMessage = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -47,23 +38,17 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.get_specific_message(patientID, messageID, function (message_content) {
                     if (req.headers['accept'].includes('text/html')) {
-                        res.render('patient/patient-message-detail', message_content);
+                        responder.render(req, res, 'patient/patient-message-detail', message_content);
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (message_content === false) {
-                            res.writeHead(403, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end();
+                            responder.report_not_found(req, res);
                         } else {
-                            res.writeHead(200, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify(message_content));
+                            responder.report_sucess_with_info(req, res, message_content);
                         }
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -71,10 +56,10 @@ exports.getMessage = function (req, res, patientDB, authorizer) {
 
 // Totally deletes the given message
 // Request Response PatientDB -> Void
-exports.deletePatientMessage = function (req, res, patientDB, authorizer) {
+exports.deletePatientMessage = function (req, res, patientDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var patientID = req.params.patientID;
@@ -83,22 +68,13 @@ exports.deletePatientMessage = function (req, res, patientDB, authorizer) {
             if (can_view) {
                 patientDB.delete_message(patientID, messageID, function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 })
             } else {
-                res.writeHead(403, {
-                    "Content-Type": "application/json"
-                });
-                res.end();
+                responder.report_not_authorized(req, res);
             }
         });
     });

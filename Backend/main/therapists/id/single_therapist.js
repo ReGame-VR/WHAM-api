@@ -1,9 +1,9 @@
 //Returns the info for a single therapist
 // Request Response TherapistDB -> Void
-exports.getTherapist = function (req, res, therapistDB, authorizer) {
+exports.getTherapist = function (req, res, therapistDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var therapistID = req.params.therapistID;
@@ -12,28 +12,20 @@ exports.getTherapist = function (req, res, therapistDB, authorizer) {
                 therapistDB.get_all_patients(therapistID, function (info) {
                     if (req.headers['accept'].includes('text/html')) {
                         //Send therapist info as HTML
-                        res.render('therapist/therapist-detail', {
+                        responder.render(req, res, 'therapist/therapist-detail', {
                             patients: info,
                             therapistID: therapistID
                         });
                     } else if (req.headers['accept'].includes('application/json')) {
                         if (info === false) {
-                            res.writeHead(403, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end();
+                            responder.report_not_found(req, res);
                         } else {
-                            res.writeHead(200, {
-                                "Content-Type": "application/json"
-                            });
-                            res.end(JSON.stringify(info));
+                            responder.report_sucess_with_info(req, res, info);
                         }
-                    } else {
-                        //An unsupported request
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });
@@ -41,10 +33,10 @@ exports.getTherapist = function (req, res, therapistDB, authorizer) {
 
 //Deletes this therapist from the database
 // Request Response TherapistDB -> Void
-exports.deleteTherapist = function (req, res, therapistDB, authorizer) {
+exports.deleteTherapist = function (req, res, therapistDB, authorizer, responder) {
     authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
-            res.redirect(req.baseUrl + '/login');
+            responder.report_bad_token(req, res);
             return;
         }
         var therapistID = req.params.therapistID;
@@ -52,19 +44,13 @@ exports.deleteTherapist = function (req, res, therapistDB, authorizer) {
             if (can_view) {
                 therapistDB.delete_therapist(therapistID, function (worked) {
                     if (worked) {
-                        res.writeHead(204, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_sucess_no_info(req, res);
                     } else {
-                        res.writeHead(403, {
-                            "Content-Type": "application/json"
-                        });
-                        res.end();
+                        responder.report_not_found(req, res);
                     }
                 });
             } else {
-                authorizer.report_not_authorized(req, res);
+                responder.report_not_authorized(req, res);
             }
         });
     });

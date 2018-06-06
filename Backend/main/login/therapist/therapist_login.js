@@ -1,26 +1,22 @@
 // Renders the login page for a patient
-// Request Response -> Void
-exports.show_login = function(req, res) {
-    if(req.headers['accept'].includes('application/json')) {
-        res.writeHead(403, {
-            "Content-Type": "application/json"
-        });
-        res.end();
+// Request Response HTTPResponses -> Void
+exports.show_login = function (req, res, responder) {
+    if (req.headers['accept'].includes('text/html')) {
+        responder.render(req, res, 'account/login-therapist', {});
     } else {
-        res.render('account/login-therapist');
+        responder.report_request_not_supported(req, res);
     }
 };
 
-exports.therapist_login = function (req, res) {
-    if(req.headers['accept'].includes("text/html")) {
+// The function that is called after Passport verifies the user login
+// Request Response HTTPResponses -> Void
+exports.therapist_login = function (req, res, responder) {
+    if (req.headers['accept'].includes("text/html")) {
         res.cookie('auth_token', req.user.token);
-        res.redirect('../therapists/' + req.body.username);
+        responder.redirect(req, res, '../therapists/' + req.body.username);
     } else {
-        res.writeHead(200, {
-            'Content-Type': 'application/json',
-        });
-        res.end(JSON.stringify({
+        responder.report_sucess_with_info(req, res, {
             token: req.user.token,
-        }));
+        })
     }
 }
