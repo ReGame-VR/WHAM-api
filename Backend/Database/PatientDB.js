@@ -17,7 +17,6 @@ class PatientDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
-            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
         this.authorizer = authorizer;
@@ -512,8 +511,31 @@ class PatientDB {
     // String String Date (Boolean -> Void) -> Void
     // Pairs this therapist and patinet in the PATIENT_THERAPIST DB
     assign_to_therapist(patientID, therapistID, date_added, callback) {
-        var sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null)";
+        var sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null, false)";
         var inserts = [patientID, therapistID, date_added];
+        sql = mysql.format(sql, inserts);
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                throw err;
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback(true);
+                }
+            });
+        });
+    }
+    
+    // String String (Boolean -> Void) -> Void
+    // Marks this patient-therapist join as accepted
+    accept_therapist_request(patientID, therapistID, callback) {
+        var sql = "UPDATE PATIENT_THERAPIST SET is_accepted = true WHERE patientID = ? AND therapistID = ?";
+        var inserts = [patientID, therapistID];
         sql = mysql.format(sql, inserts);
         var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
@@ -522,7 +544,7 @@ class PatientDB {
                 throw err;
             }
             connection.query(sql, function (error, result, fields) {
-                if (error) {
+                if (error || result.affectedRows === 0) {
                     connection.release();
                     callback(false);
                 } else {

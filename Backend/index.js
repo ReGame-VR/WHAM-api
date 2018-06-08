@@ -126,7 +126,7 @@ app.get('/api', function (req, res) {
     api.showAPI(req, res, responder);
 });
 
-// HTML Forms do not support PUT, PATCH, and DELETE so this method
+// HTML Forms do not support patch, PATCH, and DELETE so this method
 // allows the form to pass a parameter _method that overrides whatever
 // the existing method (probably POST) is.
 app.use(methodOverride('_method'));
@@ -230,7 +230,7 @@ app.get('/patients/:patientID/messages', function (req, res) {
 });
 
 // Marks this message as read
-app.put('/patients/:patientID/messages/:messageID', function (req, res) {
+app.patch('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.markMessageAsRead(req, res, patientDB, authorizer, responder);
 });
 
@@ -279,6 +279,12 @@ app.post('/therapists/:therapistID/patients', function (req, res) {
 // DOES NOT delete the pair, simply marks its "date_removed" as today
 app.delete('/therapists/:therapistID/patients/:patientID', function (req, res) {
     therapist_patient.removePatientTherapist(req, res, patientDB, authorizer, responder);
+});
+
+// Accepts this patient-therapist join
+// Marks is_accepted as true
+app.patch('/therapists/:therapistID/patients/:patientID', function (req, res) {
+    therapist_patient.accept_pair(req, res, patientDB, authorizer, responder);
 });
 
 // Returns every message this therapist has sent

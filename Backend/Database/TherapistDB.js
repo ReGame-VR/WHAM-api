@@ -17,7 +17,6 @@ class TherapistDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
-            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
         this.authorizer = authorizer;
@@ -110,7 +109,7 @@ class TherapistDB {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
         FROM THERAPIST T LEFT JOIN 
         (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
-        where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
+        where T.username = PT.therapistID AND PT.date_removed IS NULL AND is_accepted = true GROUP BY T.username) C
         ON T.username = C.username 
         WHERE T.username = ?`;
         sql = mysql.format(sql, [therapistID]);
@@ -141,7 +140,7 @@ class TherapistDB {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
                 FROM THERAPIST T LEFT JOIN 
                 (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
-                where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
+                where T.username = PT.therapistID AND PT.date_removed IS NULL AND is_accepted = true GROUP BY T.username) C
                 ON T.username = C.username`;
         this.pool.getConnection(function (err, connection) {
             if (err) {
@@ -213,7 +212,7 @@ class TherapistDB {
     get_all_patients(therapistID, callback) {
         var safe_sql = `SELECT username, dob, weight, height, information
         FROM PATIENT P, PATIENT_THERAPIST PT
-        WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL`;
+        WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL AND is_accepted = true`;
         var inserts = [therapistID];
         safe_sql = mysql.format(safe_sql, inserts);
         this.pool.getConnection(function (err, connection) {

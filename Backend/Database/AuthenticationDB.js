@@ -13,7 +13,6 @@ class AuthenticationDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
-            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
 
@@ -193,7 +192,7 @@ class AuthenticationDB {
     load_all_permissions(callback) {
         var patients_sql = "SELECT username FROM PATIENT";
         var therapist_sql = "SELECT username FROM THERAPIST";
-        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST";
+        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST WHERE is_accepted = true";
         var acl = this.acl;
         this.pool.getConnection(function (err, connection) {
             if (err) {
@@ -225,6 +224,51 @@ class AuthenticationDB {
                                 } else {
                                     for (var i = 0; i < result.length; i += 1) {
                                         acl.allow(result[i].therapistID, result[i].patientID, '*')
+                                    }
+                                    callback(true);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Sometimes permissions hang between tests, I'm gonna stop that.
+    remove_all_permissions(callback) {
+        var patients_sql = "SELECT username FROM PATIENT";
+        var therapist_sql = "SELECT username FROM THERAPIST";
+        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST WHERE is_accepted = true";
+        var acl = this.acl;
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false)
+                throw err
+            }
+            connection.query(join_sql, function (error, result, fields) {
+                if (error) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    for (var i = 0; i < result.length; i += 1) {
+                        acl.removeAllow(result[i].therapistID, result[i].patientID, '*')
+                    }
+                    connection.query(patients_sql, function (error, result, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            for (var i = 0; i < result.length; i += 1) {
+                                acl.removeAllow(result[i].username, result[i].username, '*')
+                            }
+                            connection.query(therapist_sql, function (error, result, fields) {
+                                if (error) {
+                                    connection.release();
+                                    callback(false);
+                                } else {
+                                    for (var i = 0; i < result.length; i += 1) {
+                                        acl.removeAllow(result[i].username, result[i].username, '*')
                                     }
                                     callback(true);
                                 }

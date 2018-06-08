@@ -10,7 +10,15 @@ var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
 describe("DBTests", function () {
-
+    describe("Remove Allows", function() {
+        it("should callback with true if sucessful", function(done) {
+            authorizer.remove_all_permissions(function(worked) {
+                expect(worked).to.be.equal(true);
+                done();
+            });
+        });
+    }); 
+    
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
             resetDB.reset_db(function (worked) {
@@ -358,6 +366,34 @@ describe("DBTests", function () {
     });
 
     describe("TherapistDB Pt 2", function () {
+        describe("#get_all_therapists()", function () {
+            it("should return every therapist and the number of patients they have", function (done) {
+                therapistDB.get_all_therapists(function (all) {
+                    expect(all).to.be.deep.equal([{
+                        num_patients: 0,
+                        username: "therapist1"
+                    }, {
+                        num_patients: 0,
+                        username: "therapist2"
+                    }]);
+                    done();
+                });
+            });
+        });
+    });
+
+    describe("JointDB Pt 2", function() {
+        describe("#accept_therapist_request", function() {
+            it("should give true if sucessful", function(done) {
+                patientDB.accept_therapist_request("tim", "therapist2", function(worked) {
+                    expect(worked).to.be.equal(true);
+                    done();
+                }); 
+            });
+        });
+    });
+
+    describe("TherapistDB Pt 3", function () {
         describe("#get_all_therapists()", function () {
             it("should return every therapist and the number of patients they have", function (done) {
                 therapistDB.get_all_therapists(function (all) {

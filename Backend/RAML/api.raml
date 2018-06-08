@@ -295,7 +295,7 @@ resourceTypes:
         type:  { Member: {item : Message} }
         description: A specific message. 
 
-        put:
+        patch:
           queryParameters: 
             auth_token: string
           description: Sets this message set as read.
@@ -407,6 +407,16 @@ resourceTypes:
 
       /{id}:
         description: For editing a specific patient-therapist combo.
+        patch:
+          description: Marks this patient-therapist join as accepted
+          queryParameters: 
+            auth_token: string
+          responses: 
+            204:
+              description: The pair was sucessfully accepted.
+            403:
+              description: The pair could not be accepted.
+
         delete:
           queryParameters: 
             auth_token: string

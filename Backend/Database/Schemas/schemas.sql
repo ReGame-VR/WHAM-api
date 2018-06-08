@@ -33,6 +33,7 @@ CREATE TABLE PATIENT_THERAPIST (
     therapistID VARCHAR(100),
     date_assigned DATE,
     date_removed DATE, -- CAN BE NULL
+    is_accepted BOOLEAN, -- false means patient must accept, true means is accepted
     FOREIGN KEY (patientID) REFERENCES PATIENT(username),
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username)   
 );
