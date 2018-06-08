@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS MESSAGE_REPLY;
 DROP TABLE IF EXISTS PATIENT_MESSAGE;
 DROP TABLE IF EXISTS PATIENT_SESSION;
 DROP TABLE IF EXISTS PATIENT_THERAPIST;
@@ -69,4 +70,16 @@ CREATE TABLE PATIENT_MESSAGE (
     PRIMARY KEY(messageID),
     FOREIGN KEY (patientID) REFERENCES PATIENT(username),
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username)   
+);
+
+-- Stores all the replys either the patient or the therapist has sent in a message thread
+CREATE TABLE MESSAGE_REPLY (
+    messageID INTEGER,
+    fromID VARCHAR(100),
+    date_sent DATETIME,
+    content VARCHAR(8000),
+    replyID INTEGER NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (replyID),
+    FOREIGN KEY (messageID) REFERENCES PATIENT_MESSAGE(messageID),
+    FOREIGN KEY (fromID) REFERENCES USER(username)
 );

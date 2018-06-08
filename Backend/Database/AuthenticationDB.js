@@ -20,23 +20,9 @@ class AuthenticationDB {
         this.acl.allow('admin', '*', '*') // the admin can do anything
     }
 
-    // String String (Maybe-Error Maybe-User -> Void) -> Void
-    // Logs this patient in
-    // If sucess, gives the salt
-    patient_login(username, unencrypt_password, callback) {
-        this.general_login(username, unencrypt_password, callback);
-    }
-
-    // String String (Maybe-Error Maybe-User -> Void) -> Void
-    // Logs this therapist in
-    // If sucess, gives the salt
-    therapist_login(username, unencrypt_password, callback) {
-        this.general_login(username, unencrypt_password, callback);
-    }
-
     // String String String (Error Maybe-User -> Void) -> Void
     // Tests whether the given login info is valid for the given table
-    general_login(username, unencrypt_password, callback) {
+    login(username, unencrypt_password, callback) {
         var get_salt_sql = "SELECT salt FROM USER T WHERE T.username = ?";
         var get_salt_insert = [username];
         get_salt_sql = mysql.format(get_salt_sql, get_salt_insert);

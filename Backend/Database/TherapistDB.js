@@ -73,7 +73,7 @@ class TherapistDB {
     // Calls the callback with true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password, callback) {
-        this.authorizer.therapist_login(username, unencrypt_password, callback);
+        this.authorizer.login(username, unencrypt_password, callback);
     }
 
     // String

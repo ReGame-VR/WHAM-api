@@ -286,7 +286,8 @@ describe("DBTests", function () {
                         message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 0,
-                        messageID: 1
+                        messageID: 1,
+                        replies: []
                     });
                     expectation.push({
                         therapistID: "therapist2",
@@ -294,7 +295,8 @@ describe("DBTests", function () {
                         message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
-                        messageID: 4
+                        messageID: 4,
+                        replies: []
                     });
                     expect(messages).to.be.deep.equal(expectation);
                     done();
@@ -321,7 +323,8 @@ describe("DBTests", function () {
                         message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
-                        messageID: 1
+                        messageID: 1,
+                        replies: []
                     });
                     expectation.push({
                         therapistID: "therapist2",
@@ -329,7 +332,8 @@ describe("DBTests", function () {
                         message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
-                        messageID: 4
+                        messageID: 4,
+                        replies: []
                     });
                     expect(messages).to.be.deep.equal(expectation);
                     done();

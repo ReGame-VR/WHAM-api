@@ -236,6 +236,12 @@ app.patch('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.markMessageAsRead(req, res, patientDB, authorizer, responder);
 });
 
+// Marks this message as read
+app.put('/patients/:patientID/messages/:messageID', function (req, res) {
+    single_message.replyToMessage(req, res, patientDB, authorizer, responder);
+});
+
+
 // Return info about this message in specific
 app.get('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.getMessage(req, res, patientDB, authorizer, responder);

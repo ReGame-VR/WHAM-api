@@ -430,7 +430,7 @@ class PatientDB {
     // Calls the callback with true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password, callback) {
-        this.authorizer.patient_login(username, unencrypt_password, callback);
+        this.authorizer.login(username, unencrypt_password, callback);
     }
 
     // String String String String (Boolean -> Void) -> Void
@@ -470,24 +470,54 @@ class PatientDB {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, result, fields) {
+            connection.query(sql, function (error, message_result, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
                 } else {
                     var toSend = [];
-                    for (var i = 0; i < result.length; i += 1) {
-                        toSend.push({
-                            therapistID: result[i].therapistID,
-                            patientID: patientID,
-                            message_content: result[i].message,
-                            date_sent: result[i].date_sent,
-                            is_read: result[i].is_read,
-                            messageID: result[i].messageID
-                        });
+                    for (var a = 0; a < message_result.length; a++) {
+                        (function (i) {
+                            var reply_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
+                            var reply_inserts = [message_result[i].messageID];
+                            reply_sql = mysql.format(reply_sql, reply_inserts);
+                            var therapistID = message_result[i].therapistID;
+                            var message_content = message_result[i].message;
+                            var date_sent = message_result[i].date_sent;
+                            var is_read = message_result[i].is_read;
+                            var messageID = message_result[i].messageID
+                            connection.query(reply_sql, function (error, result, fields) {
+                                if (error) {
+                                    connection.release();
+                                    callback(false);
+                                    return;
+                                } else {
+                                    var replies = []
+                                    for (var x = 0; x < result.length; x++) {
+                                        replies.push({
+                                            sentID: replies[x].fromID,
+                                            messageID: messageID,
+                                            date_sent: replies[x].date_sent,
+                                            reply_content: replies[x].content
+                                        })
+                                    }
+                                    toSend.push({
+                                        therapistID: therapistID,
+                                        patientID: patientID,
+                                        message_content: message_content,
+                                        date_sent: date_sent,
+                                        is_read: is_read,
+                                        messageID: messageID,
+                                        replies: replies
+                                    });
+                                    if (i === message_result.length - 1) {
+                                        connection.release();
+                                        callback(toSend);
+                                    }
+                                }
+                            });
+                        }(a))
                     }
-                    connection.release();
-                    callback(toSend);
                 }
             });
         });
@@ -520,28 +550,50 @@ class PatientDB {
     // String String (Maybe-Message -> Void) -> Void
     // Returns the info for a specific message
     get_specific_message(patientID, messageID, callback) {
-        var sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
-        var inserts = [patientID, messageID];
-        sql = mysql.format(sql, inserts);
+        var message_sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
+        var reply_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
+
+        var message_inserts = [patientID, messageID];
+        message_sql = mysql.format(message_sql, message_inserts);
+
+        var reply_inserts = [messageID];
+        reply_sql = mysql.format(reply_sql, reply_inserts);
 
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, result, fields) {
-                if (error || result.length === 0) {
+            connection.query(message_sql, function (error, message_result, fields) {
+                if (error || message_result.length === 0) {
                     connection.release();
                     callback(false);
                 } else {
-                    connection.release();
-                    callback({
-                        therapistID: result[0].therapistID,
-                        patientID: patientID,
-                        message_content: result[0].message,
-                        date_sent: result[0].date_sent,
-                        is_read: result[0].is_read,
-                        messageID: result[0].messageID
+                    connection.query(reply_sql, function (error, result, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            var replies = [];
+                            for (var i = 0; i < result.length; i += 1) {
+                                replies.push({
+                                    sentID: replies[i].fromID,
+                                    messageID: messageID,
+                                    date_sent: replies[i].date_sent,
+                                    reply_content: replies[i].content
+                                })
+                            }
+                            connection.release();
+                            callback({
+                                therapistID: message_result[0].therapistID,
+                                patientID: patientID,
+                                message_content: message_result[0].message,
+                                date_sent: message_result[0].date_sent,
+                                is_read: message_result[0].is_read,
+                                messageID: message_result[0].messageID,
+                                replies: replies
+                            });
+                        }
                     });
                 }
             });
@@ -634,6 +686,26 @@ class PatientDB {
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback(true);
+                }
+            });
+        });
+    }
+
+    reply_to_message(sentID, messageID, reply_content, date_sent, callback) {
+        var sql = "INSERT INTO MESSAGE_REPLY (messageID, fromID, date_sent, content) VALUES (?, ?, ?, ?)";
+        sql = mysql.format(sql, [messageID, sentID, date_sent, reply_content]);
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                throw err;
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error) {
                     connection.release();
                     callback(false);
                 } else {

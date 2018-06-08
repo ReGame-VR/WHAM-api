@@ -32,9 +32,7 @@ exports.accept_pair = function(req, res, patientDB, authorizer, responder) {
         }
         var therapistID = req.params.therapistID;
         var patientID = req.params.patientID;
-        console.log(verified + " " + patientID);
         authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
-            console.log(can_view);
             if (can_view) {
                 patientDB.accept_therapist_request(patientID, therapistID, function (worked) {
                     if (worked) {

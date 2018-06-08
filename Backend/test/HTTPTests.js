@@ -721,6 +721,7 @@ describe('HTTPTests', function () {
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
                         messageID: 1,
+                        replies: []
                     }]);
                     done();
                 });
@@ -744,6 +745,7 @@ describe('HTTPTests', function () {
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
                         messageID: 1,
+                        replies: []
                     });
                     done();
                 });
@@ -765,6 +767,7 @@ describe('HTTPTests', function () {
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 1,
                         messageID: 2,
+                        replies: []
                     });
                     done();
                 });
