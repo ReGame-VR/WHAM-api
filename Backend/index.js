@@ -115,11 +115,13 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+
 authorizer.load_all_permissions(function (worked) {
     if (!worked) {
         throw new Error("This shouldn't fail");
     }
 });
+
 
 // If the user goes to /api it will render the API HTML
 app.get('/api', function (req, res) {

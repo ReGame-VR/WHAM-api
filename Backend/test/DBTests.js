@@ -49,7 +49,7 @@ describe("DBTests", function () {
                 therapistDB.login("therapist1", "test_password1", function (err, worked) {
                     expect(worked).to.be.not.equal(false);
                     therapistDB.login("therapist15", "test_password1", function (err, worked) {
-                        expect(err).to.be.not.equal(null);
+                        expect(worked).to.be.equal(false);
                         therapistDB.login("therapist1", "test_password67", function (err, worked) {
                             expect(worked).to.be.equal(false);
                             done();
@@ -149,7 +149,7 @@ describe("DBTests", function () {
                     patientDB.login("tim", "password4", function (err, result) {
                         expect(result).to.be.equal(false);
                         patientDB.login("asjkaskjsa", "password1", function (err, result) {
-                            expect(err).to.be.not.equal(null);
+                            expect(result).to.be.equal(false);
                             done();
                         });
                     });

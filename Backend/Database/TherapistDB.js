@@ -25,36 +25,45 @@ class TherapistDB {
     // String String (Boolean -> Void) -> Void
     // Adds this therapist to the database
     add_therapist(username, unencrypt_password, callback) {
-        var sql = "INSERT INTO THERAPIST VALUES (?, ?, ?, 1)"
+        var user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)"
+        var therapist_sql = "INSERT INTO THERAPIST VALUES (?)"
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 
-        var inserts = [username, password, salt];
-        sql = mysql.format(sql, inserts);
+        var user_inserts = [username, password, salt];
+        var therapist_inserts = [username];
+        user_sql = mysql.format(user_sql, user_inserts);
+        therapist_sql = mysql.format(therapist_sql, therapist_inserts);
         var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, results, fields) {
+            connection.query(user_sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
                 } else {
-                    authorizer.addUserRoles(username, username)
-                    authorizer.allow(username, username, '*') // this user can do anything to themselves they want
-                    var token = jwt.sign({
-                        data: {
-                            username: username,
-                            password_hash: password,
-                            type: "THERAPIST"
+                    connection.query(therapist_sql, function (error, results, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            authorizer.addUserRoles(username, username)
+                            authorizer.allow(username, username, '*') // this user can do anything to themselves they want
+                            var token = jwt.sign({
+                                data: {
+                                    username: username,
+                                    password_hash: password
+                                }
+                            }, process.env.JWT_SECRET, {
+                                expiresIn: '10d'
+                            });
+                            connection.release();
+                            callback(token);
                         }
-                    }, process.env.JWT_SECRET, {
-                        expiresIn: '10d'
                     });
-                    connection.release();
-                    callback(token);
                 }
             });
         });
@@ -172,10 +181,12 @@ class TherapistDB {
         var deleteMessageSQL = "DELETE FROM PATIENT_MESSAGE WHERE therapistID = ?";
         var deleteJoinSQL = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
         var deleteInfoSQL = "DELETE FROM THERAPIST WHERE username = ?";
+        var deleteUserSQL = "DELETE FROM USER WHERE username = ?";
         var inserts = [therapistID];
         deleteMessageSQL = mysql.format(deleteMessageSQL, inserts);
         deleteJoinSQL = mysql.format(deleteJoinSQL, inserts);
         deleteInfoSQL = mysql.format(deleteInfoSQL, inserts);
+        deleteUserSQL = mysql.format(deleteUserSQL, inserts);
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
@@ -196,8 +207,15 @@ class TherapistDB {
                                     connection.release();
                                     callback(false);
                                 } else {
-                                    connection.release();
-                                    callback(true);
+                                    connection.query(deleteUserSQL, function (error, result, fields) {
+                                        if (error || result.affectedRows === 0) {
+                                            connection.release();
+                                            callback(false);
+                                        } else {
+                                            connection.release();
+                                            callback(true);
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -224,7 +242,7 @@ class TherapistDB {
                 if (error) {
                     connection.release();
                     callback(false);
-                } else if(results1.length === 0) {
+                } else if (results1.length === 0) {
                     callback([]);
                 } else {
                     var toReturn = [];
@@ -244,7 +262,7 @@ class TherapistDB {
                             }
                             var score = undefined;
                             var time = undefined;
-                            if(results2.length > 0) {
+                            if (results2.length > 0) {
                                 score = results2[0].score;
                                 time = results2[0].time;
                             }
@@ -257,7 +275,7 @@ class TherapistDB {
                                 last_score: score,
                                 last_activity_time: time
                             });
-                            if(i === results1.length) {
+                            if (i === results1.length) {
                                 connection.release();
                                 callback(toReturn);
                             }

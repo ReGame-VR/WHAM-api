@@ -56,8 +56,16 @@ class PatientDB {
                                             connection.release();
                                             callback(false);
                                         } else {
-                                            connection.release();
-                                            callback(true);
+                                            var sql = "DELETE FROM USER";
+                                            connection.query(sql, function (error, results, fields) {
+                                                if (error) {
+                                                    connection.release();
+                                                    callback(false);
+                                                } else {
+                                                    connection.release();
+                                                    callback(true);
+                                                }
+                                            });
                                         }
                                     });
                                 }
@@ -199,37 +207,46 @@ class PatientDB {
     // If fail, calls the callback with false (user already exists or other)
     // Note: Weight in Kilo, Height in CM, DOB in YYYY-MM-DD
     add_patient(username, unencrypt_password, dob, weight, height, information, callback) {
-        // Username, password, salt, DOB, Weight, Height, (?) Information
-        var sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
+        // Username, DOB, Weight, Height
+        var user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)"
+        var patient_sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?)"
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 
-        var inserts = [username, password, salt, dob, weight, height, information];
-        sql = mysql.format(sql, inserts);
+        var user_inserts = [username, password, salt];
+        var patient_inserts = [username, dob, weight, height, information];
+        user_sql = mysql.format(user_sql, user_inserts);
+        patient_sql = mysql.format(patient_sql, patient_inserts);
         var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, results, fields) {
+            connection.query(user_sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
                 } else {
-                    authorizer.addUserRoles(username, username)
-                    authorizer.allow(username, username, '*') // this user can do anything to themselves they want
-                    var token = jwt.sign({
-                        data: {
-                            username: username,
-                            password_hash: password,
-                            type: "PATIENT"
+                    connection.query(patient_sql, function (error, results, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            authorizer.addUserRoles(username, username)
+                            authorizer.allow(username, username, '*') // this user can do anything to themselves they want
+                            var token = jwt.sign({
+                                data: {
+                                    username: username,
+                                    password_hash: password
+                                }
+                            }, process.env.JWT_SECRET, {
+                                expiresIn: '10d'
+                            });
+                            connection.release();
+                            callback(token);
                         }
-                    }, process.env.JWT_SECRET, {
-                        expiresIn: '10d'
                     });
-                    connection.release();
-                    callback(token);
                 }
             });
         });
@@ -275,8 +292,17 @@ class PatientDB {
                                             connection.release();
                                             callback(false);
                                         } else {
-                                            connection.release();
-                                            callback(true);
+                                            var sql = "DELETE FROM USER where username = ?";
+                                            sql = mysql.format(sql, inserts);
+                                            connection.query(sql, function (error, results) {
+                                                if (error || results.affectedRows === 0) {
+                                                    connection.release();
+                                                    callback(false);
+                                                } else {
+                                                    connection.release();
+                                                    callback(true);
+                                                }
+                                            });
                                         }
                                     });
                                 }
@@ -544,7 +570,7 @@ class PatientDB {
             });
         });
     }
-    
+
     // String String (Boolean -> Void) -> Void
     // Marks this patient-therapist join as accepted
     accept_therapist_request(patientID, therapistID, callback) {

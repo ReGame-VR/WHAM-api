@@ -3,27 +3,33 @@ DROP TABLE IF EXISTS PATIENT_SESSION;
 DROP TABLE IF EXISTS PATIENT_THERAPIST;
 DROP TABLE IF EXISTS PATIENT;
 DROP TABLE IF EXISTS THERAPIST;
+DROP TABLE IF EXISTS USER;
+
+-- The information for a general user (super table)
+CREATE TABLE USER (
+    username VARCHAR(100),
+    password VARCHAR(100),
+    salt VARCHAR(100),
+    auth_level VARCHAR(20),
+    PRIMARY KEY (username)
+);
 
 -- The information for a single patient
 CREATE TABLE PATIENT (
     username VARCHAR(100),
-    password VARCHAR(100),
-    salt VARCHAR(100),
     dob DATE,
     weight FLOAT,
     height FLOAT,
     information VARCHAR(100),
-    auth_level VARCHAR(20),
-    PRIMARY KEY (username)
+    PRIMARY KEY (username),
+    FOREIGN KEY (username) REFERENCES USER(username)
 );
 
 -- The infromation for a single therapist
 CREATE TABLE THERAPIST (
     username VARCHAR(100),
-    password VARCHAR(100),
-    salt VARCHAR(100),
-    auth_level VARCHAR(20),
-    PRIMARY KEY (username)
+    PRIMARY KEY (username),
+    FOREIGN KEY (username) REFERENCES USER(username)
 );
 
 -- Shows which therapist is assigned to which patient 

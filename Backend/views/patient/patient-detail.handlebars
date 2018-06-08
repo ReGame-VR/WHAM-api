@@ -29,7 +29,7 @@
       // Optional; add a title and set the width and height of the chart
       var options = {
         'title': 'Sessions Over Time',
-        'width': 500,
+        'width': document.getElementById("graph").width,
         'height': 300
       };
 
@@ -56,11 +56,10 @@
     </div>
   </nav>
   <div class="container">
-    <a>Back to patient list</a>
     <h2>{{info.username}}</h2>
   </div>
-  <div id="graph"></div>
   <div class="container">
+    <div id="graph"></div>
     <h3>Pending Requests For {{info.username}}</h1>
     <table class="table table-hover">
       <thead>
