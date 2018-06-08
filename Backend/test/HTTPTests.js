@@ -696,6 +696,7 @@ describe('HTTPTests', function () {
                         info: info_expectation,
                         sessions: session_expectation,
                         messages: message_expectation,
+                        requests: []
                     };
                     expect(res.body).to.be.deep.equal(expectation);
                     done();

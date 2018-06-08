@@ -60,6 +60,28 @@
     <h2>{{info.username}}</h2>
   </div>
   <div id="graph"></div>
+  <div class="container">
+    <h3>Pending Requests For {{info.username}}</h1>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Wants To Add You</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each requests}}
+        <tr>
+          <td>{{this}}</td>
+          <td>
+            <form action={{concat "/therapists/"  this  "/patients/" ../info.username "?_method=PATCH"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
+              <button type="submit">Accept</button>
+            </form>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
 </body>
 
 </html>

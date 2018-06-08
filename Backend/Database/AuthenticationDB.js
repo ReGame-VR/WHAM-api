@@ -239,7 +239,7 @@ class AuthenticationDB {
     remove_all_permissions(callback) {
         var patients_sql = "SELECT username FROM PATIENT";
         var therapist_sql = "SELECT username FROM THERAPIST";
-        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST WHERE is_accepted = true";
+        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST";
         var acl = this.acl;
         this.pool.getConnection(function (err, connection) {
             if (err) {

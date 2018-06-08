@@ -124,15 +124,18 @@ class PatientDB {
         var message_query = "SELECT therapistID, message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
         message_query = mysql.format(message_query, inserts);
 
+        var requests_query = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
+        requests_query = mysql.format(requests_query, inserts);
+
         this.pool.getConnection(function (err, connection) {
             if (err) {
-                callback(false);
+                callback(false, false, false, false);
                 throw err;
             }
             connection.query(info_query, function (error1, info_results, fields) {
                 if (error1 || info_results.length == 0) {
                     connection.release();
-                    callback(false, false, false);
+                    callback(false, false, false, false);
                 } else {
                     var user_info = {
                         username: info_results[0].username,
@@ -144,7 +147,7 @@ class PatientDB {
                     connection.query(session_query, function (error2, session_results, fields) {
                         if (error2) {
                             connection.release();
-                            callback(false, false, false);
+                            callback(false, false, false, false);
                         } else {
                             var session_info = [];
                             for (var i = 0; i < session_results.length; i += 1) {
@@ -157,7 +160,7 @@ class PatientDB {
                             connection.query(message_query, function (error3, message_results, fields) {
                                 if (error3) {
                                     connection.release();
-                                    callback(false, false, false);
+                                    callback(false, false, false, false);
                                 } else {
                                     var message_info = []
                                     for (var i = 0; i < message_results.length; i += 1) {
@@ -168,8 +171,19 @@ class PatientDB {
                                             is_read: message_results[i].is_read
                                         });
                                     }
-                                    connection.release();
-                                    callback(user_info, session_info, message_info);
+                                    connection.query(requests_query, function (error4, requests_results, fields) {
+                                        if (error4) {
+                                            connection.release();
+                                            callback(false, false, false, false);
+                                        } else {
+                                            var requests = [];
+                                            for (var i = 0; i < requests_results.length; i += 1) {
+                                                requests.push(requests_results[i].therapistID);
+                                            }
+                                            connection.release();
+                                            callback(user_info, session_info, message_info, requests);
+                                        }
+                                    })
                                 }
                             });
                         }

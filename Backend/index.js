@@ -126,7 +126,7 @@ app.get('/api', function (req, res) {
     api.showAPI(req, res, responder);
 });
 
-// HTML Forms do not support patch, PATCH, and DELETE so this method
+// HTML Forms do not support PUT, PATCH, and DELETE so this method
 // allows the form to pass a parameter _method that overrides whatever
 // the existing method (probably POST) is.
 app.use(methodOverride('_method'));
