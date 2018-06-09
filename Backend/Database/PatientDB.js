@@ -56,8 +56,16 @@ class PatientDB {
                                             connection.release();
                                             callback(false);
                                         } else {
-                                            connection.release();
-                                            callback(true);
+                                            var sql = "DELETE FROM USER";
+                                            connection.query(sql, function (error, results, fields) {
+                                                if (error) {
+                                                    connection.release();
+                                                    callback(false);
+                                                } else {
+                                                    connection.release();
+                                                    callback(true);
+                                                }
+                                            });
                                         }
                                     });
                                 }
@@ -124,15 +132,18 @@ class PatientDB {
         var message_query = "SELECT therapistID, message, date_sent, is_read FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
         message_query = mysql.format(message_query, inserts);
 
+        var requests_query = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
+        requests_query = mysql.format(requests_query, inserts);
+
         this.pool.getConnection(function (err, connection) {
             if (err) {
-                callback(false);
+                callback(false, false, false, false);
                 throw err;
             }
             connection.query(info_query, function (error1, info_results, fields) {
                 if (error1 || info_results.length == 0) {
                     connection.release();
-                    callback(false, false, false);
+                    callback(false, false, false, false);
                 } else {
                     var user_info = {
                         username: info_results[0].username,
@@ -144,7 +155,7 @@ class PatientDB {
                     connection.query(session_query, function (error2, session_results, fields) {
                         if (error2) {
                             connection.release();
-                            callback(false, false, false);
+                            callback(false, false, false, false);
                         } else {
                             var session_info = [];
                             for (var i = 0; i < session_results.length; i += 1) {
@@ -157,7 +168,7 @@ class PatientDB {
                             connection.query(message_query, function (error3, message_results, fields) {
                                 if (error3) {
                                     connection.release();
-                                    callback(false, false, false);
+                                    callback(false, false, false, false);
                                 } else {
                                     var message_info = []
                                     for (var i = 0; i < message_results.length; i += 1) {
@@ -168,8 +179,19 @@ class PatientDB {
                                             is_read: message_results[i].is_read
                                         });
                                     }
-                                    connection.release();
-                                    callback(user_info, session_info, message_info);
+                                    connection.query(requests_query, function (error4, requests_results, fields) {
+                                        if (error4) {
+                                            connection.release();
+                                            callback(false, false, false, false);
+                                        } else {
+                                            var requests = [];
+                                            for (var i = 0; i < requests_results.length; i += 1) {
+                                                requests.push(requests_results[i].therapistID);
+                                            }
+                                            connection.release();
+                                            callback(user_info, session_info, message_info, requests);
+                                        }
+                                    })
                                 }
                             });
                         }
@@ -185,37 +207,46 @@ class PatientDB {
     // If fail, calls the callback with false (user already exists or other)
     // Note: Weight in Kilo, Height in CM, DOB in YYYY-MM-DD
     add_patient(username, unencrypt_password, dob, weight, height, information, callback) {
-        // Username, password, salt, DOB, Weight, Height, (?) Information
-        var sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
+        // Username, DOB, Weight, Height
+        var user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)"
+        var patient_sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?)"
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 
-        var inserts = [username, password, salt, dob, weight, height, information];
-        sql = mysql.format(sql, inserts);
+        var user_inserts = [username, password, salt];
+        var patient_inserts = [username, dob, weight, height, information];
+        user_sql = mysql.format(user_sql, user_inserts);
+        patient_sql = mysql.format(patient_sql, patient_inserts);
         var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, results, fields) {
+            connection.query(user_sql, function (error, results, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
                 } else {
-                    authorizer.addUserRoles(username, username)
-                    authorizer.allow(username, username, '*') // this user can do anything to themselves they want
-                    var token = jwt.sign({
-                        data: {
-                            username: username,
-                            password_hash: password,
-                            type: "PATIENT"
+                    connection.query(patient_sql, function (error, results, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            authorizer.addUserRoles(username, username)
+                            authorizer.allow(username, username, '*') // this user can do anything to themselves they want
+                            var token = jwt.sign({
+                                data: {
+                                    username: username,
+                                    password_hash: password
+                                }
+                            }, process.env.JWT_SECRET, {
+                                expiresIn: '10d'
+                            });
+                            connection.release();
+                            callback(token);
                         }
-                    }, process.env.JWT_SECRET, {
-                        expiresIn: '10d'
                     });
-                    connection.release();
-                    callback(token);
                 }
             });
         });
@@ -261,8 +292,17 @@ class PatientDB {
                                             connection.release();
                                             callback(false);
                                         } else {
-                                            connection.release();
-                                            callback(true);
+                                            var sql = "DELETE FROM USER where username = ?";
+                                            sql = mysql.format(sql, inserts);
+                                            connection.query(sql, function (error, results) {
+                                                if (error || results.affectedRows === 0) {
+                                                    connection.release();
+                                                    callback(false);
+                                                } else {
+                                                    connection.release();
+                                                    callback(true);
+                                                }
+                                            });
                                         }
                                     });
                                 }
@@ -390,7 +430,7 @@ class PatientDB {
     // Calls the callback with true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password, callback) {
-        this.authorizer.patient_login(username, unencrypt_password, callback);
+        this.authorizer.login(username, unencrypt_password, callback);
     }
 
     // String String String String (Boolean -> Void) -> Void
@@ -430,24 +470,54 @@ class PatientDB {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, result, fields) {
+            connection.query(sql, function (error, message_result, fields) {
                 if (error) {
                     connection.release();
                     callback(false);
                 } else {
                     var toSend = [];
-                    for (var i = 0; i < result.length; i += 1) {
-                        toSend.push({
-                            therapistID: result[i].therapistID,
-                            patientID: patientID,
-                            message_content: result[i].message,
-                            date_sent: result[i].date_sent,
-                            is_read: result[i].is_read,
-                            messageID: result[i].messageID
-                        });
+                    for (var a = 0; a < message_result.length; a++) {
+                        (function (i) {
+                            var reply_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
+                            var reply_inserts = [message_result[i].messageID];
+                            reply_sql = mysql.format(reply_sql, reply_inserts);
+                            var therapistID = message_result[i].therapistID;
+                            var message_content = message_result[i].message;
+                            var date_sent = message_result[i].date_sent;
+                            var is_read = message_result[i].is_read;
+                            var messageID = message_result[i].messageID
+                            connection.query(reply_sql, function (error, result, fields) {
+                                if (error) {
+                                    connection.release();
+                                    callback(false);
+                                    return;
+                                } else {
+                                    var replies = []
+                                    for (var x = 0; x < result.length; x++) {
+                                        replies.push({
+                                            sentID: replies[x].fromID,
+                                            messageID: messageID,
+                                            date_sent: replies[x].date_sent,
+                                            reply_content: replies[x].content
+                                        })
+                                    }
+                                    toSend.push({
+                                        therapistID: therapistID,
+                                        patientID: patientID,
+                                        message_content: message_content,
+                                        date_sent: date_sent,
+                                        is_read: is_read,
+                                        messageID: messageID,
+                                        replies: replies
+                                    });
+                                    if (i === message_result.length - 1) {
+                                        connection.release();
+                                        callback(toSend);
+                                    }
+                                }
+                            });
+                        }(a))
                     }
-                    connection.release();
-                    callback(toSend);
                 }
             });
         });
@@ -480,28 +550,50 @@ class PatientDB {
     // String String (Maybe-Message -> Void) -> Void
     // Returns the info for a specific message
     get_specific_message(patientID, messageID, callback) {
-        var sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
-        var inserts = [patientID, messageID];
-        sql = mysql.format(sql, inserts);
+        var message_sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
+        var reply_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
+
+        var message_inserts = [patientID, messageID];
+        message_sql = mysql.format(message_sql, message_inserts);
+
+        var reply_inserts = [messageID];
+        reply_sql = mysql.format(reply_sql, reply_inserts);
 
         this.pool.getConnection(function (err, connection) {
             if (err) {
                 callback(false);
                 throw err;
             }
-            connection.query(sql, function (error, result, fields) {
-                if (error || result.length === 0) {
+            connection.query(message_sql, function (error, message_result, fields) {
+                if (error || message_result.length === 0) {
                     connection.release();
                     callback(false);
                 } else {
-                    connection.release();
-                    callback({
-                        therapistID: result[0].therapistID,
-                        patientID: patientID,
-                        message_content: result[0].message,
-                        date_sent: result[0].date_sent,
-                        is_read: result[0].is_read,
-                        messageID: result[0].messageID
+                    connection.query(reply_sql, function (error, result, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            var replies = [];
+                            for (var i = 0; i < result.length; i += 1) {
+                                replies.push({
+                                    sentID: replies[i].fromID,
+                                    messageID: messageID,
+                                    date_sent: replies[i].date_sent,
+                                    reply_content: replies[i].content
+                                })
+                            }
+                            connection.release();
+                            callback({
+                                therapistID: message_result[0].therapistID,
+                                patientID: patientID,
+                                message_content: message_result[0].message,
+                                date_sent: message_result[0].date_sent,
+                                is_read: message_result[0].is_read,
+                                messageID: message_result[0].messageID,
+                                replies: replies
+                            });
+                        }
                     });
                 }
             });
@@ -511,8 +603,31 @@ class PatientDB {
     // String String Date (Boolean -> Void) -> Void
     // Pairs this therapist and patinet in the PATIENT_THERAPIST DB
     assign_to_therapist(patientID, therapistID, date_added, callback) {
-        var sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null)";
+        var sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null, false)";
         var inserts = [patientID, therapistID, date_added];
+        sql = mysql.format(sql, inserts);
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                throw err;
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback(true);
+                }
+            });
+        });
+    }
+
+    // String String (Boolean -> Void) -> Void
+    // Marks this patient-therapist join as accepted
+    accept_therapist_request(patientID, therapistID, callback) {
+        var sql = "UPDATE PATIENT_THERAPIST SET is_accepted = true WHERE patientID = ? AND therapistID = ?";
+        var inserts = [patientID, therapistID];
         sql = mysql.format(sql, inserts);
         var authorizer = this.authorizer;
         this.pool.getConnection(function (err, connection) {
@@ -521,7 +636,7 @@ class PatientDB {
                 throw err;
             }
             connection.query(sql, function (error, result, fields) {
-                if (error) {
+                if (error || result.affectedRows === 0) {
                     connection.release();
                     callback(false);
                 } else {
@@ -571,6 +686,26 @@ class PatientDB {
             }
             connection.query(sql, function (error, result, fields) {
                 if (error || result.affectedRows === 0) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    connection.release();
+                    callback(true);
+                }
+            });
+        });
+    }
+
+    reply_to_message(sentID, messageID, reply_content, date_sent, callback) {
+        var sql = "INSERT INTO MESSAGE_REPLY (messageID, fromID, date_sent, content) VALUES (?, ?, ?, ?)";
+        sql = mysql.format(sql, [messageID, sentID, date_sent, reply_content]);
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false);
+                throw err;
+            }
+            connection.query(sql, function (error, result, fields) {
+                if (error) {
                     connection.release();
                     callback(false);
                 } else {

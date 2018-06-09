@@ -75,3 +75,27 @@ exports.deletePatientMessage = function (req, res, patientDB, authorizer, respon
         });
     });
 }
+
+exports.replyToMessage = function (req, res, patientDB, authorizer, responder) {
+    authorizer.verifyJWT(req, function (verified) {
+        if (!verified) {
+            responder.report_bad_token(req, res);
+            return;
+        }
+        var patientID = req.params.patientID;
+        var messageID = req.params.messageID;
+        authorizer.isAllowed(verified, patientID, '*', function (err, can_view) {
+            if (can_view) {
+                patientDB.reply_to_message(rea.body.sentID, messageID, req.body.reply_content, new Date(), function (worked) {
+                    if (worked) {
+                        responder.report_sucess_no_info(req, res);
+                    } else {
+                        responder.report_not_found(req, res);
+                    }
+                })
+            } else {
+                responder.report_not_authorized(req, res);
+            }
+        });
+    });
+}
