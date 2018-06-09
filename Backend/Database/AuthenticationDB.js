@@ -20,45 +20,31 @@ class AuthenticationDB {
         this.acl.allow('admin', '*', '*') // the admin can do anything
     }
 
-    // String String (Maybe-Error Maybe-User -> Void) -> Void
-    // Logs this patient in
-    // If sucess, gives the salt
-    patient_login(username, unencrypt_password, callback) {
-        this.general_login("PATIENT", username, unencrypt_password, callback);
-    }
-
-    // String String (Maybe-Error Maybe-User -> Void) -> Void
-    // Logs this therapist in
-    // If sucess, gives the salt
-    therapist_login(username, unencrypt_password, callback) {
-        this.general_login("THERAPIST", username, unencrypt_password, callback);
-    }
-
     // String String String (Error Maybe-User -> Void) -> Void
     // Tests whether the given login info is valid for the given table
-    general_login(table_name, username, unencrypt_password, callback) {
-        var get_salt_sql = "SELECT salt FROM " + table_name + " T WHERE T.username = ?";
+    login(username, unencrypt_password, callback) {
+        var get_salt_sql = "SELECT salt FROM USER T WHERE T.username = ?";
         var get_salt_insert = [username];
         get_salt_sql = mysql.format(get_salt_sql, get_salt_insert);
         this.pool.getConnection(function (err, connection) {
             if (err) {
-                callback(false);
+                callback(err, false);
                 throw err;
             }
             connection.query(get_salt_sql, function (error, results, fields) {
                 if (error || results.length == 0) {
                     connection.release();
-                    callback(false);
+                    callback(error, false);
                 } else {
                     var salt = results[0].salt;
                     var password;
                     try {
                         password = bcrypt.hashSync(unencrypt_password, salt);
                     } catch (err) {
-                        callback(false);
+                        callback(err, false);
                         return;
                     }
-                    var login_sql = "SELECT username FROM " + table_name + " T where T.username = ? AND T.password = ?";
+                    var login_sql = "SELECT username FROM USER T where T.username = ? AND T.password = ?";
                     var login_insert = [username, password];
                     login_sql = mysql.format(login_sql, login_insert);
                     connection.query(login_sql, function (error, results, fields) {
@@ -72,8 +58,7 @@ class AuthenticationDB {
                             var token = jwt.sign({
                                 data: {
                                     username: username,
-                                    password_hash: password,
-                                    type: table_name
+                                    password_hash: password
                                 }
                             }, process.env.JWT_SECRET, {
                                 expiresIn: '10d'
@@ -92,15 +77,15 @@ class AuthenticationDB {
 
     // String String (Maybe-Integer Maybe-String -> Void) -> Void
     // Returns the authorization level of this user
-    get_auth_level(salt = 0, table_name, callback) {
-        this.get_auth_level_help(salt, table_name, callback, this.pool)
+    get_auth_level(salt = 0, callback) {
+        this.get_auth_level_help(salt, callback, this.pool)
     }
 
 
     // String String (Maybe-Integer Maybe-String -> Void) ConnectionPool -> Void
     // Returns the authorization level of this user
-    get_auth_level_help(salt = 0, table_name, callback, pool) {
-        var sql = "SELECT auth_level, username FROM " + table_name + " WHERE salt = ?";
+    get_auth_level_help(salt = 0, callback, pool) {
+        var sql = "SELECT auth_level, username FROM USER WHERE salt = ?";
         sql = mysql.format(sql, [salt]);
         pool.getConnection(function (err, connection) {
             if (err) {
@@ -164,7 +149,7 @@ class AuthenticationDB {
         }
         try {
             var decoded = jwt.verify(token, process.env.JWT_SECRET);
-            var sql = "SELECT * FROM " + decoded.data.type + " WHERE username = ? AND password = ?";
+            var sql = "SELECT * FROM USER WHERE username = ? AND password = ?";
             sql = mysql.format(sql, [decoded.data.username, decoded.data.password_hash]);
             this.pool.getConnection(function (err, connection) {
                 if (err) {
@@ -192,7 +177,7 @@ class AuthenticationDB {
     load_all_permissions(callback) {
         var patients_sql = "SELECT username FROM PATIENT";
         var therapist_sql = "SELECT username FROM THERAPIST";
-        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST";
+        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST WHERE is_accepted = true";
         var acl = this.acl;
         this.pool.getConnection(function (err, connection) {
             if (err) {
@@ -224,6 +209,51 @@ class AuthenticationDB {
                                 } else {
                                     for (var i = 0; i < result.length; i += 1) {
                                         acl.allow(result[i].therapistID, result[i].patientID, '*')
+                                    }
+                                    callback(true);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    // Sometimes permissions hang between tests, I'm gonna stop that.
+    remove_all_permissions(callback) {
+        var patients_sql = "SELECT username FROM PATIENT";
+        var therapist_sql = "SELECT username FROM THERAPIST";
+        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST";
+        var acl = this.acl;
+        this.pool.getConnection(function (err, connection) {
+            if (err) {
+                callback(false)
+                throw err
+            }
+            connection.query(join_sql, function (error, result, fields) {
+                if (error) {
+                    connection.release();
+                    callback(false);
+                } else {
+                    for (var i = 0; i < result.length; i += 1) {
+                        acl.removeAllow(result[i].therapistID, result[i].patientID, '*')
+                    }
+                    connection.query(patients_sql, function (error, result, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            for (var i = 0; i < result.length; i += 1) {
+                                acl.removeAllow(result[i].username, result[i].username, '*')
+                            }
+                            connection.query(therapist_sql, function (error, result, fields) {
+                                if (error) {
+                                    connection.release();
+                                    callback(false);
+                                } else {
+                                    for (var i = 0; i < result.length; i += 1) {
+                                        acl.removeAllow(result[i].username, result[i].username, '*')
                                     }
                                     callback(true);
                                 }

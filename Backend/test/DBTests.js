@@ -10,7 +10,15 @@ var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
 describe("DBTests", function () {
-
+    describe("Remove Allows", function() {
+        it("should callback with true if sucessful", function(done) {
+            authorizer.remove_all_permissions(function(worked) {
+                expect(worked).to.be.equal(true);
+                done();
+            });
+        });
+    }); 
+    
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
             resetDB.reset_db(function (worked) {
@@ -41,7 +49,7 @@ describe("DBTests", function () {
                 therapistDB.login("therapist1", "test_password1", function (err, worked) {
                     expect(worked).to.be.not.equal(false);
                     therapistDB.login("therapist15", "test_password1", function (err, worked) {
-                        expect(err).to.be.not.equal(null);
+                        expect(worked).to.be.equal(false);
                         therapistDB.login("therapist1", "test_password67", function (err, worked) {
                             expect(worked).to.be.equal(false);
                             done();
@@ -141,7 +149,7 @@ describe("DBTests", function () {
                     patientDB.login("tim", "password4", function (err, result) {
                         expect(result).to.be.equal(false);
                         patientDB.login("asjkaskjsa", "password1", function (err, result) {
-                            expect(err).to.be.not.equal(null);
+                            expect(result).to.be.equal(false);
                             done();
                         });
                     });
@@ -278,7 +286,8 @@ describe("DBTests", function () {
                         message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 0,
-                        messageID: 1
+                        messageID: 1,
+                        replies: []
                     });
                     expectation.push({
                         therapistID: "therapist2",
@@ -286,7 +295,8 @@ describe("DBTests", function () {
                         message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
-                        messageID: 4
+                        messageID: 4,
+                        replies: []
                     });
                     expect(messages).to.be.deep.equal(expectation);
                     done();
@@ -313,7 +323,8 @@ describe("DBTests", function () {
                         message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
-                        messageID: 1
+                        messageID: 1,
+                        replies: []
                     });
                     expectation.push({
                         therapistID: "therapist2",
@@ -321,7 +332,8 @@ describe("DBTests", function () {
                         message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
-                        messageID: 4
+                        messageID: 4,
+                        replies: []
                     });
                     expect(messages).to.be.deep.equal(expectation);
                     done();
@@ -358,6 +370,34 @@ describe("DBTests", function () {
     });
 
     describe("TherapistDB Pt 2", function () {
+        describe("#get_all_therapists()", function () {
+            it("should return every therapist and the number of patients they have", function (done) {
+                therapistDB.get_all_therapists(function (all) {
+                    expect(all).to.be.deep.equal([{
+                        num_patients: 0,
+                        username: "therapist1"
+                    }, {
+                        num_patients: 0,
+                        username: "therapist2"
+                    }]);
+                    done();
+                });
+            });
+        });
+    });
+
+    describe("JointDB Pt 2", function() {
+        describe("#accept_therapist_request", function() {
+            it("should give true if sucessful", function(done) {
+                patientDB.accept_therapist_request("tim", "therapist2", function(worked) {
+                    expect(worked).to.be.equal(true);
+                    done();
+                }); 
+            });
+        });
+    });
+
+    describe("TherapistDB Pt 3", function () {
         describe("#get_all_therapists()", function () {
             it("should return every therapist and the number of patients they have", function (done) {
                 therapistDB.get_all_therapists(function (all) {

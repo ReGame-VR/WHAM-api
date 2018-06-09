@@ -7,7 +7,8 @@ const app = require('../index');
 const PatientDB = require('../database/PatientDB.js');
 const AuthDB = require('../database/AuthenticationDB.js');
 const DBReseter = require('../database/ResetDB.js');
-var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", new AuthDB()));
+var authDB = new AuthDB();
+var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", authDB));
 var jwt = require('jsonwebtoken');
 
 
@@ -19,6 +20,15 @@ describe("PermTests", function () {
     var therapist1_auth_token;
     var therapist2_auth_token;
     var admin_auth_token;
+
+    describe("Remove Allows", function() {
+        it("should callback with true if sucessful", function(done) {
+            authDB.remove_all_permissions(function(worked) {
+                expect(worked).to.be.equal(true);
+                done();
+            });
+        });
+    }); 
 
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
@@ -161,6 +171,56 @@ describe("PermTests", function () {
                 })
                 .send({
                     patientID: 'ryan'
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Accept Patient-Therapist Join", function () {
+        it("should give status 403 if the accept was unsucessful", function (done) {
+            chai.request(app)
+                .patch('/therapists/therapist1/patients/ryan')
+                .query({
+                    auth_token: therapist2_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+
+        it("should give status 204 if the pair was sucessful", function (done) {
+            chai.request(app)
+                .patch('/therapists/therapist1/patients/ryan')
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should give status 204 if the pair was sucessful", function (done) {
+            chai.request(app)
+                .patch('/therapists/therapist2/patients/ryan')
+                .query({
+                    auth_token: ryan_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should reject another user", function (done) {
+            chai.request(app)
+                .patch('/therapists/therapist2/patients/ryan')
+                .query({
+                    auth_token: timmy_auth_token
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(403);
@@ -595,7 +655,7 @@ describe("PermTests", function () {
     describe("Mark messages as read", function () {
         it("should accept this user only", function (done) {
             chai.request(app)
-                .put('/patients/ryan/messages/1')
+                .patch('/patients/ryan/messages/1')
                 .query({
                     auth_token: ryan_auth_token
                 })
@@ -606,7 +666,7 @@ describe("PermTests", function () {
         });
         it("should reject other users", function (done) {
             chai.request(app)
-                .put('/patients/ryan/messages/1')
+                .patch('/patients/ryan/messages/1')
                 .query({
                     auth_token: timmy_auth_token
                 })

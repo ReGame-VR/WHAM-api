@@ -7,12 +7,22 @@ const app = require('../index');
 const PatientDB = require('../database/PatientDB.js');
 const AuthDB = require('../database/AuthenticationDB.js');
 const DBReseter = require('../database/ResetDB.js');
-var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", new AuthDB()));
+var authDB = new AuthDB();
+var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", authDB));
 var jwt = require('jsonwebtoken');
 
 var admin_auth_token;
 
 describe('LoadTestData', function () {
+    describe("Remove Allows", function() {
+        it("should callback with true if sucessful", function(done) {
+            authDB.remove_all_permissions(function(worked) {
+                expect(worked).to.be.equal(true);
+                done();
+            });
+        });
+    }); 
+
     describe('DBReseter', function () {
         it('should not error if the deletion is sucessful', function (done) {
             resetDB.reset_db(function (token) {
@@ -373,6 +383,21 @@ describe('LoadTestData', function () {
         });
     });
 
+    describe('Accept Patient-Therapist Join', function () {
+        it('should give status 204 if the pair was sucessful', function (done) {
+            chai.request(app)
+                .patch('/therapists/therapist1/patients/ryan')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+    });
+
     describe('Adds patient sessions', function () {
         for (let i = 10; i < 30; i++) {
             (function (cntr) {
@@ -491,7 +516,7 @@ describe('LoadTestData', function () {
     describe('Mark messages as read', function () {
         it('should give status 204 if the message was sucessfully marked as read', function (done) {
             chai.request(app)
-                .put('/patients/timmy/messages/2')
+                .patch('/patients/timmy/messages/2')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -503,7 +528,7 @@ describe('LoadTestData', function () {
 
         it('should give status 403 if the message does not exist', function (done) {
             chai.request(app)
-                .put('/patients/timmy/messages/12982189')
+                .patch('/patients/timmy/messages/12982189')
                 .query({
                     auth_token: admin_auth_token,
                 })
@@ -515,7 +540,7 @@ describe('LoadTestData', function () {
 
         it('should give status 403 if the patient does not exist', function (done) {
             chai.request(app)
-                .put('/patients/askjdnaksmn/messages/2')
+                .patch('/patients/askjdnaksmn/messages/2')
                 .query({
                     auth_token: admin_auth_token,
                 })

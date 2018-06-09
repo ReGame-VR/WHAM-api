@@ -108,6 +108,16 @@ types:
       date_sent: datetime
       is_read: boolean
       messageID: number
+      replies: MessageReply[]
+
+  MessageNoReply:
+    properties: 
+      patientID: string
+      therapistID: string
+      message_content: string
+      date_sent: datetime
+      is_read: boolean
+      messageID: number
     example:
       patientID: "Joey"
       therapistID: "UserA"
@@ -126,6 +136,13 @@ types:
       message_content: "This is a message"
       date_sent: "2015-03-21 03:21"
 
+  MessageReply:
+    properties: 
+      sentID: string
+      messageID: number
+      date_sent: datetime
+      reply_content: string
+
   NewPatientTherapistPair:
     properties: 
       patientID: string
@@ -134,7 +151,8 @@ types:
     properties: 
       info: PatientNoSession
       sessions: PatientSession[]
-      messages: Message[]
+      messages: MessageNoReply[]
+      requests: string[]
 
 
 resourceTypes:
@@ -295,7 +313,7 @@ resourceTypes:
         type:  { Member: {item : Message} }
         description: A specific message. 
 
-        put:
+        patch:
           queryParameters: 
             auth_token: string
           description: Sets this message set as read.
@@ -304,6 +322,19 @@ resourceTypes:
               description: The message was sucessfully marked as read.
             403: 
               description: The message was unsucessfully makred as read. 
+        
+        put:
+          description: Reply to this message chain.
+          queryParameters: 
+            auth_token: string
+          body:
+            application/json:
+              type: MessageReply
+          responses: 
+            204:
+              description: The reply was sucessfully sent.
+            403: 
+              description: The reply was unsucessfully sent. 
 
         get:
           queryParameters: 
@@ -407,6 +438,16 @@ resourceTypes:
 
       /{id}:
         description: For editing a specific patient-therapist combo.
+        patch:
+          description: Marks this patient-therapist join as accepted
+          queryParameters: 
+            auth_token: string
+          responses: 
+            204:
+              description: The pair was sucessfully accepted.
+            403:
+              description: The pair could not be accepted.
+
         delete:
           queryParameters: 
             auth_token: string

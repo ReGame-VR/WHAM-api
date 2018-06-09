@@ -115,11 +115,13 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+
 authorizer.load_all_permissions(function (worked) {
     if (!worked) {
         throw new Error("This shouldn't fail");
     }
 });
+
 
 // If the user goes to /api it will render the API HTML
 app.get('/api', function (req, res) {
@@ -230,9 +232,15 @@ app.get('/patients/:patientID/messages', function (req, res) {
 });
 
 // Marks this message as read
-app.put('/patients/:patientID/messages/:messageID', function (req, res) {
+app.patch('/patients/:patientID/messages/:messageID', function (req, res) {
     single_message.markMessageAsRead(req, res, patientDB, authorizer, responder);
 });
+
+// Marks this message as read
+app.put('/patients/:patientID/messages/:messageID', function (req, res) {
+    single_message.replyToMessage(req, res, patientDB, authorizer, responder);
+});
+
 
 // Return info about this message in specific
 app.get('/patients/:patientID/messages/:messageID', function (req, res) {
@@ -279,6 +287,12 @@ app.post('/therapists/:therapistID/patients', function (req, res) {
 // DOES NOT delete the pair, simply marks its "date_removed" as today
 app.delete('/therapists/:therapistID/patients/:patientID', function (req, res) {
     therapist_patient.removePatientTherapist(req, res, patientDB, authorizer, responder);
+});
+
+// Accepts this patient-therapist join
+// Marks is_accepted as true
+app.patch('/therapists/:therapistID/patients/:patientID', function (req, res) {
+    therapist_patient.accept_pair(req, res, patientDB, authorizer, responder);
 });
 
 // Returns every message this therapist has sent

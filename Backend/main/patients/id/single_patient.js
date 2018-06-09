@@ -9,7 +9,7 @@ exports.getPatient = function (req, res, patientDB, authorizer, responder) {
         var id = req.params.patientID
         authorizer.isAllowed(verified, id, '*', function (err, can_view) {
             if (can_view) {
-                patientDB.get_patient_info(id, function (info, sessions, messages) {
+                patientDB.get_patient_info(id, function (info, sessions, messages, requests) {
                     if (info === false) {
                         responder.report_not_found(req, res);
                     } else {
@@ -20,11 +20,13 @@ exports.getPatient = function (req, res, patientDB, authorizer, responder) {
                         responder.report_sucess(req, res, {
                             info: info,
                             sessions: sessions,
-                            messages: messages
+                            messages: messages,
+                            requests: requests
                         }, 'patient/patient-detail', {
                             info: info,
                             sessions: realSessions,
-                            messages: messages
+                            messages: messages,
+                            requests: requests
                         })
                     }
                 });
