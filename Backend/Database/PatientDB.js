@@ -6,7 +6,7 @@ var jwt = require('jsonwebtoken');
 
 class PatientDB {
 
-    // Objects: 
+    // Objects:
     // Patient = Object(String Date Number Number String)
     // Patient-Session = Object(String Date Number Number String Number Date)
     // Session = Object(Number Date)
@@ -17,7 +17,6 @@ class PatientDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
-            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
         this.authorizer = authorizer;
@@ -74,7 +73,7 @@ class PatientDB {
     // Calls the callback with every patients info and their last session
     get_all_patient_info(callback) {
         var sql =
-            `SELECT username, dob, weight, height, information, 
+            `SELECT username, dob, weight, height, information,
         (SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as score,
         (SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as time
         FROM PATIENT P`;
@@ -111,7 +110,7 @@ class PatientDB {
     //  Patient  // User Info
     //  [List-of Session]  //Session Info
     //  [List-of Message]]  //Message Info
-    //  -> Void) 
+    //  -> Void)
     //  -> Void
     // Gives all information for the given patient
     get_patient_info(username, callback) {
@@ -223,7 +222,7 @@ class PatientDB {
     }
 
     // String (Boolean -> Void) -> Void
-    // Tries to purge the patient from the DB 
+    // Tries to purge the patient from the DB
     // Including all session, message, and patient-therapist info
     // If suceed, gives true
     // If fail, gives false (unknown reason, probably server error)

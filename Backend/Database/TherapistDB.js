@@ -6,7 +6,7 @@ var jwt = require('jsonwebtoken');
 
 class TherapistDB {
 
-    // Objects: 
+    // Objects:
     // Therapist = String
     // Patient = Object(String Date Number Number String)
     // Patient-Session = Object(String Date Number Number String Number Date)
@@ -17,7 +17,6 @@ class TherapistDB {
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
-            socketPath: '/tmp/mysql.sock',
             database: "WHAM_TEST"
         });
         this.authorizer = authorizer;
@@ -108,10 +107,10 @@ class TherapistDB {
     // Returns just info about this therapist
     get_specific_therapist(therapistID, callback) {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
-        FROM THERAPIST T LEFT JOIN 
-        (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
+        FROM THERAPIST T LEFT JOIN
+        (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
         where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
-        ON T.username = C.username 
+        ON T.username = C.username
         WHERE T.username = ?`;
         sql = mysql.format(sql, [therapistID]);
         this.pool.getConnection(function (err, connection) {
@@ -139,8 +138,8 @@ class TherapistDB {
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
-                FROM THERAPIST T LEFT JOIN 
-                (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
+                FROM THERAPIST T LEFT JOIN
+                (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
                 where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
                 ON T.username = C.username`;
         this.pool.getConnection(function (err, connection) {

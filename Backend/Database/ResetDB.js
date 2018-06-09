@@ -10,7 +10,6 @@ class DBReseter {
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: "WHAM_TEST",
-            socketPath: '/tmp/mysql.sock',
             multipleStatements: true
         });
         this.patientDB = patientDB;
