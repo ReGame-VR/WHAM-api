@@ -22,6 +22,8 @@ const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
 // The class that handles sending the actual info
 const responder = new HTTPResponses();
 
+const auth_helpers = require('./helpers/auth_helper.js');
+
 // All the JS files that handle specific requests
 // The file structure indicates which request URL every file handles
 const api = require('./main/api.js');
@@ -131,7 +133,6 @@ authorizer.load_all_permissions(function (worked) {
     }
 });
 
-
 // If the user goes to /api it will render the API HTML
 app.get('/api', api.showAPI);
 
@@ -174,78 +175,78 @@ app.post('/login/therapist',
 app.get('/login/therapist', therapist_login.show_login);
 
 // Returns info about every patient
-app.get('/patients', all_patients.getPatients);
+app.get('/patients', auth_helpers.hasAdminPriv, all_patients.getPatients);
 
 // Adds a patient to the DB (create an account)
 // Will give back the users authenticaiton token
 app.post('/patients', all_patients.addPatient);
 
 // Returns info about this patient
-app.get('/patients/:patientID', single_patient.getPatient);
+app.get('/patients/:patientID', auth_helpers.canViewPatient, single_patient.getPatient);
 
 // Deletes this patient and all associated information
-app.delete('/patients/:patientID', single_patient.deletePatient);
+app.delete('/patients/:patientID', auth_helpers.canViewPatient, single_patient.deletePatient);
 
 // Returns info about every session this patient has logged
-app.get('/patients/:patientID/sessions', patient_sessions.getPatientSessions);
+app.get('/patients/:patientID/sessions', auth_helpers.canViewPatient, patient_sessions.getPatientSessions);
 
 // Adds a session to this patients log
-app.post('/patients/:patientID/sessions', patient_sessions.addPatientSession);
+app.post('/patients/:patientID/sessions', auth_helpers.canViewPatient, patient_sessions.addPatientSession);
 
 // Returns informaiton about this specific session
-app.get('/patients/:patientID/sessions/:sessionID', single_session.getSession);
+app.get('/patients/:patientID/sessions/:sessionID', auth_helpers.canViewPatient, single_session.getSession);
 
 // Deletes this specific session
-app.delete('/patients/:patientID/sessions/:sessionID', single_session.deletePatientSession);
+app.delete('/patients/:patientID/sessions/:sessionID', auth_helpers.canViewPatient, single_session.deletePatientSession);
 
 // Sends a message to this patient
-app.post('/patients/:patientID/messages', patient_messages.addPatientMessage);
+app.post('/patients/:patientID/messages', auth_helpers.canViewPatient, patient_messages.addPatientMessage);
 
 // Returns every message this patient has recieved
-app.get('/patients/:patientID/messages', patient_messages.getPatientMessages);
+app.get('/patients/:patientID/messages', auth_helpers.canViewPatient, patient_messages.getPatientMessages);
 
 // Marks this message as read
-app.patch('/patients/:patientID/messages/:messageID', single_message.markMessageAsRead);
+app.patch('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.markMessageAsRead);
 
 // Marks this message as read
-app.put('/patients/:patientID/messages/:messageID', single_message.replyToMessage);
+app.put('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.replyToMessage);
 
 
 // Return info about this message in specific
-app.get('/patients/:patientID/messages/:messageID', single_message.getMessage);
+app.get('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.getMessage);
 
 // Deletes this message from the DB
-app.delete('/patients/:patientID/messages/:messageID', single_message.deletePatientMessage);
+app.delete('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.deletePatientMessage);
 
 // Returns info about every therapist
-app.get('/therapists', all_therapists.getAllTherapists);
+app.get('/therapists', auth_helpers.hasAdminPriv, all_therapists.getAllTherapists);
 
 // Adds a therapist to the DB
 // Will give back the users authenticaiton token
 app.post('/therapists', all_therapists.addTherapist);
 
 // Returns info about this therapist in particuliar
-app.get('/therapists/:therapistID', single_therapist.getTherapist);
+app.get('/therapists/:therapistID', auth_helpers.canViewTherapist, single_therapist.getTherapist);
 
 // Removed this therapist and all assicated information from the server
-app.delete('/therapists/:therapistID', single_therapist.deleteTherapist);
+app.delete('/therapists/:therapistID', auth_helpers.canViewTherapist, single_therapist.deleteTherapist);
 
 // Returns info about this therapists patients
-app.get('/therapists/:therapistID/patients', therapist_patients.getTherapistPatients);
+app.get('/therapists/:therapistID/patients', auth_helpers.canViewTherapist, therapist_patients.getTherapistPatients);
 
 // Pairs the given patient with this therapist
-app.post('/therapists/:therapistID/patients', therapist_patients.addPatientTherapist);
+app.post('/therapists/:therapistID/patients', auth_helpers.canViewTherapist, therapist_patients.addPatientTherapist);
 
 // Unpairs this therapist from this patient
 // DOES NOT delete the pair, simply marks its "date_removed" as today
-app.delete('/therapists/:therapistID/patients/:patientID', therapist_patient.removePatientTherapist);
+app.delete('/therapists/:therapistID/patients/:patientID', auth_helpers.canViewTherapist, auth_helpers.canViewPatient, therapist_patient.removePatientTherapist);
 
 // Accepts this patient-therapist join
 // Marks is_accepted as true
-app.patch('/therapists/:therapistID/patients/:patientID', therapist_patient.acceptPair);
+app.patch('/therapists/:therapistID/patients/:patientID', auth_helpers.canViewPatient, therapist_patient.acceptPair);
 
 // Returns every message this therapist has sent
-app.get('/therapists/:therapistID/messages', therapist_messages.getMessagesFromTherapist);
+app.get('/therapists/:therapistID/messages', auth_helpers.canViewTherapist, therapist_messages.getMessagesFromTherapist);
 
 app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 

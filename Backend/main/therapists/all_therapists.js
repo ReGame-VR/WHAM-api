@@ -1,26 +1,14 @@
 //Gives all therapist info in either JSON or HTML form
 // Request Response TherapistDB -> Void
 exports.getAllTherapists = function (req, res) {
-    req.authorizer.verifyJWT(req, function (verified) {
-        if (!verified) {
-            req.responder.report_bad_token(req, res);
-            return;
+    req.therapistDB.get_all_therapists(function (therapists) {
+        if (therapists == false) {
+            req.responder.report_not_found(req, res);
+        } else {
+            req.responder.report_sucess(req, res, therapists, 'therapist/therapist-overview', {
+                therapists: therapists
+            });
         }
-        req.authorizer.isAllowed(verified, "/therapist", '*', function (err, can_view) {
-            if (can_view) {
-                req.therapistDB.get_all_therapists(function (therapists) {
-                    if (therapists == false) {
-                        req.responder.report_not_found(req, res);
-                    } else {
-                        req.responder.report_sucess(req, res, therapists, 'therapist/therapist-overview', {
-                            therapists: therapists
-                        });
-                    }
-                });
-            } else {
-                req.responder.report_not_authorized(req, res);
-            }
-        });
     });
 }
 

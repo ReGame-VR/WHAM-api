@@ -1,20 +1,8 @@
 // Gives all patient info in either JSON or HTML form
 // Request Response PatientDB AuthorizationDB -> Void
 exports.getPatients = function (req, res) {
-    req.authorizer.verifyJWT(req, function (verified) {
-        if (!verified) {
-            req.responder.report_bad_token(req, res);
-            return;
-        }
-        req.authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
-            if (can_view) {
-                req.patientDB.get_all_patient_info(function (info) {
-                    req.responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
-                });
-            } else {
-                req.responder.report_not_authorized(req, res);
-            }
-        });
+    req.patientDB.get_all_patient_info(function (info) {
+        req.responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
     });
 }
 
