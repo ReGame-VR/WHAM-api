@@ -8,7 +8,7 @@ const PatientDB = require('./database/PatientDB.js');
 const TherapistDB = require('./database/TherapistDB.js');
 const AuthenticationDB = require('./database/AuthenticationDB.js');
 const ResetDB = require('./database/ResetDB.js');
-const HTTPResponses = require('./helpers/http-responses.js');
+const responder = require('./helpers/http-responses.js'); // The class that handles sending the actual info 
 const methodOverride = require('method-override');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
@@ -22,8 +22,6 @@ const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
 // The db that the admin can query to to reset the app
 const resetDB = new ResetDB("WHAM_TEST", patientDB);
 
-// The class that handles sending the actual info
-const responder = new HTTPResponses();
 
 // The file path that has the code for verifying the JWT and checking permissions
 const auth_helpers = require('./helpers/auth_helper.js');
