@@ -116,17 +116,10 @@ class TherapistDB {
     // Returns just info about this therapist
     get_specific_therapist(therapistID, callback) {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
-<<<<<<< HEAD
-        FROM THERAPIST T LEFT JOIN
-        (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
-        where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
-        ON T.username = C.username
-=======
         FROM THERAPIST T LEFT JOIN 
         (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
         where T.username = PT.therapistID AND PT.date_removed IS NULL AND is_accepted = true GROUP BY T.username) C
         ON T.username = C.username 
->>>>>>> 7c451e70e10cdc128b67c4b2896c30087eec3da4
         WHERE T.username = ?`;
         sql = mysql.format(sql, [therapistID]);
         this.pool.getConnection(function (err, connection) {
@@ -154,15 +147,9 @@ class TherapistDB {
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
-<<<<<<< HEAD
                 FROM THERAPIST T LEFT JOIN
                 (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
-                where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
-=======
-                FROM THERAPIST T LEFT JOIN 
-                (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
-                where T.username = PT.therapistID AND PT.date_removed IS NULL AND is_accepted = true GROUP BY T.username) C
->>>>>>> 7c451e70e10cdc128b67c4b2896c30087eec3da4
+                where T.username = PT.therapistID AND PT.date_removed IS NULL AND PT.is_accepted = true GROUP BY T.username) C
                 ON T.username = C.username`;
         this.pool.getConnection(function (err, connection) {
             if (err) {
