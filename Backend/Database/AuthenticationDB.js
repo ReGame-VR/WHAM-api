@@ -266,7 +266,18 @@ class AuthenticationDB {
                                     for (var i = 0; i < result.length; i += 1) {
                                         acl.removeAllow(result[i].username, result[i].username, '*')
                                     }
-                                    callback(true);
+                                    connection.query("SELECT * FROM PATIENT_MESSAGE", function (error, result, fields) {
+                                        if (error) {
+                                            connection.release();
+                                            callback(false);
+                                        } else {
+                                            for (var i = 0; i < result.length; i += 1) {
+                                                acl.removeAllow(result[i].therapistID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
+                                                acl.removeAllow(result[i].patientID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
+                                            }
+                                            callback(true);
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -274,6 +285,14 @@ class AuthenticationDB {
                 }
             });
         });
+    }
+
+    // Resets the ACL storage
+    // (Boolean -> Void) -> Void
+    reset_self(worked) {
+        this.acl = new ACL(new ACL.memoryBackend());
+        this.acl.allow('admin', '*', '*') // the admin can do anything
+        worked(true);
     }
 }
 

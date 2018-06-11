@@ -3,34 +3,29 @@ const chai = require("chai");
 var expect = chai.expect;
 var chaiHttp = require('chai-http');
 chai.use(chaiHttp);
-const app = require('../index');
-const PatientDB = require('../database/PatientDB.js');
-const AuthDB = require('../database/AuthenticationDB.js');
-const DBReseter = require('../database/ResetDB.js');
-var authDB = new AuthDB();
-var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", authDB));
+const app = require('../index').app;
+const reset = require('../index').reset;
 var jwt = require('jsonwebtoken');
 
-
+var ryan_auth_token;
+var timmy_auth_token;
+var cole_auth_token;
+var therapist1_auth_token;
+var therapist2_auth_token;
+var admin_auth_token;
 
 describe("PermTests", function () {
 
-    var ryan_auth_token;
-    var timmy_auth_token;
-    var cole_auth_token;
-    var therapist1_auth_token;
-    var therapist2_auth_token;
-    var admin_auth_token;
-
     describe('DBReseter', function () {
-        it("should not error if the deletion is sucessful", function (done) {
-            resetDB.reset_db(function (token) {
+        it('should not error if the deletion is sucessful', function (done) {
+            reset(function (token) {
                 expect(token).to.be.a('string');
                 admin_auth_token = token;
                 done();
             });
         });
     });
+
 
     describe("Adds Users", function () {
         it("should return the patient salt given a sucessful create account", function (done) {
@@ -181,6 +176,7 @@ describe("PermTests", function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(403);
+                    done();
                 });
         });
     });
@@ -401,7 +397,7 @@ describe("PermTests", function () {
                     done();
                 });
         });
-    })
+    });
 
     describe("Get all therapists", function () {
         it("should only accept the user", function (done) {

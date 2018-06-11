@@ -263,11 +263,21 @@ const resetApp = function(callback) {
                 if(token === false) {
                     callback(false)
                 } else {
-                    callback(token);
+                    authorizer.reset_self(function(worked) {
+                        if(worked === false) {
+                            callback(false);
+                        } else {
+                            callback(token);
+                        }
+                    });
                 }                
             });
         }
     });
 }
 
-module.exports = app; // for testing with chai
+
+module.exports = {
+    app: app,
+    reset: resetApp
+}; // for testing with chai

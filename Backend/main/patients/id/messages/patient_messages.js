@@ -7,8 +7,8 @@ exports.addPatientMessage = function (req, res) {
     var date_sent = req.body.date_sent;
     req.patientDB.send_patient_a_message(patientID, therapistID, message_content, date_sent, function (worked) {
         if (worked !== false) {
-            req.authorizer.allow(therapistID, " message " + worked.messageID, '*') // this user can do anything to themselves they want
-            req.authorizer.allow(patientID, " message " + worked.messageID, '*') // this user can do anything to themselves they want
+            req.authorizer.allow(therapistID, " message " + worked, '*') // this user can do anything to themselves they want
+            req.authorizer.allow(patientID, " message " + worked, '*') // this user can do anything to themselves they want
             req.responder.report_sucess_no_info(req, res);
         } else {
             req.responder.report_not_found(req, res);

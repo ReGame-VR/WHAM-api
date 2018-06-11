@@ -10,15 +10,6 @@ var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
 describe("DBTests", function () {
-    describe("Remove Allows", function() {
-        it("should callback with true if sucessful", function(done) {
-            authorizer.remove_all_permissions(function(worked) {
-                expect(worked).to.be.equal(true);
-                done();
-            });
-        });
-    }); 
-    
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
             resetDB.reset_db(function (worked) {

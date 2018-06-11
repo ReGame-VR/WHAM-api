@@ -3,29 +3,16 @@ const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
-const app = require('../index');
-const PatientDB = require('../database/PatientDB.js');
-const AuthDB = require('../database/AuthenticationDB.js');
-const DBReseter = require('../database/ResetDB.js');
-var authDB = new AuthDB();
-var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", authDB));
+const app = require('../index').app;
+const reset = require('../index').reset;
 var jwt = require('jsonwebtoken');
 
 var admin_auth_token;
 
 describe('LoadTestData', function () {
-    describe("Remove Allows", function() {
-        it("should callback with true if sucessful", function(done) {
-            authDB.remove_all_permissions(function(worked) {
-                expect(worked).to.be.equal(true);
-                done();
-            });
-        });
-    }); 
-
     describe('DBReseter', function () {
         it('should not error if the deletion is sucessful', function (done) {
-            resetDB.reset_db(function (token) {
+            reset(function (token) {
                 expect(token).to.be.a('string');
                 admin_auth_token = token;
                 done();
