@@ -20,6 +20,8 @@ exports.addTherapist = function (req, res) {
     var unencrypt_password = req.body.password
     req.therapistDB.add_therapist(username, unencrypt_password, function (worked) {
         if (worked !== false) {
+            req.authorizer.addUserRoles(username, username)
+            req.authorizer.allow(username, username, '*') // this user can do anything to themselves they want
             req.responder.report_sucess_with_info(req, res, {
                 token: worked
             })

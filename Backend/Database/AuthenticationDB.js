@@ -210,7 +210,18 @@ class AuthenticationDB {
                                     for (var i = 0; i < result.length; i += 1) {
                                         acl.allow(result[i].therapistID, result[i].patientID, '*')
                                     }
-                                    callback(true);
+                                    connection.query("SELECT * FROM PATIENT_MESSAGE", function (error, result, fields) {
+                                        if (error) {
+                                            connection.release();
+                                            callback(false);
+                                        } else {
+                                            for (var i = 0; i < result.length; i += 1) {
+                                                acl.allow(result[i].therapistID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
+                                                acl.allow(result[i].patientID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
+                                            }
+                                            callback(true);
+                                        }
+                                    });
                                 }
                             });
                         }

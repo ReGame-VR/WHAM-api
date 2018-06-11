@@ -22,6 +22,8 @@ exports.addPatient = function (req, res) {
     var information = req.body.information
     req.patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
         if (worked !== false) {
+            req.authorizer.addUserRoles(username, username)
+            req.authorizer.allow(username, username, '*') // this user can do anything to themselves they want
             req.responder.report_sucess_with_info(req, res, {
                 token: worked
             })

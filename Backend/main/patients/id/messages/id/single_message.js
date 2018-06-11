@@ -43,7 +43,8 @@ exports.deletePatientMessage = function (req, res) {
 exports.replyToMessage = function (req, res) {
     var patientID = req.params.patientID;
     var messageID = req.params.messageID;
-    req.patientDB.reply_to_message(rea.body.sentID, messageID, req.body.reply_content, new Date(), function (worked) {
+    var date_sent = req.body.date_sent;
+    req.patientDB.reply_to_message(req.body.sentID, messageID, req.body.reply_content, date_sent, function (worked) {
         if (worked) {
             req.responder.report_sucess_no_info(req, res);
         } else {

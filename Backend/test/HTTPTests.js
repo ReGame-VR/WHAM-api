@@ -14,16 +14,17 @@ var jwt = require('jsonwebtoken');
 var admin_auth_token;
 
 describe('HTTPTests', function () {
-    describe("Remove Allows", function() {
-        it("should callback with true if sucessful", function(done) {
-            authDB.remove_all_permissions(function(worked) {
+    describe("Remove Allows", function () {
+        it("should callback with true if sucessful", function (done) {
+            authDB.remove_all_permissions(function (worked) {
                 expect(worked).to.be.equal(true);
                 done();
             });
         });
-    }); 
+    });
 
     describe('DBReseter', function () {
+
         it('should not error if the deletion is sucessful', function (done) {
             resetDB.reset_db(function (token) {
                 expect(token).to.be.a('string');
@@ -383,7 +384,7 @@ describe('HTTPTests', function () {
         });
     });
 
-    describe("Accept Joins", function() {
+    describe("Accept Joins", function () {
         it('should give status 204 if the accept was sucessful', function (done) {
             chai.request(app)
                 .patch('/therapists/therapist1/patients/ryan')
@@ -552,6 +553,44 @@ describe('HTTPTests', function () {
         });
     });
 
+    describe("Add message reply", function () {
+        it("should return 204 if the reply was sucesfully sent", function (done) {
+            chai.request(app)
+                .put('/patients/ryan/messages/1')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({
+                    sentID: 'therapist1',
+                    reply_content: 'This is a reply',
+                    date_sent: '2016-02-28T16:42:41',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should return 204 if the reply was sucesfully sent", function (done) {
+            chai.request(app)
+                .put('/patients/ryan/messages/1')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({
+                    sentID: 'ryan',
+                    reply_content: 'This is a message',
+                    date_sent: '2016-02-28T16:43:41',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+    })
+
     describe('Mark messages as read', function () {
         it('should give status 204 if the message was sucessfully marked as read', function (done) {
             chai.request(app)
@@ -644,20 +683,6 @@ describe('HTTPTests', function () {
                 });
         });
 
-        /*
-        it('should return general info for every patient', function(done) {
-            chai.request(app)
-                .get('/patients')
-                .accept('application/json')
-                .query({
-                    auth_token: admin_auth_token,
-                })
-                .end(function(err, res) {
-                    expect(res.status).to.be.equal(403);
-                    done();
-                });
-        });
-        */
     });
 
     describe('Get all individual patient info', function () {
@@ -721,7 +746,22 @@ describe('HTTPTests', function () {
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
                         messageID: 1,
-                        replies: []
+                        replies: [
+                            {
+                                date_sent: "2016-02-28T21:42:41.000Z",
+                                messageID: 1,
+                                reply_content: "This is a reply",
+                                sentID: "therapist1"
+
+                            },
+                            {
+                                date_sent: "2016-02-28T21:43:41.000Z",
+                                messageID: 1,
+                                reply_content: "This is a message",
+                                sentID: "ryan"
+
+                            }
+                        ]
                     }]);
                     done();
                 });
@@ -745,7 +785,22 @@ describe('HTTPTests', function () {
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
                         messageID: 1,
-                        replies: []
+                        replies: [
+                            {
+                                date_sent: "2016-02-28T21:42:41.000Z",
+                                messageID: "1",
+                                reply_content: "This is a reply",
+                                sentID: "therapist1"
+
+                            },
+                            {
+                                date_sent: "2016-02-28T21:43:41.000Z",
+                                messageID: "1",
+                                reply_content: "This is a message",
+                                sentID: "ryan"
+
+                            }
+                        ]
                     });
                     done();
                 });
@@ -836,17 +891,15 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
-                    expect(res.body).to.be.deep.equal([
-                        {
-                            dob: "1999-05-05T04:00:00.000Z",
-                            height: 71,
-                            information: "He is a developer of this app!",
-                            last_activity_time: "2016-02-28T21:41:29.000Z",
-                            last_score: 129,
-                            username: "ryan",
-                            weight: 160
-                        }
-                    ]);
+                    expect(res.body).to.be.deep.equal([{
+                        dob: "1999-05-05T04:00:00.000Z",
+                        height: 71,
+                        information: "He is a developer of this app!",
+                        last_activity_time: "2016-02-28T21:41:29.000Z",
+                        last_score: 129,
+                        username: "ryan",
+                        weight: 160
+                    }]);
                     done();
                 });
         });

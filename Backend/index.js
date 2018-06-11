@@ -7,6 +7,7 @@ const path = require('path');
 const PatientDB = require('./database/PatientDB.js');
 const TherapistDB = require('./database/TherapistDB.js');
 const AuthenticationDB = require('./database/AuthenticationDB.js');
+const ResetDB = require('./database/ResetDB.js');
 const HTTPResponses = require('./helpers/http-responses.js');
 const methodOverride = require('method-override');
 var passport = require('passport');
@@ -18,6 +19,8 @@ const authorizer = new AuthenticationDB('WHAM_TEST');
 const patientDB = new PatientDB('WHAM_TEST', authorizer);
 // The db used to change stuf related to therapists
 const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
+// The db that the admin can query to to reset the app
+const resetDB = new ResetDB("WHAM_TEST", patientDB);
 
 // The class that handles sending the actual info
 const responder = new HTTPResponses();
@@ -106,7 +109,6 @@ passport.deserializeUser(function (id, cb) {
 // session.
 app.use(passport.initialize());
 
-
 // Gives express the ability to parse JSON
 app.use(bodyParser.json());
 
@@ -124,6 +126,7 @@ app.use(function (req, res, next) {
     req.therapistDB = therapistDB;
     req.authorizer = authorizer;
     req.responder = responder;
+    req.resetDB = resetDB;
     next();
 })
 
@@ -207,17 +210,16 @@ app.post('/patients/:patientID/messages', auth_helpers.canViewPatient, patient_m
 app.get('/patients/:patientID/messages', auth_helpers.canViewPatient, patient_messages.getPatientMessages);
 
 // Marks this message as read
-app.patch('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.markMessageAsRead);
+app.patch('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.markMessageAsRead);
 
 // Marks this message as read
-app.put('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.replyToMessage);
-
+app.put('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.replyToMessage);
 
 // Return info about this message in specific
-app.get('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.getMessage);
+app.get('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.getMessage);
 
 // Deletes this message from the DB
-app.delete('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, single_message.deletePatientMessage);
+app.delete('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.deletePatientMessage);
 
 // Returns info about every therapist
 app.get('/therapists', auth_helpers.hasAdminPriv, all_therapists.getAllTherapists);
@@ -250,5 +252,22 @@ app.patch('/therapists/:therapistID/patients/:patientID', auth_helpers.canViewPa
 app.get('/therapists/:therapistID/messages', auth_helpers.canViewTherapist, therapist_messages.getMessagesFromTherapist);
 
 app.listen(3000, () => console.log('WHAM listening on port 3000!'));
+
+// The helper to reset the app
+const resetApp = function(callback) {
+    authorizer.remove_all_permissions(function (worked) {
+        if(worked === false) {
+            callback(false);
+        } else {
+            resetDB.reset_db(function (token) {
+                if(token === false) {
+                    callback(false)
+                } else {
+                    callback(token);
+                }                
+            });
+        }
+    });
+}
 
 module.exports = app; // for testing with chai
