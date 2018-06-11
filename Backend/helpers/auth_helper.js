@@ -1,3 +1,4 @@
+// Says whether the given user can view the given patientID
 exports.canViewPatient = function(req, res, next) {
     req.authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
@@ -14,6 +15,7 @@ exports.canViewPatient = function(req, res, next) {
     });
 }
 
+// Says whether the given user can view the given therapistID
 exports.canViewTherapist = function(req, res, next) {
     req.authorizer.verifyJWT(req, function (verified) {
         if (!verified) {
@@ -30,6 +32,7 @@ exports.canViewTherapist = function(req, res, next) {
     });
 }
 
+// Says whether the given user has admin prividlege
 exports.hasAdminPriv = function(req, res, next) {
     req.authorizer.verifyJWT(req, function (verified) {
         if (!verified) {

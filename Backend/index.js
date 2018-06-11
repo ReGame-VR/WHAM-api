@@ -22,6 +22,7 @@ const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
 // The class that handles sending the actual info
 const responder = new HTTPResponses();
 
+// The file path that has the code for verifying the JWT and checking permissions
 const auth_helpers = require('./helpers/auth_helper.js');
 
 // All the JS files that handle specific requests
