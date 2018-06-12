@@ -62,8 +62,4 @@ patient_route.delete('/:patientID/messages/:messageID', single_message.deletePat
 // Marks is_accepted as true
 patient_route.patch('/:patientID/therapists/:therapistID', therapist_patient.acceptPair);
 
-// Unpairs this therapist from this patient
-// DOES NOT delete the pair, simply marks its "date_removed" as today
-patient_route.delete('/:patientID/therapists/:therapistID', therapist_patient.removePatientTherapist);
-
 module.exports = patient_route;

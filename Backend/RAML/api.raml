@@ -402,16 +402,6 @@ resourceTypes:
             403:
               description: The pair could not be accepted.
 
-        delete:
-          queryParameters: 
-            auth_token: string
-          description: Removes this patient from this therapist.
-          responses: 
-            204:
-              description: The pair was sucessfully broken.
-            403:
-              description: The pair could not be broken.
-
 /therapists:
   type:  { UserCollection: {newItem : NewTherapist, item : Therapist} }
   description: A collection of all therapists in the system.
