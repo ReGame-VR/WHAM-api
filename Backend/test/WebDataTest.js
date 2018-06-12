@@ -373,7 +373,7 @@ describe('LoadTestData', function () {
     describe('Accept Patient-Therapist Join', function () {
         it('should give status 204 if the pair was sucessful', function (done) {
             chai.request(app)
-                .patch('/therapists/therapist1/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist1')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
