@@ -27,7 +27,7 @@ class DBReseter {
             }
             connection.query(sql, function (error, result) {
                 if (error) {
-                    callback(null, false);
+                    callback(error, false);
                 } else {
                     patientDB.add_patient("admin", process.env.ADMIN_PASSWORD, "1999-05-05", "160", "71", "", callback);
                 }

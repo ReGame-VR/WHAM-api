@@ -42,13 +42,21 @@ class TherapistDB {
                     connection.release();
                     callback(false);
                 } else {
-                    authorizer.addUserRoles(username, username)
-                    authorizer.allow(username, username, '*') // this user can do anything to themselves they want
-                    var token = jwt.sign({
-                        data: {
-                            username: username,
-                            password_hash: password,
-                            type: "THERAPIST"
+                    connection.query(therapist_sql, function (error, results, fields) {
+                        if (error) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            var token = jwt.sign({
+                                data: {
+                                    username: username,
+                                    password_hash: password
+                                }
+                            }, process.env.JWT_SECRET, {
+                                expiresIn: '10d'
+                            });
+                            connection.release();
+                            callback(token);
                         }
                     }, process.env.JWT_SECRET, {
                         expiresIn: '10d'
@@ -109,7 +117,7 @@ class TherapistDB {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
         FROM THERAPIST T LEFT JOIN
         (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
-        where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
+        where T.username = PT.therapistID AND PT.date_removed IS NULL AND is_accepted = true GROUP BY T.username) C
         ON T.username = C.username
         WHERE T.username = ?`;
         sql = mysql.format(sql, [therapistID]);
@@ -140,7 +148,7 @@ class TherapistDB {
         var sql = `SELECT T.username, IFNULL(C.c, 0) as c
                 FROM THERAPIST T LEFT JOIN
                 (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
-                where T.username = PT.therapistID AND PT.date_removed IS NULL GROUP BY T.username) C
+                where T.username = PT.therapistID AND PT.date_removed IS NULL AND PT.is_accepted = true GROUP BY T.username) C
                 ON T.username = C.username`;
         this.pool.getConnection(function (err, connection) {
             if (err) {
@@ -229,39 +237,41 @@ class TherapistDB {
                 } else {
                     var toReturn = [];
                     var sqlPt2 = "SELECT score, time FROM PATIENT P JOIN PATIENT_SESSION PS ON P.username = PS.patientID WHERE P.username = ? ORDER BY PS.time DESC";
-                    for (var i = 0; i < results1.length; i += 1) {
-                        var username = results1[i].username;
-                        var dob = results1[i].dob;
-                        var weight = results1[i].weight;
-                        var height = results1[i].height;
-                        var information = results1[i].information;
-                        sqlPt2 = mysql.format(sqlPt2, [username]);
-                        connection.query(sqlPt2, function (error, results2, fields) {
-                            if (error) {
-                                connection.release();
-                                callback(false);
-                                return;
-                            }
-                            var score = undefined;
-                            var time = undefined;
-                            if(results2.length > 0) {
-                                score = results2[0].score;
-                                time = results2[0].time;
-                            }
-                            toReturn.push({
-                                username: username,
-                                dob: dob,
-                                weight: weight,
-                                height: height,
-                                information: information,
-                                last_score: score,
-                                last_activity_time: time
+                    for (var a = 0; a < results1.length; a += 1) {
+                        (function(i) {
+                            var username = results1[i].username;
+                            var dob = results1[i].dob;
+                            var weight = results1[i].weight;
+                            var height = results1[i].height;
+                            var information = results1[i].information;
+                            sqlPt2 = mysql.format(sqlPt2, [username]);
+                            connection.query(sqlPt2, function (error, results2, fields) {
+                                if (error) {
+                                    connection.release();
+                                    callback(false);
+                                    return;
+                                }
+                                var score = undefined;
+                                var time = undefined;
+                                if (results2.length > 0) {
+                                    score = results2[0].score;
+                                    time = results2[0].time;
+                                }
+                                toReturn.push({
+                                    username: username,
+                                    dob: dob,
+                                    weight: weight,
+                                    height: height,
+                                    information: information,
+                                    last_score: score,
+                                    last_activity_time: time
+                                });
+                                if (i === results1.length - 1) {
+                                    connection.release();
+                                    callback(toReturn);
+                                }
                             });
-                            if(i === results1.length) {
-                                connection.release();
-                                callback(toReturn);
-                            }
-                        });
+                        })(a)
                     }
                 }
             });

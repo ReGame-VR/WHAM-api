@@ -233,8 +233,6 @@ class PatientDB {
                             connection.release();
                             callback(false);
                         } else {
-                            authorizer.addUserRoles(username, username)
-                            authorizer.allow(username, username, '*') // this user can do anything to themselves they want
                             var token = jwt.sign({
                                 data: {
                                     username: username,
@@ -451,7 +449,7 @@ class PatientDB {
                     callback(false);
                 } else {
                     connection.release();
-                    callback(true);
+                    callback(results.insertId);
                 }
             });
         });
@@ -495,10 +493,10 @@ class PatientDB {
                                     var replies = []
                                     for (var x = 0; x < result.length; x++) {
                                         replies.push({
-                                            sentID: replies[x].fromID,
+                                            sentID: result[x].fromID,
                                             messageID: messageID,
-                                            date_sent: replies[x].date_sent,
-                                            reply_content: replies[x].content
+                                            date_sent: result[x].date_sent,
+                                            reply_content: result[x].content
                                         })
                                     }
                                     toSend.push({
@@ -577,10 +575,10 @@ class PatientDB {
                             var replies = [];
                             for (var i = 0; i < result.length; i += 1) {
                                 replies.push({
-                                    sentID: replies[i].fromID,
+                                    sentID: result[i].fromID,
                                     messageID: messageID,
-                                    date_sent: replies[i].date_sent,
-                                    reply_content: replies[i].content
+                                    date_sent: result[i].date_sent,
+                                    reply_content: result[i].content
                                 })
                             }
                             connection.release();
@@ -641,7 +639,6 @@ class PatientDB {
                     callback(false);
                 } else {
                     connection.release();
-                    authorizer.allow(therapistID, patientID, '*') // this user can do anything to this patient they want
                     callback(true);
                 }
             });
@@ -667,7 +664,6 @@ class PatientDB {
                     callback(false);
                 } else {
                     connection.release();
-                    authorizer.removeAllow(therapistID, patientID, "*");
                     callback(true);
                 }
             });
@@ -677,7 +673,7 @@ class PatientDB {
     // String (Boolean -> Void) -> Void
     // Deletes this message
     delete_message(patientID, messageID, callback) {
-        var sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
+        var sql = `DELETE MESSAGE_REPLY FROM PATIENT_MESSAGE JOIN MESSAGE_REPLY ON PATIENT_MESSAGE.messageID = MESSAGE_REPLY.messageID WHERE patientID = ? AND MESSAGE_REPLY.messageID = ?`;
         sql = mysql.format(sql, [patientID, messageID])
         this.pool.getConnection(function (err, connection) {
             if (err) {
@@ -685,12 +681,21 @@ class PatientDB {
                 throw err;
             }
             connection.query(sql, function (error, result, fields) {
-                if (error || result.affectedRows === 0) {
+                if (error) {
                     connection.release();
                     callback(false);
                 } else {
-                    connection.release();
-                    callback(true);
+                    var sql = `DELETE FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?`;
+                    sql = mysql.format(sql, [patientID, messageID])
+                    connection.query(sql, function (error, result, fields) {
+                        if (error || result.affectedRows === 0) {
+                            connection.release();
+                            callback(false);
+                        } else {
+                            connection.release();
+                            callback(true);
+                        }
+                    });
                 }
             });
         });

@@ -7,7 +7,8 @@ const path = require('path');
 const PatientDB = require('./database/PatientDB.js');
 const TherapistDB = require('./database/TherapistDB.js');
 const AuthenticationDB = require('./database/AuthenticationDB.js');
-const HTTPResponses = require('./helpers/http-responses.js');
+const ResetDB = require('./database/ResetDB.js');
+const responder = require('./helpers/http-responses.js'); // The class that handles sending the actual info 
 const methodOverride = require('method-override');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
@@ -18,9 +19,12 @@ const authorizer = new AuthenticationDB('WHAM_TEST');
 const patientDB = new PatientDB('WHAM_TEST', authorizer);
 // The db used to change stuf related to therapists
 const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
+// The db that the admin can query to to reset the app
+const resetDB = new ResetDB("WHAM_TEST", patientDB);
 
-// The class that handles sending the actual info
-const responder = new HTTPResponses();
+
+// The file path that has the code for verifying the JWT and checking permissions
+const auth_helpers = require('./helpers/auth_helper.js');
 
 // All the JS files that handle specific requests
 // The file structure indicates which request URL every file handles
@@ -103,7 +107,6 @@ passport.deserializeUser(function (id, cb) {
 // session.
 app.use(passport.initialize());
 
-
 // Gives express the ability to parse JSON
 app.use(bodyParser.json());
 
@@ -115,18 +118,25 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+// Loads all the DB/helpers to the Req
+app.use(function (req, res, next) {
+    req.patientDB = patientDB;
+    req.therapistDB = therapistDB;
+    req.authorizer = authorizer;
+    req.responder = responder;
+    req.resetDB = resetDB;
+    next();
+})
 
+// Resets the ACL permissions based on the DB entries
 authorizer.load_all_permissions(function (worked) {
     if (!worked) {
         throw new Error("This shouldn't fail");
     }
 });
 
-
 // If the user goes to /api it will render the API HTML
-app.get('/api', function (req, res) {
-    api.showAPI(req, res, responder);
-});
+app.get('/api', api.showAPI);
 
 // HTML Forms do not support PUT, PATCH, and DELETE so this method
 // allows the form to pass a parameter _method that overrides whatever
@@ -134,19 +144,13 @@ app.get('/api', function (req, res) {
 app.use(methodOverride('_method'));
 
 // Renders the registration screen as HTML
-app.get('/register', function (req, res) {
-    register.show_register(req, res, responder);
-});
+app.get('/register', register.show_register);
 
 // Clears the cookies and shows the logout screen
-app.get('/logout', function (req, res) {
-    logout.show_logout(req, res, responder);
-});
+app.get('/logout', logout.show_logout);
 
 // Renders the login choosing screen as HTML
-app.get('/login', function (req, res) {
-    login.show_login(req, res, responder);
-});
+app.get('/login', login.show_login);
 
 // Logs this patient
 // Will give back the users authenticaiton token
@@ -154,15 +158,11 @@ app.post('/login/patient',
     passport.authenticate('patient', {
         failureRedirect: '/login/patient'
     }),
-    function (req, res) {
-        patient_login.patient_login(req, res, responder);
-    }
+    patient_login.patient_login
 );
 
 // Renders the patient login screen as HTML
-app.get('/login/patient', function (req, res) {
-    patient_login.show_login(req, res, responder);
-});
+app.get('/login/patient', patient_login.show_login);
 
 // Logs this therapist
 // Will give back the users authenticaiton token
@@ -170,136 +170,112 @@ app.post('/login/therapist',
     passport.authenticate('therapist', {
         failureRedirect: '/login/therapist'
     }),
-    function (req, res) {
-        therapist_login.therapist_login(req, res, responder);
-    }
+    therapist_login.therapist_login
 );
 
 // Renders the therapist login screen as HTML
-app.get('/login/therapist', function (req, res) {
-    therapist_login.show_login(req, res, responder);
-});
+app.get('/login/therapist', therapist_login.show_login);
 
 // Returns info about every patient
-app.get('/patients', function (req, res) {
-    all_patients.getPatients(req, res, patientDB, authorizer, responder);
-});
+app.get('/patients', auth_helpers.hasAdminPriv, all_patients.getPatients);
 
 // Adds a patient to the DB (create an account)
 // Will give back the users authenticaiton token
-app.post('/patients', function (req, res) {
-    all_patients.addPatient(req, res, patientDB, responder);
-});
+app.post('/patients', all_patients.addPatient);
 
 // Returns info about this patient
-app.get('/patients/:patientID', function (req, res) {
-    single_patient.getPatient(req, res, patientDB, authorizer, responder);
-});
+app.get('/patients/:patientID', auth_helpers.canViewPatient, single_patient.getPatient);
 
 // Deletes this patient and all associated information
-app.delete('/patients/:patientID', function (req, res) {
-    single_patient.deletePatient(req, res, patientDB, authorizer, responder);
-});
+app.delete('/patients/:patientID', auth_helpers.canViewPatient, single_patient.deletePatient);
 
 // Returns info about every session this patient has logged
-app.get('/patients/:patientID/sessions', function (req, res) {
-    patient_sessions.getPatientSessions(req, res, patientDB, authorizer, responder);
-});
+app.get('/patients/:patientID/sessions', auth_helpers.canViewPatient, patient_sessions.getPatientSessions);
 
 // Adds a session to this patients log
-app.post('/patients/:patientID/sessions', function (req, res) {
-    patient_sessions.addPatientSession(req, res, patientDB, authorizer, responder);
-});
+app.post('/patients/:patientID/sessions', auth_helpers.canViewPatient, patient_sessions.addPatientSession);
 
 // Returns informaiton about this specific session
-app.get('/patients/:patientID/sessions/:sessionID', function (req, res) {
-    single_session.getSession(req, res, patientDB, authorizer, responder);
-});
+app.get('/patients/:patientID/sessions/:sessionID', auth_helpers.canViewPatient, single_session.getSession);
 
 // Deletes this specific session
-app.delete('/patients/:patientID/sessions/:sessionID', function (req, res) {
-    single_session.deletePatientSession(req, res, patientDB, authorizer, responder);
-});
+app.delete('/patients/:patientID/sessions/:sessionID', auth_helpers.canViewPatient, single_session.deletePatientSession);
 
 // Sends a message to this patient
-app.post('/patients/:patientID/messages', function (req, res) {
-    patient_messages.addPatientMessage(req, res, patientDB, authorizer, responder);
-});
+app.post('/patients/:patientID/messages', auth_helpers.canViewPatient, patient_messages.addPatientMessage);
 
 // Returns every message this patient has recieved
-app.get('/patients/:patientID/messages', function (req, res) {
-    patient_messages.getPatientMessages(req, res, patientDB, authorizer, responder);
-});
+app.get('/patients/:patientID/messages', auth_helpers.canViewPatient, patient_messages.getPatientMessages);
 
 // Marks this message as read
-app.patch('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.markMessageAsRead(req, res, patientDB, authorizer, responder);
-});
+app.patch('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.markMessageAsRead);
 
 // Marks this message as read
-app.put('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.replyToMessage(req, res, patientDB, authorizer, responder);
-});
-
+app.put('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.replyToMessage);
 
 // Return info about this message in specific
-app.get('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.getMessage(req, res, patientDB, authorizer, responder);
-});
+app.get('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.getMessage);
 
 // Deletes this message from the DB
-app.delete('/patients/:patientID/messages/:messageID', function (req, res) {
-    single_message.deletePatientMessage(req, res, patientDB, authorizer, responder);
-});
+app.delete('/patients/:patientID/messages/:messageID', auth_helpers.canViewPatient, auth_helpers.canViewMessage, single_message.deletePatientMessage);
 
 // Returns info about every therapist
-app.get('/therapists', function (req, res) {
-    all_therapists.getAllTherapists(req, res, therapistDB, authorizer, responder);
-});
+app.get('/therapists', auth_helpers.hasAdminPriv, all_therapists.getAllTherapists);
 
 // Adds a therapist to the DB
 // Will give back the users authenticaiton token
-app.post('/therapists', function (req, res) {
-    all_therapists.addTherapist(req, res, therapistDB, responder);
-});
+app.post('/therapists', all_therapists.addTherapist);
 
 // Returns info about this therapist in particuliar
-app.get('/therapists/:therapistID', function (req, res) {
-    single_therapist.getTherapist(req, res, therapistDB, authorizer, responder);
-});
+app.get('/therapists/:therapistID', auth_helpers.canViewTherapist, single_therapist.getTherapist);
 
 // Removed this therapist and all assicated information from the server
-app.delete('/therapists/:therapistID', function (req, res) {
-    single_therapist.deleteTherapist(req, res, therapistDB, authorizer, responder);
-});
+app.delete('/therapists/:therapistID', auth_helpers.canViewTherapist, single_therapist.deleteTherapist);
 
 // Returns info about this therapists patients
-app.get('/therapists/:therapistID/patients', function (req, res) {
-    therapist_patients.getTherapistPatients(req, res, therapistDB, authorizer, responder);
-});
+app.get('/therapists/:therapistID/patients', auth_helpers.canViewTherapist, therapist_patients.getTherapistPatients);
 
 // Pairs the given patient with this therapist
-app.post('/therapists/:therapistID/patients', function (req, res) {
-    therapist_patients.addPatientTherapist(req, res, patientDB, authorizer, responder);
-});
+app.post('/therapists/:therapistID/patients', auth_helpers.canViewTherapist, therapist_patients.addPatientTherapist);
 
 // Unpairs this therapist from this patient
 // DOES NOT delete the pair, simply marks its "date_removed" as today
-app.delete('/therapists/:therapistID/patients/:patientID', function (req, res) {
-    therapist_patient.removePatientTherapist(req, res, patientDB, authorizer, responder);
-});
+app.delete('/therapists/:therapistID/patients/:patientID', auth_helpers.canViewTherapist, auth_helpers.canViewPatient, therapist_patient.removePatientTherapist);
 
 // Accepts this patient-therapist join
 // Marks is_accepted as true
-app.patch('/therapists/:therapistID/patients/:patientID', function (req, res) {
-    therapist_patient.accept_pair(req, res, patientDB, authorizer, responder);
-});
+app.patch('/therapists/:therapistID/patients/:patientID', auth_helpers.canViewPatient, therapist_patient.acceptPair);
 
 // Returns every message this therapist has sent
-app.get('/therapists/:therapistID/messages', function (req, res) {
-    therapist_messages.getMessagesFromTherapist(req, res, therapistDB, authorizer, responder);
-});
+app.get('/therapists/:therapistID/messages', auth_helpers.canViewTherapist, therapist_messages.getMessagesFromTherapist);
 
 app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 
-module.exports = app; // for testing with chai
+// The helper to reset the app
+const resetApp = function(callback) {
+    authorizer.remove_all_permissions(function (worked) {
+        if(worked === false) {
+            callback(false);
+        } else {
+            resetDB.reset_db(function (token) {
+                if(token === false) {
+                    callback(false)
+                } else {
+                    authorizer.reset_self(function(worked) {
+                        if(worked === false) {
+                            callback(false);
+                        } else {
+                            callback(token);
+                        }
+                    });
+                }                
+            });
+        }
+    });
+}
+
+
+module.exports = {
+    app: app,
+    reset: resetApp
+}; // for testing with chai

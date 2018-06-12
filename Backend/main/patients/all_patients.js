@@ -1,30 +1,18 @@
 // Gives all patient info in either JSON or HTML form
 // Request Response PatientDB AuthorizationDB -> Void
-exports.getPatients = function (req, res, patientDB, authorizer, responder) {
-    authorizer.verifyJWT(req, function (verified) {
-        if (!verified) {
-            responder.report_bad_token(req, res);
-            return;
-        }
-        authorizer.isAllowed(verified, "/ patients", '*', function (err, can_view) {
-            if (can_view) {
-                patientDB.get_all_patient_info(function (info) {
-                    responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
-                });
-            } else {
-                responder.report_not_authorized(req, res);
-            }
-        });
+exports.getPatients = function (req, res) {
+    req.patientDB.get_all_patient_info(function (info) {
+        req.responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
     });
 }
 
 
 // Adds the patient to the database
 // Request Response PatientDB -> Void
-exports.addPatient = function (req, res, patientDB, responder) {
+exports.addPatient = function (req, res) {
     var username = req.body.username
     if (username.includes(" ")) {
-        responder.report_fail_with_message(req, res, "Bad Username");
+        req.responder.report_fail_with_message(req, res, "Bad Username");
         return;
     }
     var unencrypt_password = req.body.password
@@ -32,13 +20,15 @@ exports.addPatient = function (req, res, patientDB, responder) {
     var weight = req.body.weight
     var height = req.body.height
     var information = req.body.information
-    patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
+    req.patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
         if (worked !== false) {
-            responder.report_sucess_with_info(req, res, {
+            req.authorizer.addUserRoles(username, username)
+            req.authorizer.allow(username, username, '*') // this user can do anything to themselves they want
+            req.responder.report_sucess_with_info(req, res, {
                 token: worked
             })
         } else {
-            responder.report_fail_with_message(req, res, "User already exists");
+            req.responder.report_fail_with_message(req, res, "User already exists");
         }
     });
 }

@@ -10,18 +10,10 @@ var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
 describe("DBTests", function () {
-    describe("Remove Allows", function() {
-        it("should callback with true if sucessful", function(done) {
-            authorizer.remove_all_permissions(function(worked) {
-                expect(worked).to.be.equal(true);
-                done();
-            });
-        });
-    }); 
-    
     describe('DBReseter', function () {
         it("should not error if the deletion is sucessful", function (done) {
             resetDB.reset_db(function (worked) {
+                expect(worked).to.be.not.equal(false);
                 expect(worked).to.be.a('string');
                 done();
             });
@@ -261,13 +253,13 @@ describe("DBTests", function () {
         describe("#send_patient_a_message()", function () {
             it("should give true if the message was sucessfully added", function (done) {
                 patientDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
-                    expect(worked).to.be.equal(true);
+                    expect(worked).to.be.an('number');
                     patientDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
                         expect(worked).to.be.equal(false);
                         patientDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
                             expect(worked).to.be.equal(false);
                             patientDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04", function (worked) {
-                                expect(worked).to.be.equal(true);
+                                expect(worked).to.be.an('number');
                                 done();
                             });
                         });

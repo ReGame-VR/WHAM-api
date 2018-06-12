@@ -3,42 +3,29 @@ const chai = require("chai");
 var expect = chai.expect;
 var chaiHttp = require('chai-http');
 chai.use(chaiHttp);
-const app = require('../index');
-const PatientDB = require('../database/PatientDB.js');
-const AuthDB = require('../database/AuthenticationDB.js');
-const DBReseter = require('../database/ResetDB.js');
-var authDB = new AuthDB();
-var resetDB = new DBReseter("WHAM_TEST", new PatientDB("WHAM_TEST", authDB));
+const app = require('../index').app;
+const reset = require('../index').reset;
 var jwt = require('jsonwebtoken');
 
+var ryan_auth_token;
+var timmy_auth_token;
+var cole_auth_token;
+var therapist1_auth_token;
+var therapist2_auth_token;
+var admin_auth_token;
 
 describe("PermTests", function () {
 
-    var ryan_auth_token;
-    var timmy_auth_token;
-    var cole_auth_token;
-    var therapist1_auth_token;
-    var therapist2_auth_token;
-    var admin_auth_token;
-
-    describe("Remove Allows", function() {
-        it("should callback with true if sucessful", function(done) {
-            authDB.remove_all_permissions(function(worked) {
-                expect(worked).to.be.equal(true);
-                done();
-            });
-        });
-    }); 
-
     describe('DBReseter', function () {
-        it("should not error if the deletion is sucessful", function (done) {
-            resetDB.reset_db(function (token) {
+        it('should not error if the deletion is sucessful', function (done) {
+            reset(function (token) {
                 expect(token).to.be.a('string');
                 admin_auth_token = token;
                 done();
             });
         });
     });
+
 
     describe("Adds Users", function () {
         it("should return the patient salt given a sucessful create account", function (done) {
@@ -171,6 +158,21 @@ describe("PermTests", function () {
                 })
                 .send({
                     patientID: 'ryan'
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Has no access before join accept", function () {
+        it('should return status 403 because the patient has not yet accepted the join', function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept('application/json')
+                .query({
+                    auth_token: therapist1_auth_token,
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(403);
@@ -359,6 +361,44 @@ describe("PermTests", function () {
         });
     });
 
+    describe("Add message reply", function () {
+        it("should return 204 if the reply was sucesfully sent", function (done) {
+            chai.request(app)
+                .put('/patients/ryan/messages/1')
+                .accept('application/json')
+                .query({
+                    auth_token: ryan_auth_token,
+                })
+                .send({
+                    sentID: 'therapist1',
+                    reply_content: 'This is a reply',
+                    date_sent: '2016-02-28T16:42:41',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+
+        it("should return 403 if the user does not have permission", function (done) {
+            chai.request(app)
+                .put('/patients/timmy/messages/1')
+                .accept('application/json')
+                .query({
+                    auth_token: timmy_auth_token,
+                })
+                .send({
+                    sentID: 'ryan',
+                    reply_content: 'This is a message',
+                    date_sent: '2016-02-28T16:43:41',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
     describe("Get all therapists", function () {
         it("should only accept the user", function (done) {
             chai.request(app)
@@ -397,6 +437,19 @@ describe("PermTests", function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it("should reject a user looking for a message they did not sent", function (done) {
+            chai.request(app)
+                .get('/patients/timmy/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
                     done();
                 });
         });
