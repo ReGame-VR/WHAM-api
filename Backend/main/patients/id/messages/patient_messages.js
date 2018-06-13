@@ -6,6 +6,7 @@ exports.getPatientMessages = function (req, res) {
         if (messages === false) {
             req.responder.report_not_found(req, res);
         } else {
+            console.log("here");
             req.responder.report_sucess(req, res, messages, 'patient/patient-message-overview', {
                 patientID: patientID,
                 messages: messages

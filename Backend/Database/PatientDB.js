@@ -474,6 +474,10 @@ class PatientDB {
                     callback(false);
                 } else {
                     var toSend = [];
+                    if(message_result.length == 0) {
+                        connection.release();
+                        callback([]);
+                    }
                     for (var a = 0; a < message_result.length; a++) {
                         (function (i) {
                             var reply_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";

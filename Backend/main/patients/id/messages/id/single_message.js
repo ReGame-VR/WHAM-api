@@ -21,7 +21,9 @@ exports.getMessage = function (req, res) {
         if (message_content === false) {
             req.responder.report_not_found(req, res);
         } else {
-            req.responder.report_sucess(req, res, message_content, 'patient/patient-message-detail', message_content)
+            var html_message_content = message_content;
+            html_message_content.viewerID = req.verified;
+            req.responder.report_sucess(req, res, message_content, 'patient/patient-message-detail', html_message_content)
         }
     });
 }
@@ -43,7 +45,7 @@ exports.deletePatientMessage = function (req, res) {
 exports.replyToMessage = function (req, res) {
     var patientID = req.params.patientID;
     var messageID = req.params.messageID;
-    var date_sent = req.body.date_sent;
+    var date_sent = new Date(req.body.date_sent);
     req.patientDB.reply_to_message(req.body.sentID, messageID, req.body.reply_content, date_sent, function (worked) {
         if (worked) {
             req.responder.report_sucess_no_info(req, res);

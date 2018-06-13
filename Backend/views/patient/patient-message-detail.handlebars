@@ -6,11 +6,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
     crossorigin="anonymous">
-  <link href="/css/login.css" rel="stylesheet">
 </head>
 
 <body>
-    {{message_content}}
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand">WHAM</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="navbar-collapse collapse justify-content-stretch" id="navbar">
+      <div class="navbar-nav ml-auto">
+        <a class="nav-item nav-link" href="#">Profile
+          <span class="sr-only">(current)</span>
+        </a>
+        <a class="nav-item nav-link" href="/logout">Sign out</a>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    <h2>
+      {{message_content}}
+    </h2>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Who Sent</th>
+          <th>Reply Content</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each replies}}
+        <tr>
+          <td>{{sentID}}</td>
+          <td>{{reply_content}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="container">
+    <form action={{concat "/patients/" patientID "/messages/" messageID "?_method=PUT"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
+      Reply Content:
+      <br>
+      <input type="text" name="reply_content">
+      <br>
+      <input type="hidden" name="sentID" value={{viewerID}}>
+      <input type="hidden" name="date_sent" value={{get_date}}>
+      <button type="submit">Send</button>
+    </form>
+  </div>
 </body>
 
 </html>
