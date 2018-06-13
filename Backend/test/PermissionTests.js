@@ -184,7 +184,7 @@ describe("PermTests", function () {
     describe("Accept Patient-Therapist Join", function () {
         it("should give status 403 if the accept was unsucessful", function (done) {
             chai.request(app)
-                .patch('/therapists/therapist1/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist1')
                 .query({
                     auth_token: therapist2_auth_token
                 })
@@ -196,7 +196,7 @@ describe("PermTests", function () {
 
         it("should give status 204 if the pair was sucessful", function (done) {
             chai.request(app)
-                .patch('/therapists/therapist1/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist1')
                 .query({
                     auth_token: ryan_auth_token
                 })
@@ -208,7 +208,7 @@ describe("PermTests", function () {
 
         it("should give status 204 if the pair was sucessful", function (done) {
             chai.request(app)
-                .patch('/therapists/therapist2/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist2')
                 .query({
                     auth_token: ryan_auth_token
                 })
@@ -220,7 +220,7 @@ describe("PermTests", function () {
 
         it("should reject another user", function (done) {
             chai.request(app)
-                .patch('/therapists/therapist2/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist2')
                 .query({
                     auth_token: timmy_auth_token
                 })

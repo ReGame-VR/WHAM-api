@@ -18,6 +18,13 @@ class AuthenticationDB {
 
         this.acl = new ACL(new ACL.memoryBackend());
         this.acl.allow('admin', '*', '*') // the admin can do anything
+
+        // Resets the ACL permissions based on the DB entries
+        this.load_all_permissions(function (worked) {
+            if (!worked) {
+                throw new Error("This shouldn't fail");
+            }
+        });
     }
 
     // String String String (Error Maybe-User -> Void) -> Void

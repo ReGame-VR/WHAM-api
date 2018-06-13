@@ -374,7 +374,7 @@ describe('HTTPTests', function () {
     describe("Accept Joins", function () {
         it('should give status 204 if the accept was sucessful', function (done) {
             chai.request(app)
-                .patch('/therapists/therapist1/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist1')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
@@ -387,7 +387,7 @@ describe('HTTPTests', function () {
 
         it('should give status 403 if the accept was unsucessful', function (done) {
             chai.request(app)
-                .patch('/therapists/therapist1/patients/lskamdfsdmlkdfws')
+                .patch('/patients/lskamdfsdmlkdfws/therapists/therapist1')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
@@ -400,7 +400,7 @@ describe('HTTPTests', function () {
 
         it('should give status 403 if the accept was unsucessful', function (done) {
             chai.request(app)
-                .patch('/therapists/therapist1555/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist1555')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
@@ -413,7 +413,7 @@ describe('HTTPTests', function () {
 
         it('should give status 204 if the accept was sucessful', function (done) {
             chai.request(app)
-                .patch('/therapists/therapist2/patients/ryan')
+                .patch('/patients/ryan/therapists/therapist2')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,

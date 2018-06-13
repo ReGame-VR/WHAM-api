@@ -139,6 +139,13 @@ types:
   MessageReply:
     properties: 
       sentID: string
+      messageID: number
+      date_sent: datetime
+      reply_content: string
+
+  NewMessageReply:
+    properties: 
+      sentID: string
       date_sent: datetime
       reply_content: string
 
@@ -328,7 +335,7 @@ resourceTypes:
             auth_token: string
           body:
             application/json:
-              type: MessageReply
+              type: NewMessageReply
           responses: 
             204:
               description: The reply was sucessfully sent.
@@ -383,6 +390,17 @@ resourceTypes:
             403:
               description: Bad request          
               
+    /therapists:
+      /{id}:
+        patch:
+          description: Marks this patient-therapist join as accepted
+          queryParameters: 
+            auth_token: string
+          responses: 
+            204:
+              description: The pair was sucessfully accepted.
+            403:
+              description: The pair could not be accepted.
 
 /therapists:
   type:  { UserCollection: {newItem : NewTherapist, item : Therapist} }
@@ -437,16 +455,6 @@ resourceTypes:
 
       /{id}:
         description: For editing a specific patient-therapist combo.
-        patch:
-          description: Marks this patient-therapist join as accepted
-          queryParameters: 
-            auth_token: string
-          responses: 
-            204:
-              description: The pair was sucessfully accepted.
-            403:
-              description: The pair could not be accepted.
-
         delete:
           queryParameters: 
             auth_token: string
