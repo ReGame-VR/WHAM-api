@@ -469,13 +469,13 @@ describe('HTTPTests', function () {
     describe('Adds patient messages', function () {
         it('should give status 204 if the message was sucessfully added', function (done) {
             chai.request(app)
-                .post('/patients/ryan/messages')
+                .post('/therapists/therapist1/messages')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
                 .send({
-                    therapistID: 'therapist1',
+                    patientID: 'ryan',
                     message_content: 'This is a message',
                     date_sent: '2016-02-28T16:41:41',
                 })
@@ -487,13 +487,13 @@ describe('HTTPTests', function () {
 
         it('should give status 204 if the message was sucessfully added', function (done) {
             chai.request(app)
-                .post('/patients/timmy/messages')
+                .post('/therapists/therapist2/messages')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
                 .send({
-                    therapistID: 'therapist2',
+                    patientID: 'timmy',
                     message_content: 'This is a very good message',
                     date_sent: '2016-02-28T16:41:41',
                 })
@@ -505,13 +505,13 @@ describe('HTTPTests', function () {
 
         it('should give status 403 if the message was sucessfully added', function (done) {
             chai.request(app)
-                .post('/patients/ryan/messages')
+                .post('/therapists/skjdfnakjsndsfko/messages')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
                 .send({
-                    therapistID: 'skjdfnakjsndsfko\'sa',
+                    patientID: 'ryan',
                     message_content: 'This is a message',
                     date_sent: '2016-02-28T16:41:41',
                 })
@@ -523,10 +523,10 @@ describe('HTTPTests', function () {
 
         it('should give status 403 if the message was sucessfully added', function (done) {
             chai.request(app)
-                .post('/patients/askjmndqkls/messages')
+                .post('/therapists/therapist1/messages')
                 .accept('application/json')
                 .send({
-                    therapistID: 'therapist1',
+                    patientID: 'askjmndqkls',
                     message_content: 'This is a message',
                     date_sent: '2016-02-28T16:41:41',
                 })

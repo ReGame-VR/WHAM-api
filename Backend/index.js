@@ -31,6 +31,21 @@ var hbs = exphbs.create({
         json: function (context) {
             return JSON.stringify(context);
         },
+        get_date: function () {
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth() + 1; //January is 0!
+            var yyyy = today.getFullYear();
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            today = yyyy + "-" + mm + "-" + dd; 
+
+            return JSON.stringify(today);
+        },
         concat: (...args) => args.slice(0, -1).join('')
     }
 });
@@ -78,23 +93,23 @@ app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 /************************STUFF FOR TESTING PURPOSES**********************************/
 
 // The helper to reset the app
-const resetApp = function(callback) {
+const resetApp = function (callback) {
     authorizer.remove_all_permissions(function (worked) {
-        if(worked === false) {
+        if (worked === false) {
             callback(false);
         } else {
             resetDB.reset_db(function (token) {
-                if(token === false) {
+                if (token === false) {
                     callback(false)
                 } else {
-                    authorizer.reset_self(function(worked) {
-                        if(worked === false) {
+                    authorizer.reset_self(function (worked) {
+                        if (worked === false) {
                             callback(false);
                         } else {
                             callback(token);
                         }
                     });
-                }                
+                }
             });
         }
     });

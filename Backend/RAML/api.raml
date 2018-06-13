@@ -81,7 +81,6 @@ types:
       username: string
       password: string
 
-
   NewPatientSession:
     properties:
       score: number
@@ -128,11 +127,11 @@ types:
 
   NewMessage:
     properties: 
-      therapistID: string
+      patientID: string
       message_content: string
       date_sent: datetime
     example:
-      therapistID: "UserA"
+      patientID: "UserA"
       message_content: "This is a message"
       date_sent: "2015-03-21 03:21"
 
@@ -301,19 +300,7 @@ resourceTypes:
 
     /messages:
       type:  { Collection: {item : Message} }
-      description: A collection of all the patient's messages.
-      post:
-        queryParameters: 
-          auth_token: string
-        description: Sends a message to this patient.
-        body:
-          application/json:
-            type: NewMessage
-        responses:
-          204:
-            description: Message was sucessfully sent    
-          403:
-            description: Message failed to send       
+      description: A collection of all the patient's messages.     
 
       /{id}:
         type:  { Member: {item : Message} }
@@ -477,3 +464,17 @@ resourceTypes:
                 type: Message[]
           403:
             description: Bad authentication. 
+
+      post:
+        queryParameters: 
+          auth_token: string
+        description: Sends a message to this patient.
+        body:
+          application/json:
+            type: NewMessage
+          responses:
+            204:
+              description: Message was sucessfully sent    
+            403:
+              description: Message failed to send  
+

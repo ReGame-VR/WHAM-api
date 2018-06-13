@@ -40,9 +40,6 @@ patient_route.get('/:patientID/sessions/:sessionID', single_session.getSession);
 // Deletes this specific session
 patient_route.delete('/:patientID/sessions/:sessionID', single_session.deletePatientSession);
 
-// Sends a message to this patient
-patient_route.post('/:patientID/messages', patient_messages.addPatientMessage);
-
 // Returns every message this patient has recieved
 patient_route.get('/:patientID/messages', patient_messages.getPatientMessages);
 

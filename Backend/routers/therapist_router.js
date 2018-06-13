@@ -38,6 +38,9 @@ therapist_route.delete('/:therapistID/patients/:patientID', therapist_patient.re
 // Returns every message this therapist has sent
 therapist_route.get('/:therapistID/messages', therapist_messages.getMessagesFromTherapist);
 
+// Sends a message to this patient
+therapist_route.post('/:therapistID/messages', therapist_messages.addPatientMessage);
+
 module.exports = therapist_route;
 
 
