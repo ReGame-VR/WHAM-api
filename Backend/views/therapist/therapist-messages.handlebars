@@ -41,6 +41,17 @@
       </tbody>
     </table>
   </div>
+
+  <div class="container">
+    <form action={{concat "/therapists/" therapistID "/messages"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
+      Content:<br>
+      <input type="text" name="message_content"><br>
+      Send to Whom?:<br>
+      <input type="text" name="patientID">
+      <input type="hidden" name="date_sent" value={{get_date}}>
+      <button type="submit">Send</button>
+    </form>
+  </div>
 </body>
 
 </html>

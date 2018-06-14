@@ -292,31 +292,31 @@ describe("PermTests", function () {
     });
 
     describe("Adds patient messages", function () {
-        it("should let users add messages to their accounts", function (done) {
+        it("should not let users add messages to their own accounts", function (done) {
             chai.request(app)
-                .post('/patients/ryan/messages')
+                .post('/therapists/therapist1/messages')
                 .query({
                     auth_token: ryan_auth_token
                 })
                 .send({
-                    therapistID: "therapist1",
+                    patientID: "ryan",
                     message_content: "This is a message",
                     date_sent: "2016-02-28T16:41:41"
                 })
                 .end(function (err, res) {
-                    expect(res.status).to.be.equal(204);
+                    expect(res.status).to.be.equal(403);
                     done();
                 });
         });
 
         it("should let users assigned therapists add messages to their accounts", function (done) {
             chai.request(app)
-                .post('/patients/ryan/messages')
+                .post('/therapists/therapist1/messages')
                 .query({
                     auth_token: therapist1_auth_token
                 })
                 .send({
-                    therapistID: "therapist1",
+                    patientID: "ryan",
                     message_content: "This is a message",
                     date_sent: "2016-02-28T16:41:41"
                 })
@@ -328,12 +328,12 @@ describe("PermTests", function () {
 
         it("should not let users not-assigned therapists add messages to their accounts", function (done) {
             chai.request(app)
-                .post('/patients/ryan/messages')
+                .post('/therapists/therapist1/messages')
                 .query({
                     auth_token: therapist2_auth_token
                 })
                 .send({
-                    therapistID: "therapist1",
+                    therapistID: "ryan",
                     message_content: "This is a message",
                     date_sent: "2016-02-28T16:41:41"
                 })
@@ -345,12 +345,12 @@ describe("PermTests", function () {
 
         it("should not let other users add messages to their accounts", function (done) {
             chai.request(app)
-                .post('/patients/ryan/messages')
+                .post('/therapists/therapist1/messages')
                 .query({
                     auth_token: timmy_auth_token
                 })
                 .send({
-                    therapistID: "therapist1",
+                    therapistID: "ryan",
                     message_content: "This is a message",
                     date_sent: "2016-02-28T16:41:41"
                 })

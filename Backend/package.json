@@ -25,7 +25,7 @@
   "scripts": {
     "test": "mocha",
     "start": "node index.js",
-    "restart": "mocha --grep LoadTestData & node index.js"
+    "restart": "mocha --grep LoadTestData"
   },
   "repository": {
     "type": "git",

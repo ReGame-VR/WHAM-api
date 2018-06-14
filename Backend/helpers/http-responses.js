@@ -26,7 +26,7 @@ function report_bad_token(req, res) {
         res.writeHead(403);
         res.end();
     } else if (req.headers['accept'].includes('text/html')) {
-        res.redirect(req.baseUrl + '/login');
+        res.redirect('/login');
     } else if (req.headers['accept'].includes('application/json')) {
         res.writeHead(403);
         res.end();

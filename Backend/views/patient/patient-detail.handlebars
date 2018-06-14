@@ -72,7 +72,7 @@
         <tr>
           <td>{{this}}</td>
           <td>
-            <form action={{concat "/therapists/"  this  "/patients/" ../info.username "?_method=PATCH"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
+            <form action={{concat "/patients/"  ../info.username  "/therapists/" this "?_method=PATCH"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
               <button type="submit">Accept</button>
             </form>
           </td>

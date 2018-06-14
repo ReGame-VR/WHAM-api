@@ -51,6 +51,14 @@
       </tbody>
     </table>
   </div>
+
+  <div class="container">
+    <form action={{concat "/therapists/" therapistID "/patients"}} method="POST" onsubmit="setTimeout(function () { window.location.reload(); }, 100)">
+      Request Patient:<br>
+      <input type="text" name="patientID"><br>
+      <button type="submit">Send</button>
+    </form>
+  </div>
 </body>
 
 </html>
