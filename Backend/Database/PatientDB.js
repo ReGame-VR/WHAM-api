@@ -156,6 +156,7 @@ class PatientDB {
             });
         }).catch(function (error) {
             callback(false, false, false, false);
+            throw error;
         });
     }
 
@@ -194,7 +195,7 @@ class PatientDB {
             }).catch(function (error) {
                 connection.release();
                 callback(false);
-            })
+            });
         }).catch(function (error) {
             callback(false);
             throw err;

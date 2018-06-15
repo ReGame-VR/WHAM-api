@@ -1,8 +1,34 @@
 require('dotenv').config();
-const mysql = require('mysql');
+const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 var jwt = require('jsonwebtoken');
+
+/********************SQL STATEMENTS*******************/
+
+//GETTING
+const get_message_from_sql = "SELECT patientID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE therapistID = ?";
+const get_all_therapist_info =
+    `SELECT T.username, IFNULL(C.c, 0) as c
+FROM THERAPIST T LEFT JOIN
+(SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
+where T.username = PT.therapistID AND PT.date_removed IS NULL AND PT.is_accepted = true GROUP BY T.username) C
+ON T.username = C.username`;
+const get_specif_therapist_info = get_all_therapist_info + ` WHERE T.username = ?`;
+const get_therapist_patients_sql =
+    `SELECT username, dob, weight, height, information
+FROM PATIENT P, PATIENT_THERAPIST PT
+WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL AND is_accepted = true`
+const get_patient_recent_sessions_sql = "SELECT score, time FROM PATIENT P JOIN PATIENT_SESSION PS ON P.username = PS.patientID WHERE P.username = ? ORDER BY PS.time DESC";
+//DELETING
+const delete_therapist_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE therapistID = ?";
+const delete_therapist_patient_sql = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
+const delete_therapist_sql = "DELETE FROM THERAPIST WHERE username = ?";
+const delete_user_sql = "DELETE FROM USER WHERE username = ?";
+//ADDING
+const add_user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)"
+const add_therapist_sql = "INSERT INTO THERAPIST VALUES (?)"
+//UPDATING
 
 class TherapistDB {
 
@@ -25,45 +51,37 @@ class TherapistDB {
     // String String (Boolean -> Void) -> Void
     // Adds this therapist to the database
     add_therapist(username, unencrypt_password, callback) {
-        var user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)"
-        var therapist_sql = "INSERT INTO THERAPIST VALUES (?)"
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 
         var user_inserts = [username, password, salt];
         var therapist_inserts = [username];
-        user_sql = mysql.format(user_sql, user_inserts);
-        therapist_sql = mysql.format(therapist_sql, therapist_inserts);
-        var authorizer = this.authorizer;
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false);
-                throw err;
-            }
-            connection.query(user_sql, function (error, results, fields) {
-                if (error) {
+        var user_sql = mysql.format(add_user_sql, user_inserts);
+        var therapist_sql = mysql.format(add_therapist_sql, therapist_inserts);
+        this.pool.getConnection().then(function (connection) {
+            connection.query(user_sql).then(function (results) {
+                connection.query(therapist_sql).then(function (results) {
+                    var token = jwt.sign({
+                        data: {
+                            username: username,
+                            password_hash: password
+                        }
+                    }, process.env.JWT_SECRET, {
+                        expiresIn: '10d'
+                    });
+                    connection.release();
+                    callback(token);
+                }).catch(function (error) {
                     connection.release();
                     callback(false);
-                } else {
-                    connection.query(therapist_sql, function (error, results, fields) {
-                        if (error) {
-                            connection.release();
-                            callback(false);
-                        } else {
-                            var token = jwt.sign({
-                                data: {
-                                    username: username,
-                                    password_hash: password
-                                }
-                            }, process.env.JWT_SECRET, {
-                                expiresIn: '10d'
-                            });
-                            connection.release();
-                            callback(token);
-                        }
-                    });
-                }
+                });
+            }).catch(function (error) {
+                connection.release();
+                callback(false);
             });
+        }).catch(function (error) {
+            callback(false);
+            throw err;
         });
     }
 
@@ -79,54 +97,40 @@ class TherapistDB {
     // -> Void
     // Gives every message that this patient has ever recieved
     get_all_messages_from(therapistID, callback) {
-        var sql = "SELECT patientID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE therapistID = ?";
         var inserts = [therapistID];
-        sql = mysql.format(sql, inserts);
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false);
-                throw err;
-            }
-            connection.query(sql, function (error, result, fields) {
-                if (error) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    var toSend = [];
-                    for (var i = 0; i < result.length; i += 1) {
-                        toSend.push({
-                            patientID: result[i].patientID,
-                            message_content: result[i].message,
-                            date_sent: result[i].date_sent,
-                            is_read: result[i].is_read,
-                            messageID: result[i].messageID,
-                            therapistID: therapistID
-                        });
-                    }
-                    connection.release();
-                    callback(toSend);
+        var query = mysql.format(get_message_from_sql, inserts);
+        this.pool.getConnection().then(function (connection) {
+            connection.query(query).then(function (result) {
+                var toSend = [];
+                for (var i = 0; i < result.length; i += 1) {
+                    toSend.push({
+                        patientID: result[i].patientID,
+                        message_content: result[i].message,
+                        date_sent: result[i].date_sent,
+                        is_read: result[i].is_read,
+                        messageID: result[i].messageID,
+                        therapistID: therapistID
+                    });
                 }
+                connection.release();
+                callback(toSend);
+            }).catch(function (error) {
+                connection.release();
+                callback(false);
             });
+        }).catch(function (error) {
+            callback(false);
+            throw err;
         });
     }
 
     // String (Maybe Therapist -> Void) -> Void
     // Returns just info about this therapist
     get_specific_therapist(therapistID, callback) {
-        var sql = `SELECT T.username, IFNULL(C.c, 0) as c
-        FROM THERAPIST T LEFT JOIN 
-        (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT 
-        where T.username = PT.therapistID AND PT.date_removed IS NULL AND is_accepted = true GROUP BY T.username) C
-        ON T.username = C.username 
-        WHERE T.username = ?`;
-        sql = mysql.format(sql, [therapistID]);
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false);
-                throw err;
-            }
-            connection.query(sql, function (error, results, fields) {
-                if (error || results.length === 0) {
+        var query = mysql.format(get_specif_therapist_info, [therapistID]);
+        this.pool.getConnection().then(function (connection) {
+            connection.query(query).then(function (results) {
+                if (results.length === 0) {
                     connection.release();
                     callback(false);
                 } else {
@@ -137,128 +141,103 @@ class TherapistDB {
                     connection.release();
                     callback(toSend);
                 }
+            }).catch(function (error) {
+                connection.release();
+                callback(false);
             });
+        }).catch(function (error) {
+            callback(false);
+            throw err;
         });
     }
 
     // (Maybe(List-of (Object String Number) -> Void) -> Void
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
-        var sql = `SELECT T.username, IFNULL(C.c, 0) as c
-                FROM THERAPIST T LEFT JOIN
-                (SELECT username, COUNT(*) as c FROM THERAPIST T, PATIENT_THERAPIST PT
-                where T.username = PT.therapistID AND PT.date_removed IS NULL AND PT.is_accepted = true GROUP BY T.username) C
-                ON T.username = C.username`;
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false);
-                throw err;
-            }
-            connection.query(sql, function (error, results, fields) {
-                if (error) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    var toSend = [];
-                    for (var i = 0; i < results.length; i += 1) {
-                        toSend.push({
-                            username: results[i].username,
-                            num_patients: results[i].c
-                        });
-                    }
-                    connection.release();
-                    callback(toSend);
+        this.pool.getConnection().then(function (connection) {
+            connection.query(get_all_therapist_info).then(function (results) {
+                var toSend = [];
+                for (var i = 0; i < results.length; i += 1) {
+                    toSend.push({
+                        username: results[i].username,
+                        num_patients: results[i].c
+                    });
                 }
+                connection.release();
+                callback(toSend);
+            }).catch(function (error) {
+                connection.release();
+                callback(false);
             });
+        }).catch(function (error) {
+            callback(false);
+            throw err;
         });
     }
 
     // String (Boolean -> Void) -> Void
     // Deletes this therapist
     delete_therapist(therapistID, callback) {
-        var deleteMessageSQL = "DELETE FROM PATIENT_MESSAGE WHERE therapistID = ?";
-        var deleteJoinSQL = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
-        var deleteInfoSQL = "DELETE FROM THERAPIST WHERE username = ?";
-        var deleteUserSQL = "DELETE FROM USER WHERE username = ?";
         var inserts = [therapistID];
-        deleteMessageSQL = mysql.format(deleteMessageSQL, inserts);
-        deleteJoinSQL = mysql.format(deleteJoinSQL, inserts);
-        deleteInfoSQL = mysql.format(deleteInfoSQL, inserts);
-        deleteUserSQL = mysql.format(deleteUserSQL, inserts);
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false);
-                throw err;
-            }
-            connection.query(deleteMessageSQL, function (error, result, fields) {
-                if (error) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    connection.query(deleteJoinSQL, function (error, result, fields) {
-                        if (error) {
+        var deleteMessageQuery = mysql.format(delete_therapist_message_sql, inserts);
+        var deleteJoinQuery = mysql.format(delete_therapist_patient_sql, inserts);
+        var deleteInfoQuery = mysql.format(delete_therapist_sql, inserts);
+        var deleteUserQuery = mysql.format(delete_user_sql, inserts);
+        this.pool.getConnection().then(function (connection) {
+            connection.query(deleteMessageQuery).then(function (result) {
+                connection.query(deleteJoinQuery).then(function (result) {
+                    connection.query(deleteInfoQuery).then(function (result) {
+                        connection.query(deleteUserQuery).then(function (result) {
+                            if (result.affectedRows === 0) {
+                                connection.release();
+                                callback(false);
+                            } else {
+                                connection.release();
+                                callback(true);
+                            }
+                        }).catch(function (error) {
                             connection.release();
                             callback(false);
-                        } else {
-                            connection.query(deleteInfoSQL, function (error, result, fields) {
-                                if (error || result.affectedRows === 0) {
-                                    connection.release();
-                                    callback(false);
-                                } else {
-                                    connection.query(deleteUserSQL, function (error, result, fields) {
-                                        if (error || result.affectedRows === 0) {
-                                            connection.release();
-                                            callback(false);
-                                        } else {
-                                            connection.release();
-                                            callback(true);
-                                        }
-                                    });
-                                }
-                            });
-                        }
+                        });
+                    }).catch(function (error) {
+                        connection.release();
+                        callback(false);
                     });
-                }
+                }).catch(function (error) {
+                    connection.release();
+                    callback(false);
+                });
+            }).catch(function (error) {
+                connection.release();
+                callback(false);
             });
+        }).catch(function (error) {
+            callback(false);
+            throw err;
         });
     }
 
     // String (Listof Patient-Session -> Void) -> Void
     // Return every patient this therapist has
     get_all_patients(therapistID, callback) {
-        var safe_sql = `SELECT username, dob, weight, height, information
-        FROM PATIENT P, PATIENT_THERAPIST PT
-        WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL AND is_accepted = true`;
         var inserts = [therapistID];
-        safe_sql = mysql.format(safe_sql, inserts);
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false);
-                throw err;
-            }
-            connection.query(safe_sql, function (error, results1, fields) {
-                if (error) {
+        var query = mysql.format(get_therapist_patients_sql, inserts);
+        this.pool.getConnection().then(function (connection) {
+            connection.query(query).then(function (results1) {
+                if (results1.length === 0) {
                     connection.release();
-                    callback(false);
-                } else if (results1.length === 0) {
                     callback([]);
                 } else {
                     var toReturn = [];
-                    var sqlPt2 = "SELECT score, time FROM PATIENT P JOIN PATIENT_SESSION PS ON P.username = PS.patientID WHERE P.username = ? ORDER BY PS.time DESC";
                     for (var a = 0; a < results1.length; a += 1) {
-                        (function(i) {
+                        (function (i) {
                             var username = results1[i].username;
                             var dob = results1[i].dob;
                             var weight = results1[i].weight;
                             var height = results1[i].height;
                             var information = results1[i].information;
-                            sqlPt2 = mysql.format(sqlPt2, [username]);
-                            connection.query(sqlPt2, function (error, results2, fields) {
-                                if (error) {
-                                    connection.release();
-                                    callback(false);
-                                    return;
-                                }
+                            var query = mysql.format(get_patient_recent_sessions_sql, [username]);
+                            connection.query(query).then(function (results2) {
                                 var score = undefined;
                                 var time = undefined;
                                 if (results2.length > 0) {
@@ -278,11 +257,20 @@ class TherapistDB {
                                     connection.release();
                                     callback(toReturn);
                                 }
+                            }).catch(function (error) {
+                                connection.release();
+                                callback(false);
                             });
                         })(a)
                     }
                 }
+            }).catch(function (error) {
+                connection.release();
+                callback(false);
             });
+        }).catch(function (error) {
+            callback(false);
+            throw err;
         });
     }
 }
