@@ -2,6 +2,8 @@ require('dotenv').config();
 const mysql = require('promise-mysql');
 var fs = require('fs');
 
+var connection;
+
 class DBReseter {
 
     constructor(dbName, patientDB) {
@@ -20,16 +22,16 @@ class DBReseter {
     reset_db(callback) {
         var sql = fs.readFileSync(__dirname + '/schemas' + '/schemas.sql').toString();
         var patientDB = this.patientDB;
-        this.pool.getConnection().then(function (connection) {
-            connection.query(sql).then(function (result) {
-                patientDB.add_patient("admin", process.env.ADMIN_PASSWORD, "1999-05-05", "160", "71", "", callback);
-            }).catch(function (error) {
-                connection.release();
-                callback(false);
-            });
+        this.pool.getConnection().then(function (con) {
+            connection = con
+            return connection.query(sql)
+        }).then(function (result) {
+            patientDB.add_patient("admin", process.env.ADMIN_PASSWORD, "1999-05-05", "160", "71", "", callback);
         }).catch(function (error) {
+            if (connection !== undefined && connection && connection.release) {
+                connection.release();
+            }
             callback(false);
-            throw (error);
         });
     }
 }
