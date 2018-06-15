@@ -30,7 +30,7 @@ const add_reply_to_message_sql = "INSERT INTO MESSAGE_REPLY (messageID, fromID, 
 //DELETING
 const delete_indiv_patient_session_sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ?";
 const delete_indiv_patient_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ?";
-const delete_indiv_patient_therapist_sql  = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ?";
+const delete_indiv_patient_therapist_sql = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ?";
 const delete_indiv_patient_sql = "DELETE FROM PATIENT where username = ?";
 const delete_indiv_user_sql = "DELETE FROM USER where username = ?";
 const delete_specif_session_sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ? AND sessionID = ?";
@@ -97,66 +97,64 @@ class PatientDB {
     //  -> Void
     // Gives all information for the given patient
     get_patient_info(username, callback) {
+        var connection;
         var inserts = [username];
         var info_query = mysql.format(get_patient_info_sql, inserts);
         var session_query = mysql.format(get_all_patient_sessions_sql, inserts);
         var message_query = mysql.format(get_all_patient_message_sql, inserts);
         var requests_query = mysql.format(get_all_patient_requests_sql, inserts);
 
-        this.pool.getConnection().then(function (connection) {
-            connection.query(info_query).then(function (info_results) {
-                var user_info = {
-                    username: info_results[0].username,
-                    dob: info_results[0].dob,
-                    weight: info_results[0].weight,
-                    height: info_results[0].height,
-                    information: info_results[0].information
-                };
-                connection.query(session_query).then(function (session_results) {
-                    var session_info = [];
-                    for (var i = 0; i < session_results.length; i += 1) {
-                        session_info.push({
-                            score: session_results[i].score,
-                            time: session_results[i].time,
-                            sessionID: session_results[i].sessionID
-                        });
-                    }
-                    connection.query(message_query).then(function (message_results) {
-                        var message_info = []
-                        for (var i = 0; i < message_results.length; i += 1) {
-                            message_info.push({
-                                therapistID: message_results[i].therapistID,
-                                message_content: message_results[i].message,
-                                date_sent: message_results[i].date_sent,
-                                is_read: message_results[i].is_read
-                            });
-                        }
-                        connection.query(requests_query).then(function (requests_results) {
-                            var requests = [];
-                            for (var i = 0; i < requests_results.length; i += 1) {
-                                requests.push(requests_results[i].therapistID);
-                            }
-                            connection.release();
-                            callback(user_info, session_info, message_info, requests);
-                        }).catch(function (error) {
-                            connection.release();
-                            callback(false, false, false, false);
-                        });
-                    }).catch(function (error) {
-                        connection.release();
-                        callback(false, false, false, false);
-                    });
-                }).catch(function (error) {
-                    connection.release();
-                    callback(false, false, false, false);
+        var user_info;
+        var session_info;
+        var message_info;
+
+        this.pool.getConnection().then(function (con) {
+            connection = con;
+            return connection.query(info_query);
+        }).then(function (user_results) {
+            user_info = {
+                username: user_results[0].username,
+                dob: user_results[0].dob,
+                weight: user_results[0].weight,
+                height: user_results[0].height,
+                information: user_results[0].information
+            };
+            var session_results = connection.query(session_query);
+            return session_results
+        }).then(function (session_results) {
+            session_info = [];
+            for (var i = 0; i < session_results.length; i += 1) {
+                session_info.push({
+                    score: session_results[i].score,
+                    time: session_results[i].time,
+                    sessionID: session_results[i].sessionID
                 });
-            }).catch(function (error) {
-                connection.release();
-                callback(false, false, false, false);
-            });
+            }
+            return connection.query(message_query);
+        }).then(function (message_results) {
+            message_info = []
+            for (var i = 0; i < message_results.length; i += 1) {
+                message_info.push({
+                    therapistID: message_results[i].therapistID,
+                    message_content: message_results[i].message,
+                    date_sent: message_results[i].date_sent,
+                    is_read: message_results[i].is_read
+                });
+            }
+            var requests_results = connection.query(requests_query)
+            return requests_results;
+        }).then(function(requests_results) {
+            var requests = [];
+            for (var i = 0; i < requests_results.length; i += 1) {
+                requests.push(requests_results[i].therapistID);
+            }
+            connection.release();
+            callback(user_info, session_info, message_info, requests);
         }).catch(function (error) {
+            if (connection && connection.release) {
+                connection.release();
+            }
             callback(false, false, false, false);
-            throw error;
         });
     }
 
