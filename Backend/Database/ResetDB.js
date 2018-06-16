@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mysql = require('promise-mysql');
+const handle_error = require('../helpers/db-helper.js');
 var fs = require('fs');
 
 var connection;
@@ -28,10 +29,7 @@ class DBReseter {
         }).then(function (result) {
             patientDB.add_patient("admin", process.env.ADMIN_PASSWORD, "1999-05-05", "160", "71", "", callback);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 }

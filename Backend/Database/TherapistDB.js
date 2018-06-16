@@ -2,6 +2,7 @@ require('dotenv').config();
 const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const handle_error = require('../helpers/db-helper.js');
 var jwt = require('jsonwebtoken');
 var connection;
 
@@ -76,10 +77,7 @@ class TherapistDB {
             connection.release();
             callback(token);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -115,10 +113,7 @@ class TherapistDB {
             connection.release();
             callback(toSend);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -141,10 +136,7 @@ class TherapistDB {
                 callback(toSend);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -165,10 +157,7 @@ class TherapistDB {
             connection.release();
             callback(toSend);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -197,10 +186,7 @@ class TherapistDB {
                 callback(true);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
 
     }
@@ -252,8 +238,7 @@ class TherapistDB {
                 }
             }
         }).catch(function (error) {
-            connection.release();
-            callback(false);
+            chandle_error(error, connection, callback);
         });
     }
 }

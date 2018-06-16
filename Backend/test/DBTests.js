@@ -39,11 +39,11 @@ describe("DBTests", function () {
         describe('#login()', function () {
             it("should return true if the login was sucessful", function (done) {
                 therapistDB.login("therapist1", "test_password1", function (err, worked) {
-                    expect(worked).to.be.not.equal(false);
+                    expect(err).to.be.not.equal(false);
                     therapistDB.login("therapist15", "test_password1", function (err, worked) {
-                        expect(worked).to.be.equal(false);
+                        expect(err).to.be.equal(false);
                         therapistDB.login("therapist1", "test_password67", function (err, worked) {
-                            expect(worked).to.be.equal(false);
+                            expect(err).to.be.equal(false);
                             done();
                         });
                     });
@@ -137,11 +137,11 @@ describe("DBTests", function () {
             });
             it('should return false given a wrong login', function (done) {
                 patientDB.login("bob", "password16", function (err, result) {
-                    expect(result).to.be.equal(false);
+                    expect(err).to.be.equal(false);
                     patientDB.login("tim", "password4", function (err, result) {
-                        expect(result).to.be.equal(false);
+                        expect(err).to.be.equal(false);
                         patientDB.login("asjkaskjsa", "password1", function (err, result) {
-                            expect(result).to.be.equal(false);
+                            expect(err).to.be.equal(false);
                             done();
                         });
                     });

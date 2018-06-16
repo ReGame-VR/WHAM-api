@@ -1,7 +1,7 @@
 const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-
+const handle_error = require('../helpers/db-helper.js');
 var jwt = require('jsonwebtoken');
 
 var ACL = require('acl');
@@ -75,10 +75,7 @@ class AuthenticationDB {
                 });
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false, false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -104,10 +101,7 @@ class AuthenticationDB {
                 callback(result[0].auth_level, result[0].username);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false, false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -164,10 +158,7 @@ class AuthenticationDB {
                 callback(decoded.data.username);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -203,14 +194,7 @@ class AuthenticationDB {
             connection.release();
             callback(true);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.end) {
-                try {
-                    connection.release();
-                } catch(error) {
-                    
-                }
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 

@@ -2,6 +2,7 @@ require('dotenv').config();
 const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const handle_error = require('../helpers/db-helper.js');
 var jwt = require('jsonwebtoken');
 var connection;
 
@@ -65,10 +66,10 @@ class PatientDB {
     // ([List-of Patient-Session] -> Void) -> Void
     // Calls the callback with every patients info and their last session
     get_all_patient_info(callback) {
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(get_all_patient_info_sql);
-        }).then(function (results) {
+        }).then(results => {
             var toReturn = [];
             for (var i = 0; i < results.length; i += 1) {
                 toReturn.push({
@@ -83,11 +84,8 @@ class PatientDB {
             }
             connection.release();
             callback(toReturn);
-        }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false, false, false, false);
+        }).catch(error => {
+            handle_error(error, connection, callback);
         });
 
     }
@@ -153,10 +151,7 @@ class PatientDB {
             connection.release();
             callback(user_info, session_info, message_info, requests);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false, false, false, false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -192,10 +187,7 @@ class PatientDB {
             });
             callback(token);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -230,10 +222,7 @@ class PatientDB {
                 throw new Error("No User Deleted");
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -258,10 +247,7 @@ class PatientDB {
             connection.release();
             callback(session_info);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -280,10 +266,7 @@ class PatientDB {
             connection.release();
             callback(true);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
 
     }
@@ -308,10 +291,7 @@ class PatientDB {
                 callback(true);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -338,10 +318,7 @@ class PatientDB {
                 });
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
 
     }
@@ -366,10 +343,7 @@ class PatientDB {
             connection.release();
             callback(result.insertId);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -428,10 +402,7 @@ class PatientDB {
                 }(a))
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -453,10 +424,7 @@ class PatientDB {
                 callback(true);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -501,10 +469,7 @@ class PatientDB {
                 replies: replies
             });
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -520,10 +485,7 @@ class PatientDB {
             connection.release();
             callback(true);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -543,10 +505,7 @@ class PatientDB {
                 callback(true);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -567,10 +526,7 @@ class PatientDB {
                 callback(true);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -592,10 +548,7 @@ class PatientDB {
                 callback(true);
             }
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
@@ -608,10 +561,7 @@ class PatientDB {
             connection.release();
             callback(true);
         }).catch(function (error) {
-            if (connection !== undefined && connection && connection.release) {
-                connection.release();
-            }
-            callback(false);
+            handle_error(error, connection, callback);
         });
     }
 
