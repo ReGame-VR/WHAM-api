@@ -94,7 +94,7 @@ app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 
 // The helper to reset the app
 const resetApp = function (callback) {
-    authorizer.remove_all_permissions(function (worked) {
+    authorizer.reset_self(function (worked) {
         if (worked === false) {
             callback(false);
         } else {

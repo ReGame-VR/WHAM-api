@@ -1,10 +1,22 @@
-const mysql = require('mysql');
+const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-
+const handle_error = require('../helpers/db-helper.js');
 var jwt = require('jsonwebtoken');
 
 var ACL = require('acl');
+
+/********************SQL STATEMENTS*******************/
+const get_user_salt_sql = "SELECT salt FROM USER T WHERE T.username = ?";
+const verify_user_password_sql = "SELECT * FROM USER T where T.username = ? AND T.password = ?";
+const get_user_auth_level = "SELECT auth_level, username FROM USER WHERE salt = ?";
+
+const get_patients_sql = "SELECT * FROM PATIENT";
+const get_therapist_sql = "SELECT * FROM THERAPIST";
+const get_patient_therapist_join_sql = "SELECT * from PATIENT_THERAPIST WHERE is_accepted = true";
+const get_messages_sql = "SELECT * FROM PATIENT_MESSAGE";
+
+var connection;
 
 class AuthenticationDB {
 
@@ -21,64 +33,49 @@ class AuthenticationDB {
 
         // Resets the ACL permissions based on the DB entries
         this.load_all_permissions(function (worked) {
-            if (!worked) {
-                throw new Error("This shouldn't fail");
-            }
+            
         });
     }
 
     // String String String (Error Maybe-User -> Void) -> Void
     // Tests whether the given login info is valid for the given table
     login(username, unencrypt_password, callback) {
-        var get_salt_sql = "SELECT salt FROM USER T WHERE T.username = ?";
         var get_salt_insert = [username];
-        get_salt_sql = mysql.format(get_salt_sql, get_salt_insert);
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(err, false);
-                throw err;
+        var password;
+        this.pool.getConnection().then(con => {
+            connection = con
+            var get_salt_query = mysql.format(get_user_salt_sql, get_salt_insert);
+            return connection.query(get_salt_query)
+        }).then(results => {
+            if (results.length == 0) {
+                throw new Error("User not found");
+            } else {
+                var salt = results[0].salt;
+                password = bcrypt.hashSync(unencrypt_password, salt);
+                var login_insert = [username, password];
+                var login_query = mysql.format(verify_user_password_sql, login_insert);
+                return connection.query(login_query)
             }
-            connection.query(get_salt_sql, function (error, results, fields) {
-                if (error || results.length == 0) {
-                    connection.release();
-                    callback(error, false);
-                } else {
-                    var salt = results[0].salt;
-                    var password;
-                    try {
-                        password = bcrypt.hashSync(unencrypt_password, salt);
-                    } catch (err) {
-                        callback(err, false);
-                        return;
+        }).then(results => {
+            if (results.length == 0) {
+                throw new Error("Bad password");
+            } else {
+                var token = jwt.sign({
+                    data: {
+                        username: username,
+                        password_hash: password
                     }
-                    var login_sql = "SELECT username FROM USER T where T.username = ? AND T.password = ?";
-                    var login_insert = [username, password];
-                    login_sql = mysql.format(login_sql, login_insert);
-                    connection.query(login_sql, function (error, results, fields) {
-                        if (error) {
-                            connection.release();
-                            callback(error, false);
-                        } else if (results.length == 0) {
-                            connection.release();
-                            callback(null, false)
-                        } else {
-                            var token = jwt.sign({
-                                data: {
-                                    username: username,
-                                    password_hash: password
-                                }
-                            }, process.env.JWT_SECRET, {
-                                expiresIn: '10d'
-                            });
+                }, process.env.JWT_SECRET, {
+                    expiresIn: '10d'
+                });
 
-                            connection.release();
-                            callback(null, {
-                                token: token
-                            });
-                        }
-                    });
-                }
-            });
+                connection.release();
+                callback(null, {
+                    token: token
+                });
+            }
+        }).catch(error => {
+            handle_error(error, connection, callback);
         });
     }
 
@@ -92,22 +89,19 @@ class AuthenticationDB {
     // String String (Maybe-Integer Maybe-String -> Void) ConnectionPool -> Void
     // Returns the authorization level of this user
     get_auth_level_help(salt = 0, callback, pool) {
-        var sql = "SELECT auth_level, username FROM USER WHERE salt = ?";
-        sql = mysql.format(sql, [salt]);
-        pool.getConnection(function (err, connection) {
-            if (err) {
-                (callback(false, false))
-                throw err;
+        pool.getConnection().then(con => {
+            connection = con;
+            var query = mysql.format(get_user_auth_level, [salt]);
+            return connection.query(query);
+        }).then(result => {
+            if (result.length == 0) {
+                throw new Error("User does not exist");
+            } else {
+                connection.release();
+                callback(result[0].auth_level, result[0].username);
             }
-            connection.query(sql, function (error, result, fields) {
-                if (error || result.length == 0) {
-                    connection.release();
-                    callback(false, false);
-                } else {
-                    connection.release();
-                    callback(result[0].auth_level, result[0].username);
-                }
-            });
+        }).catch(error => {
+            handle_error(error, connection, callback);
         });
     }
 
@@ -150,147 +144,57 @@ class AuthenticationDB {
             var cookies = req.headers.cookie;
             token = req.cookies.auth_token;
         }
-        if (token === undefined) {
-            callback(false);
-            return;
-        }
-        try {
-            var decoded = jwt.verify(token, process.env.JWT_SECRET);
-            var sql = "SELECT * FROM USER WHERE username = ? AND password = ?";
-            sql = mysql.format(sql, [decoded.data.username, decoded.data.password_hash]);
-            this.pool.getConnection(function (err, connection) {
-                if (err) {
-                    (callback(false))
-                    throw err
-                }
-                connection.query(sql, function (error, result, fields) {
-                    if (error || result.length == 0) {
-                        connection.release();
-                        callback(false);
-                    } else {
-                        connection.release();
-                        callback(decoded.data.username);
-                    }
-                });
-            });
-        } catch (err) { // The JWT was malformed (probably a fake)
-            callback(false);
-            return;
-        }
+        var decoded;
+        this.pool.getConnection().then(con => {
+            connection = con
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+            var query = mysql.format(verify_user_password_sql, [decoded.data.username, decoded.data.password_hash]);
+            return connection.query(query);
+        }).then(result => {
+            if (result.length == 0) {
+                throw new Error("Bad password");
+            } else {
+                connection.release();
+                callback(decoded.data.username);
+            }
+        }).catch(error => {
+            handle_error(error, connection, callback);
+        });
     }
 
     // When the server is shut down, all permissions are cleared from ACL
     // This method loads them back in based on what is written in the DB
     load_all_permissions(callback) {
-        var patients_sql = "SELECT username FROM PATIENT";
-        var therapist_sql = "SELECT username FROM THERAPIST";
-        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST WHERE is_accepted = true";
         var acl = this.acl;
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                (callback(false))
-                throw err
+        this.pool.getConnection().then(con => {
+            connection = con;
+            return connection.query(get_patients_sql);
+        }).then(result => {
+            for (var i = 0; i < result.length; i += 1) {
+                acl.addUserRoles(result[i].username, result[i].username);
+                acl.allow(result[i].username, result[i].username, '*')
             }
-            connection.query(patients_sql, function (error, result, fields) {
-                if (error) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    for (var i = 0; i < result.length; i += 1) {
-                        acl.addUserRoles(result[i].username, result[i].username);
-                        acl.allow(result[i].username, result[i].username, '*')
-                    }
-                    connection.query(therapist_sql, function (error, result, fields) {
-                        if (error) {
-                            connection.release();
-                            callback(false);
-                        } else {
-                            for (var i = 0; i < result.length; i += 1) {
-                                acl.addUserRoles(result[i].username, result[i].username);
-                                acl.allow(result[i].username, result[i].username, '*')
-                            }
-                            connection.query(join_sql, function (error, result, fields) {
-                                if (error) {
-                                    connection.release();
-                                    callback(false);
-                                } else {
-                                    for (var i = 0; i < result.length; i += 1) {
-                                        acl.allow(result[i].therapistID, result[i].patientID, '*')
-                                    }
-                                    connection.query("SELECT * FROM PATIENT_MESSAGE", function (error, result, fields) {
-                                        if (error) {
-                                            connection.release();
-                                            callback(false);
-                                        } else {
-                                            for (var i = 0; i < result.length; i += 1) {
-                                                acl.allow(result[i].therapistID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
-                                                acl.allow(result[i].patientID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
-                                            }
-                                            callback(true);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        });
-    }
-
-    // Sometimes permissions hang between tests, I'm gonna stop that.
-    remove_all_permissions(callback) {
-        var patients_sql = "SELECT username FROM PATIENT";
-        var therapist_sql = "SELECT username FROM THERAPIST";
-        var join_sql = "SELECT patientID, therapistID from PATIENT_THERAPIST";
-        var acl = this.acl;
-        this.pool.getConnection(function (err, connection) {
-            if (err) {
-                callback(false)
-                throw err
+            return connection.query(get_therapist_sql)
+        }).then(result => {
+            for (var i = 0; i < result.length; i += 1) {
+                acl.addUserRoles(result[i].username, result[i].username);
+                acl.allow(result[i].username, result[i].username, '*')
             }
-            connection.query(join_sql, function (error, result, fields) {
-                if (error) {
-                    connection.release();
-                    callback(false);
-                } else {
-                    for (var i = 0; i < result.length; i += 1) {
-                        acl.removeAllow(result[i].therapistID, result[i].patientID, '*')
-                    }
-                    connection.query(patients_sql, function (error, result, fields) {
-                        if (error) {
-                            connection.release();
-                            callback(false);
-                        } else {
-                            for (var i = 0; i < result.length; i += 1) {
-                                acl.removeAllow(result[i].username, result[i].username, '*')
-                            }
-                            connection.query(therapist_sql, function (error, result, fields) {
-                                if (error) {
-                                    connection.release();
-                                    callback(false);
-                                } else {
-                                    for (var i = 0; i < result.length; i += 1) {
-                                        acl.removeAllow(result[i].username, result[i].username, '*')
-                                    }
-                                    connection.query("SELECT * FROM PATIENT_MESSAGE", function (error, result, fields) {
-                                        if (error) {
-                                            connection.release();
-                                            callback(false);
-                                        } else {
-                                            for (var i = 0; i < result.length; i += 1) {
-                                                acl.removeAllow(result[i].therapistID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
-                                                acl.removeAllow(result[i].patientID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
-                                            }
-                                            callback(true);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            });
+            return connection.query(get_patient_therapist_join_sql)
+        }).then(result => {
+            for (var i = 0; i < result.length; i += 1) {
+                acl.allow(result[i].therapistID, result[i].patientID, '*')
+            }
+            return connection.query(get_messages_sql)
+        }).then(result => {
+            for (var i = 0; i < result.length; i += 1) {
+                acl.allow(result[i].therapistID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
+                acl.allow(result[i].patientID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
+            }
+            connection.release();
+            callback(true);
+        }).catch(error => {
+            handle_error(error, connection, callback);
         });
     }
 
