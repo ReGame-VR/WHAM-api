@@ -108,10 +108,10 @@ class PatientDB {
         var session_info;
         var message_info;
 
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(info_query);
-        }).then(function (user_results) {
+        }).then(user_results => {
             user_info = {
                 username: user_results[0].username,
                 dob: user_results[0].dob,
@@ -121,7 +121,7 @@ class PatientDB {
             };
             var session_results = connection.query(session_query);
             return session_results
-        }).then(function (session_results) {
+        }).then(session_results => {
             session_info = [];
             for (var i = 0; i < session_results.length; i += 1) {
                 session_info.push({
@@ -131,7 +131,7 @@ class PatientDB {
                 });
             }
             return connection.query(message_query);
-        }).then(function (message_results) {
+        }).then(message_results => {
             message_info = []
             for (var i = 0; i < message_results.length; i += 1) {
                 message_info.push({
@@ -143,14 +143,14 @@ class PatientDB {
             }
             var requests_results = connection.query(requests_query)
             return requests_results;
-        }).then(function (requests_results) {
+        }).then(requests_results => {
             var requests = [];
             for (var i = 0; i < requests_results.length; i += 1) {
                 requests.push(requests_results[i].therapistID);
             }
             connection.release();
             callback(user_info, session_info, message_info, requests);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -170,12 +170,12 @@ class PatientDB {
         var patient_inserts = [username, dob, weight, height, information];
         var add_user_query = mysql.format(add_user_sql, user_inserts);
         var add_patient_query = mysql.format(add_patient_sql, patient_inserts);
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(add_user_query);
-        }).then(function (result) {
+        }).then(result => {
             return connection.query(add_patient_query)
-        }).then(function (result) {
+        }).then(result => {
             connection.release();
             var token = jwt.sign({
                 data: {
@@ -186,7 +186,7 @@ class PatientDB {
                 expiresIn: '10d'
             });
             callback(token);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -198,30 +198,30 @@ class PatientDB {
     // If fail, gives false (unknown reason, probably server error)
     delete_patient(patientID, callback) {
         var inserts = [patientID];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var delete_indiv_patient_session_query = mysql.format(delete_indiv_patient_session_sql, inserts);
             return connection.query(delete_indiv_patient_session_query);
-        }).then(function (result) {
+        }).then(result => {
             var delete_indiv_patient_message_query = mysql.format(delete_indiv_patient_message_sql, inserts);
             return connection.query(delete_indiv_patient_message_query);
-        }).then(function (result) {
+        }).then(result => {
             var delete_indiv_patient_therapist_query = mysql.format(delete_indiv_patient_therapist_sql, inserts);
             return connection.query(delete_indiv_patient_therapist_query);
-        }).then(function (result) {
+        }).then(result => {
             var delete_indiv_patient_query = mysql.format(delete_indiv_patient_sql, inserts);
             return connection.query(delete_indiv_patient_query);
-        }).then(function (result) {
+        }).then(result => {
             var delete_indiv_user_query = mysql.format(delete_indiv_user_sql, inserts);
             return connection.query(delete_indiv_user_query);
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows !== 0) {
                 connection.release();
                 callback(true);
             } else {
                 throw new Error("No User Deleted");
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -231,11 +231,11 @@ class PatientDB {
     get_patient_sessions(patientID, callback) {
         var inserts = [patientID];
 
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var session_query = mysql.format(get_all_patient_sessions_sql, inserts);
             return connection.query(session_query);
-        }).then(function (session_results) {
+        }).then(session_results => {
             var session_info = [];
             for (var i = 0; i < session_results.length; i += 1) {
                 session_info.push({
@@ -246,7 +246,7 @@ class PatientDB {
             }
             connection.release();
             callback(session_info);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -258,14 +258,14 @@ class PatientDB {
     add_patient_session(patientID, score, time, callback) {
         var inserts = [patientID, score, time];
 
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var add_patient_session_query = mysql.format(add_patient_session_sql, inserts);
             return connection.query(add_patient_session_query);
-        }).then(function (result) {
+        }).then(result => {
             connection.release();
             callback(true);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
 
@@ -278,11 +278,11 @@ class PatientDB {
     delete_patient_session(patientID, sessionID, callback) {
         var inserts = [patientID, sessionID];
 
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var delete_specif_session_query = mysql.format(delete_specif_session_sql, inserts);
             return connection.query(delete_specif_session_query);
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows === 0) {
                 connection.release();
                 callback(false);
@@ -290,7 +290,7 @@ class PatientDB {
                 connection.release();
                 callback(true);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -301,11 +301,11 @@ class PatientDB {
     get_patient_session_specific(patientID, sessionID, callback) {
         var inserts = [patientID, sessionID, sessionID];
 
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var get_specif_patient_session_query = mysql.format(get_specif_patient_session_sql, inserts);
             return connection.query(get_specif_patient_session_query);
-        }).then(function (result) {
+        }).then(result => {
             if (result.length == 0) {
                 connection.release();
                 callback(false);
@@ -317,7 +317,7 @@ class PatientDB {
                     id: result[0].sessionID
                 });
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
 
@@ -335,14 +335,14 @@ class PatientDB {
     // Calls the callback with the sucess of the querry
     send_patient_a_message(patientID, therapistID, message, time, callback) {
         var inserts = [patientID, therapistID, message, time];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var query = mysql.format(add_patient_message_sql, inserts);
             return connection.query(query)
-        }).then(function (result) {
+        }).then(result => {
             connection.release();
             callback(result.insertId);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -353,11 +353,11 @@ class PatientDB {
     // Gives every message that this patient has ever recieved
     get_all_messages_for(patientID, callback) {
         var inserts = [patientID];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var query = mysql.format(get_all_patient_message_sql, inserts);
             return connection.query(query);
-        }).then(function (message_result) {
+        }).then(message_result => {
             var toSend = [];
             if (message_result.length === 0) {
                 connection.release();
@@ -372,7 +372,7 @@ class PatientDB {
                     var date_sent = message_result[i].date_sent;
                     var is_read = message_result[i].is_read;
                     var messageID = message_result[i].messageID
-                    connection.query(reply_query).then(function (result) {
+                    connection.query(reply_query).then(result => {
                         var replies = []
                         for (var x = 0; x < result.length; x++) {
                             replies.push({
@@ -395,13 +395,10 @@ class PatientDB {
                             connection.release();
                             callback(toSend);
                         }
-                    }).catch(function (error) {
-                        connection.release();
-                        callback(false);
-                    });
+                    })
                 }(a))
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -411,11 +408,11 @@ class PatientDB {
     // Gives back whether the querry suceeded or not
     mark_message_as_read(patientID, messageID, callback) {
         var inserts = [patientID, messageID];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var query = mysql.format(mark_message_as_read_sql, inserts);
             return connection.query(query)
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows === 0) {
                 connection.release();
                 callback(false);
@@ -423,7 +420,7 @@ class PatientDB {
                 connection.release();
                 callback(true);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -438,14 +435,14 @@ class PatientDB {
 
         var message_result;
 
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var message_sql = mysql.format(get_specif_message_sql, message_inserts);
             return connection.query(message_sql)
-        }).then(function (mr) {
+        }).then(mr => {
             message_result = mr
             return connection.query(reply_sql)
-        }).then(function (result) {
+        }).then(result => {
             if (message_result.length === 0) {
                 throw new Error("Message Not Found");
             }
@@ -468,7 +465,7 @@ class PatientDB {
                 messageID: message_result[0].messageID,
                 replies: replies
             });
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -477,14 +474,14 @@ class PatientDB {
     // Pairs this therapist and patinet in the PATIENT_THERAPIST DB
     assign_to_therapist(patientID, therapistID, date_added, callback) {
         var inserts = [patientID, therapistID, date_added];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var query = mysql.format(add_patient_therapist_join_sql, inserts);
             return connection.query(query)
-        }).then(function (error) {
+        }).then(error => {
             connection.release();
             callback(true);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -493,18 +490,18 @@ class PatientDB {
     // Marks this patient-therapist join as accepted
     accept_therapist_request(patientID, therapistID, callback) {
         var inserts = [patientID, therapistID];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var query = mysql.format(accept_therapist_request_sql, inserts);
             return connection.query(query);
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows === 0) {
                 throw new Error("Pair does not exist");
             } else {
                 connection.release();
                 callback(true);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -514,18 +511,18 @@ class PatientDB {
     // DOES NOT delete this pair, simply marks its date_removed as the given date
     unassign_to_therapist(patientID, therapistID, date_removed, callback) {
         var inserts = [date_removed, patientID, therapistID];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var query = mysql.format(remove_patient_therapist_join_sql, inserts);
             return connection.query(query);
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows === 0) {
                 throw new Error("Pair not found");
             } else {
                 connection.release();
                 callback(true);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -533,34 +530,34 @@ class PatientDB {
     // String (Boolean -> Void) -> Void
     // Deletes this message
     delete_message(patientID, messageID, callback) {
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var reply_query = mysql.format(delete_message_replies_for_message, [patientID, messageID])
             return connection.query(reply_query)
-        }).then(function (result) {
+        }).then(result => {
             var message_query = mysql.format(delete_specif_message_sql, [patientID, messageID])
             return connection.query(message_query)
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows === 0) {
                 throw new Error("Message not found");
             } else {
                 connection.release();
                 callback(true);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
 
     reply_to_message(sentID, messageID, reply_content, date_sent, callback) {
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             var query = mysql.format(add_reply_to_message_sql, [messageID, sentID, date_sent, reply_content]);
             return connection.query(query)
-        }).then(function (result) {
+        }).then(result => {
             connection.release();
             callback(true);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }

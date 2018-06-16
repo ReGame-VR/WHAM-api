@@ -60,12 +60,12 @@ class TherapistDB {
         var therapist_inserts = [username];
         var user_sql = mysql.format(add_user_sql, user_inserts);
         var therapist_sql = mysql.format(add_therapist_sql, therapist_inserts);
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con
             return connection.query(user_sql);
-        }).then(function (results) {
+        }).then(results => {
             return connection.query(therapist_sql)
-        }).then(function (results) {
+        }).then(results => {
             var token = jwt.sign({
                 data: {
                     username: username,
@@ -76,7 +76,7 @@ class TherapistDB {
             });
             connection.release();
             callback(token);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -95,10 +95,10 @@ class TherapistDB {
     get_all_messages_from(therapistID, callback) {
         var inserts = [therapistID];
         var query = mysql.format(get_message_from_sql, inserts);
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(query);
-        }).then(function (result) {
+        }).then(result => {
             var toSend = [];
             for (var i = 0; i < result.length; i += 1) {
                 toSend.push({
@@ -112,7 +112,7 @@ class TherapistDB {
             }
             connection.release();
             callback(toSend);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -121,10 +121,10 @@ class TherapistDB {
     // Returns just info about this therapist
     get_specific_therapist(therapistID, callback) {
         var query = mysql.format(get_specif_therapist_info, [therapistID]);
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(query);
-        }).then(function (results) {
+        }).then(results => {
             if (results.length === 0) {
                 throw new Error("Therapist not found");
             } else {
@@ -135,7 +135,7 @@ class TherapistDB {
                 connection.release();
                 callback(toSend);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -143,10 +143,10 @@ class TherapistDB {
     // (Maybe(List-of (Object String Number) -> Void) -> Void
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists(callback) {
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(get_all_therapist_info);
-        }).then(function (results) {
+        }).then(results => {
             var toSend = [];
             for (var i = 0; i < results.length; i += 1) {
                 toSend.push({
@@ -156,7 +156,7 @@ class TherapistDB {
             }
             connection.release();
             callback(toSend);
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
     }
@@ -169,23 +169,23 @@ class TherapistDB {
         var deleteJoinQuery = mysql.format(delete_therapist_patient_sql, inserts);
         var deleteInfoQuery = mysql.format(delete_therapist_sql, inserts);
         var deleteUserQuery = mysql.format(delete_user_sql, inserts);
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             return connection.query(deleteMessageQuery);
-        }).then(function (result) {
+        }).then(result => {
             return connection.query(deleteJoinQuery);
-        }).then(function (result) {
+        }).then(result => {
             return connection.query(deleteInfoQuery);
-        }).then(function (result) {
+        }).then(result => {
             return connection.query(deleteUserQuery);
-        }).then(function (result) {
+        }).then(result => {
             if (result.affectedRows === 0) {
                 throw new Error("User not found");
             } else {
                 connection.release();
                 callback(true);
             }
-        }).catch(function (error) {
+        }).catch(error => {
             handle_error(error, connection, callback);
         });
 
@@ -195,11 +195,11 @@ class TherapistDB {
     // Return every patient this therapist has
     get_all_patients(therapistID, callback) {
         var inserts = [therapistID];
-        this.pool.getConnection().then(function (con) {
+        this.pool.getConnection().then(con => {
             connection = con;
             var query = mysql.format(get_therapist_patients_sql, inserts);
             return connection.query(query);
-        }).then(function (results1) {
+        }).then(results1 => {
             if (results1.length === 0) {
                 connection.release();
                 callback([]);
@@ -213,7 +213,7 @@ class TherapistDB {
                         var height = results1[i].height;
                         var information = results1[i].information;
                         var query = mysql.format(get_patient_recent_sessions_sql, [username]);
-                        connection.query(query).then(function (results2) {
+                        connection.query(query).then(results2 => {
                             var score = undefined;
                             var time = undefined;
                             if (results2.length > 0) {
@@ -237,7 +237,7 @@ class TherapistDB {
                     })(a)
                 }
             }
-        }).catch(function (error) {
+        }).catch(error => {
             chandle_error(error, connection, callback);
         });
     }
