@@ -97,7 +97,7 @@ class PatientDB {
     //  -> Void)
     //  -> Void
     // Gives all information for the given patient
-    get_patient_info(username, callback) {
+    get_patient_info(username) {
         var inserts = [username];
         var info_query = mysql.format(get_patient_info_sql, inserts);
         var session_query = mysql.format(get_all_patient_sessions_sql, inserts);
@@ -108,10 +108,15 @@ class PatientDB {
         var session_info;
         var message_info;
 
-        this.pool.getConnection().then(con => {
-            connection = con;
-            return connection.query(info_query);
-        }).then(user_results => {
+        return this.pool.getConnection().then(connection => {
+            let res = Promise.all([
+                connection.query(info_query),
+                connection.query(session_query), 
+                connection.query(message_query),
+                connection.query(requests_query)]);
+            connection.release();
+            return res;
+        }).then(([user_results, session_results, message_results, requests_results]) => {
             user_info = {
                 username: user_results[0].username,
                 dob: user_results[0].dob,
@@ -119,9 +124,7 @@ class PatientDB {
                 height: user_results[0].height,
                 information: user_results[0].information
             };
-            var session_results = connection.query(session_query);
-            return session_results
-        }).then(session_results => {
+
             session_info = [];
             for (var i = 0; i < session_results.length; i += 1) {
                 session_info.push({
@@ -130,8 +133,7 @@ class PatientDB {
                     sessionID: session_results[i].sessionID
                 });
             }
-            return connection.query(message_query);
-        }).then(message_results => {
+
             message_info = []
             for (var i = 0; i < message_results.length; i += 1) {
                 message_info.push({
@@ -141,17 +143,12 @@ class PatientDB {
                     is_read: message_results[i].is_read
                 });
             }
-            var requests_results = connection.query(requests_query)
-            return requests_results;
-        }).then(requests_results => {
+
             var requests = [];
             for (var i = 0; i < requests_results.length; i += 1) {
                 requests.push(requests_results[i].therapistID);
             }
-            connection.release();
-            callback(user_info, session_info, message_info, requests);
-        }).catch(error => {
-            handle_error(error, connection, callback);
+            return [user_info, session_info, message_info, requests];
         });
     }
 
