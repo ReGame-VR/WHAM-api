@@ -732,23 +732,7 @@ describe('HTTPTests', function () {
                         message_content: 'This is a message',
                         date_sent: '2016-02-28T21:41:41.000Z',
                         is_read: 0,
-                        messageID: 1,
-                        replies: [
-                            {
-                                date_sent: "2016-02-28T21:42:41.000Z",
-                                messageID: 1,
-                                reply_content: "This is a reply",
-                                sentID: "therapist1"
-
-                            },
-                            {
-                                date_sent: "2016-02-28T21:43:41.000Z",
-                                messageID: 1,
-                                reply_content: "This is a message",
-                                sentID: "ryan"
-
-                            }
-                        ]
+                        messageID: 1
                     }]);
                     done();
                 });
@@ -1142,7 +1126,7 @@ describe('HTTPTests', function () {
 
         it('should return 403 if the deletion was unsucessful', function (done) {
             chai.request(app)
-                .delete('/therapists/therapist2slkmdlkas')
+                .delete('/therapists/therapist2')
                 .query({
                     auth_token: admin_auth_token,
                 })

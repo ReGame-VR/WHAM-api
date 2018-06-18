@@ -9,11 +9,11 @@ var authorizer = new AuthenticationDB("WHAM_TEST");
 var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
+
 describe("DBTests", function () {
     describe('DBReseter', function () {
-        it("should not error if the deletion is sucessful", function (done) {
-            resetDB.reset_db(function (worked) {
-                expect(worked).to.be.not.equal(false);
+        it("should not error if the reset is sucessful", function (done) {
+            resetDB.reset_db().then(worked => {
                 expect(worked).to.be.a('string');
                 done();
             });
@@ -23,11 +23,13 @@ describe("DBTests", function () {
     describe('TherapistDB', function () {
         describe('#add_therapist()', function (done) {
             it("should give true if the addding worked", function (done) {
-                therapistDB.add_therapist("therapist1", "test_password1", function (worked) {
+                therapistDB.add_therapist("therapist1", "test_password1").then(worked => {
                     expect(worked).to.be.a('string');
-                    therapistDB.add_therapist("therapist1", "test_password2", function (worked) {
-                        expect(worked).to.be.equal(false);
-                        therapistDB.add_therapist("therapist2", "test_password3", function (worked) {
+                    therapistDB.add_therapist("therapist1", "test_password2").then(worked => {
+                        expect(worked).to.be(2131231221); //dont ever want to get here
+                    }).catch(error => {
+                        expect(1).to.be.equal(1); //We want there to be an error
+                        therapistDB.add_therapist("therapist2", "test_password3").then(worked => {
                             expect(worked).to.be.a('string');
                             done();
                         });
@@ -38,76 +40,67 @@ describe("DBTests", function () {
 
         describe('#login()', function () {
             it("should return true if the login was sucessful", function (done) {
-                therapistDB.login("therapist1", "test_password1", function (err, worked) {
-                    expect(err).to.be.not.equal(false);
-                    therapistDB.login("therapist15", "test_password1", function (err, worked) {
-                        expect(err).to.be.equal(false);
-                        therapistDB.login("therapist1", "test_password67", function (err, worked) {
-                            expect(err).to.be.equal(false);
+                therapistDB.login("therapist1", "test_password1").then(worked => {
+                    expect(worked.token).to.be.a('string');
+                    therapistDB.login("therapist15", "test_password1").then(worked => {}).catch(error => {
+                        expect(false).to.be.equal(false);
+                        therapistDB.login("therapist1", "test_password67").then(worked => {}).catch(error => {
+                            expect(false).to.be.equal(false);
                             done();
                         });
                     });
                 });
             });
         });
-
     });
 
     describe('PatientDB', function () {
 
         describe('#add_patient()', function () {
             it('should return true when the patient does not exist', function (done) {
-                patientDB.add_patient("bob", "password1", "1999-05-05", "160", "72", "", function (not_exists) {
+                patientDB.add_patient("bob", "password1", "1999-05-05", "160", "72", "").then(not_exists => {
                     expect(not_exists).to.be.a('string');
-                    patientDB.add_patient("tim", "password2", "1982-10-10", "151", "75", "", function (not_exists) {
+                    patientDB.add_patient("tim", "password2", "1982-10-10", "151", "75", "").then(not_exists => {
                         expect(not_exists).to.be.a('string');
-                        patientDB.add_patient("cole", "password3", "1978-01-30", "182", "71", "", function (not_exists) {
+                        patientDB.add_patient("cole", "password3", "1978-01-30", "182", "71", "").then(not_exists => {
                             expect(not_exists).to.be.a('string');
-                            patientDB.add_patient("mary", "password4", "1948-03-22", "120", "64", "She is a person.", function (not_exists) {
+                            patientDB.add_patient("mary", "password4", "1948-03-22", "120", "64", "She is a person.").then(not_exists => {
                                 expect(not_exists).to.be.a('string');
-                                patientDB.add_patient("jessy", "password5", "2000-11-13", "150", "70", "He is a cool person.", function (not_exists) {
+                                patientDB.add_patient("jessy", "password5", "2000-11-13", "150", "70", "He is a cool person.").then(not_exists => {
                                     expect(not_exists).to.be.a('string');
                                     done();
-                                });
-                            });
+                                })
+                            })
                         });
                     });
                 });
             });
             it('should return false when the patient already exists', function (done) {
-                patientDB.add_patient("tim", "password4", "1981-02-20", "112", "79", "", function (not_exists) {
-                    expect(not_exists).to.be.equal(false);
+                patientDB.add_patient("tim", "password4", "1981-02-20", "112", "79", "").then(not_exists => {
+                }).catch(error => {
+                    expect(1).to.be.equal(1);
                     done();
-                });
+                })
             });
         });
 
         describe('#add_patient_session()', function () {
             it('should return true if the insert is sucessful', function (done) {
-                patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01", function (worked) {
-                    expect(worked).to.be.equal(true);
-                    patientDB.add_patient_session('cole', 17, "2012-03-04 4:1:02", function (worked) {
-                        expect(worked).to.be.equal(true);
-                        patientDB.add_patient_session('cole', 19, "2012-03-04 4:1:03", function (worked) {
-                            expect(worked).to.be.equal(true);
-                            patientDB.add_patient_session('cole', 25, "2012-03-04 4:1:04", function (worked) {
-                                expect(worked).to.be.equal(true);
-                                patientDB.add_patient_session('cole', 29, "2012-03-04 4:1:05", function (worked) {
-                                    expect(worked).to.be.equal(true);
-                                    patientDB.add_patient_session('tim', 20, "2012-03-04 4:1:01", function (worked) {
-                                        expect(worked).to.be.equal(true);
-                                        patientDB.add_patient_session('tim', 17, "2012-03-04 4:1:02", function (worked) {
-                                            expect(worked).to.be.equal(true);
-                                            patientDB.add_patient_session('tim', 19, "2012-03-04 4:1:03", function (worked) {
-                                                expect(worked).to.be.equal(true);
-                                                patientDB.add_patient_session('tim', 25, "2012-03-04 4:1:04", function (worked) {
-                                                    expect(worked).to.be.equal(true);
-                                                    patientDB.add_patient_session('tim', 29, "2012-03-04 4:1:05", function (worked) {
-                                                        expect(worked).to.be.equal(true);
-                                                        done();
-                                                    });
-                                                });
-                                            });
+                patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                    expect(1).to.be.equal(1);
+                    patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                        expect(1).to.be.equal(1);
+                        patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                            expect(1).to.be.equal(1);
+                            patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                                expect(1).to.be.equal(1);
+                                patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                                    expect(1).to.be.equal(1);
+                                    patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                                        expect(1).to.be.equal(1);
+                                        patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
+                                            expect(1).to.be.equal(1);
+                                            done();
                                         });
                                     });
                                 });
@@ -115,12 +108,12 @@ describe("DBTests", function () {
                         });
                     });
                 });
-            })
+            });
         });
 
         describe('#get_all_patient_info()', function () {
             it('should return every patient username', function (done) {
-                patientDB.get_all_patient_info(function (result) {
+                patientDB.get_all_patient_info().then(result => {
                     expect(result[1]['username']).to.be.equal("bob");
                     expect(result).to.be.deep.equal(result, ['admin', 'bob', 'tim', 'cole', 'mary', 'jessy']);
                     done();
@@ -130,18 +123,18 @@ describe("DBTests", function () {
 
         describe('#login()', function () {
             it('should return true given a real login', function (done) {
-                patientDB.login("bob", "password1", function (result) {
-                    expect(result).to.be.not.equal(false);
+                patientDB.login("bob", "password1").then(result => {
+                    expect(result.token).to.be.a('string');
                     done();
                 });
             });
             it('should return false given a wrong login', function (done) {
-                patientDB.login("bob", "password16", function (err, result) {
-                    expect(err).to.be.equal(false);
-                    patientDB.login("tim", "password4", function (err, result) {
-                        expect(err).to.be.equal(false);
-                        patientDB.login("asjkaskjsa", "password1", function (err, result) {
-                            expect(err).to.be.equal(false);
+                patientDB.login("bob", "password16").catch(error => {
+                    expect(1).to.be.equal(1);
+                    patientDB.login("tim", "password4").catch(error => {
+                        expect(1).to.be.equal(1);
+                        patientDB.login("asjkaskjsa", "password1").catch(error => {
+                            expect(1).to.be.equal(1);
                             done();
                         });
                     });
@@ -151,14 +144,14 @@ describe("DBTests", function () {
 
         describe('#get_patient_info()', function () {
             it('should return false given a non-existing user', function (done) {
-                patientDB.get_patient_info("shjasjkas", function (info, sessions, messaages) {
-                    expect(info).to.be.equal(false);
+                patientDB.get_patient_info("shjasjkas").catch(error => {
+                    expect(1).to.be.equal(1);
                     done();
                 });
             });
 
             it('should return all info given an existing user', function (done) {
-                patientDB.get_patient_info("cole", function (info, sessions, messaages) {
+                patientDB.get_patient_info("cole").then(([info, sessions, messaages, requests]) => {
                     expect(info).to.be.deep.equal({
                         username: 'cole',
                         dob: new Date('1978-01-30T05:00:00.000Z'),
@@ -190,6 +183,7 @@ describe("DBTests", function () {
 
                     expect(sessions).to.be.deep.equal(sessions);
                     expect(messaages).to.be.deep.equal([]);
+                    expect(requests).to.be.deep.equal([]);
                     done();
                 });
             });
@@ -197,8 +191,8 @@ describe("DBTests", function () {
 
         describe("#delete_patient_session()", function () {
             it("should return true if the session is sucessful deleted", function (done) {
-                patientDB.delete_patient_session("cole", 2, function (worked) {
-                    expect(worked).to.be.equal(true);
+                patientDB.delete_patient_session("cole", 2).then(() => {
+                    expect(1).to.be.equal(1);
                     done();
                 });
             });
@@ -206,11 +200,11 @@ describe("DBTests", function () {
 
         describe('#get_patient_session_specific()', function () {
             it("should return the score of the given session time", function (done) {
-                patientDB.get_patient_session_specific("cole", 4, function (score) {
+                patientDB.get_patient_session_specific("cole", 4).then(score => {
                     expect(score).to.be.deep.equal({
-                        activityLevel: 25,
-                        id: 4, 
-                        time: new Date('2012-03-04T09:01:04.000Z')
+                        activityLevel: 20,
+                        id: 4,
+                        time: new Date('2012-03-04T09:01:01.000Z')
                     });
                     done();
                 });
@@ -219,12 +213,12 @@ describe("DBTests", function () {
 
         describe("#get_patient_sessions()", function () {
             it("should return every session this user has had", function (done) {
-                patientDB.get_patient_sessions("cole", function (sessions) {
+                patientDB.get_patient_sessions("cole").then(sessions => {
                     var sessions = [];
                     sessions.push([20, new Date('2012-03-04 4:1:01')]);
-                    sessions.push([19, new Date('2012-03-04 4:1:03')]);
-                    sessions.push([25, new Date('2012-03-04 4:1:04')]);
-                    sessions.push([29, new Date('2012-03-04 4:1:05')]);
+                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
+                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
+                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
                     expect(sessions).to.be.deep.equal(sessions);
                     done();
                 });
@@ -233,17 +227,18 @@ describe("DBTests", function () {
 
         describe('#delete_patient()', function () {
             it('should return true if the deletion was sucessful', function (done) {
-                patientDB.delete_patient("cole", function (worked) {
-                    expect(worked).to.be.equal(true);
+                patientDB.delete_patient("cole").then(() => {
+                    expect(1).to.be.equal(1);
                     done();
                 });
             });
 
             it('should return false given a non-existing user', function (done) {
-                patientDB.get_patient_info("cole", function (info, sessions, messaages) {
-                    expect(info).to.be.equal(false);
+                patientDB.get_patient_info("cole").then(([info, sessions, messaages, requests]) => {
+                }).catch(error => {
+                    expect(1).to.be.equal(1);
                     done();
-                });
+                })
             });
         });
 
@@ -252,13 +247,13 @@ describe("DBTests", function () {
     describe("JointDB", function () {
         describe("#send_patient_a_message()", function () {
             it("should give true if the message was sucessfully added", function (done) {
-                patientDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
+                patientDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04").then(worked => {
                     expect(worked).to.be.an('number');
-                    patientDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
-                        expect(worked).to.be.equal(false);
-                        patientDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04", function (worked) {
-                            expect(worked).to.be.equal(false);
-                            patientDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04", function (worked) {
+                    patientDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04").catch(error => {
+                        expect(1).to.be.equal(1);
+                        patientDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04").catch(error => {
+                            expect(1).to.be.equal(1);
+                            patientDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04").then(worked => {
                                 expect(worked).to.be.an('number');
                                 done();
                             });
@@ -270,7 +265,7 @@ describe("DBTests", function () {
 
         describe("#get_all_messages_for_patient()", function () {
             it("should return every message this patient has recieved", function (done) {
-                patientDB.get_all_messages_for("tim", function (messages) {
+                patientDB.get_all_messages_for("tim").then(messages => {
                     var expectation = [];
                     expectation.push({
                         therapistID: "therapist1",
@@ -278,8 +273,7 @@ describe("DBTests", function () {
                         message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 0,
-                        messageID: 1,
-                        replies: []
+                        messageID: 1
                     });
                     expectation.push({
                         therapistID: "therapist2",
@@ -287,8 +281,7 @@ describe("DBTests", function () {
                         message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
-                        messageID: 4,
-                        replies: []
+                        messageID: 4
                     });
                     expect(messages).to.be.deep.equal(expectation);
                     done();
@@ -298,8 +291,8 @@ describe("DBTests", function () {
 
         describe("#mark_as_read()", function () {
             it("should return true if the message was properly marked as read", function (done) {
-                patientDB.mark_message_as_read("tim", "1", function (worked) {
-                    expect(worked).to.be.equal(true);
+                patientDB.mark_message_as_read("tim", "1").then(() => {
+                    expect(1).to.be.equal(1);
                     done();
                 });
             });
@@ -307,7 +300,7 @@ describe("DBTests", function () {
 
         describe("#get_all_messages_for_patient()", function () {
             it("should return every message this patient has recieved", function (done) {
-                patientDB.get_all_messages_for("tim", function (messages) {
+                patientDB.get_all_messages_for("tim").then(messages => {
                     var expectation = [];
                     expectation.push({
                         therapistID: "therapist1",
@@ -315,8 +308,7 @@ describe("DBTests", function () {
                         message_content: "You are a cool dude.",
                         date_sent: new Date("2012-03-04 4:1:04"),
                         is_read: 1,
-                        messageID: 1,
-                        replies: []
+                        messageID: 1
                     });
                     expectation.push({
                         therapistID: "therapist2",
@@ -324,8 +316,7 @@ describe("DBTests", function () {
                         message_content: "You are a very cool dude.",
                         date_sent: new Date("2012-02-01 4:1:04"),
                         is_read: 0,
-                        messageID: 4,
-                        replies: []
+                        messageID: 4
                     });
                     expect(messages).to.be.deep.equal(expectation);
                     done();
@@ -335,7 +326,7 @@ describe("DBTests", function () {
 
         describe("#get_all_messages_from_therapist", function () {
             it("should return every message this therapist has sent", function (done) {
-                therapistDB.get_all_messages_from("therapist1", function (messages) {
+                therapistDB.get_all_messages_from("therapist1").then(messages => {
                     expect(messages).to.be.deep.equal([{
                         patientID: "tim",
                         therapistID: "therapist1",
@@ -353,8 +344,8 @@ describe("DBTests", function () {
     describe("JointDB Pt 2", function () {
         describe("#assign_to_therapist()", function () {
             it("should return true if the pair is sucessful", function (done) {
-                patientDB.assign_to_therapist("tim", "therapist2", "2018-05-22", function (worked) {
-                    expect(worked).to.be.equal(true);
+                patientDB.assign_to_therapist("tim", "therapist2", "2018-05-22").then(() => {
+                    expect(1).to.be.equal(1);
                     done();
                 })
             });
@@ -364,7 +355,7 @@ describe("DBTests", function () {
     describe("TherapistDB Pt 2", function () {
         describe("#get_all_therapists()", function () {
             it("should return every therapist and the number of patients they have", function (done) {
-                therapistDB.get_all_therapists(function (all) {
+                therapistDB.get_all_therapists().then(all => {
                     expect(all).to.be.deep.equal([{
                         num_patients: 0,
                         username: "therapist1"
@@ -378,13 +369,13 @@ describe("DBTests", function () {
         });
     });
 
-    describe("JointDB Pt 2", function() {
-        describe("#accept_therapist_request", function() {
-            it("should give true if sucessful", function(done) {
-                patientDB.accept_therapist_request("tim", "therapist2", function(worked) {
-                    expect(worked).to.be.equal(true);
+    describe("JointDB Pt 2", function () {
+        describe("#accept_therapist_request", function () {
+            it("should give true if sucessful", function (done) {
+                patientDB.accept_therapist_request("tim", "therapist2").then(() => {
+                    expect(1).to.be.equal(1);
                     done();
-                }); 
+                });
             });
         });
     });
@@ -392,7 +383,7 @@ describe("DBTests", function () {
     describe("TherapistDB Pt 3", function () {
         describe("#get_all_therapists()", function () {
             it("should return every therapist and the number of patients they have", function (done) {
-                therapistDB.get_all_therapists(function (all) {
+                therapistDB.get_all_therapists().then(all => {
                     expect(all).to.be.deep.equal([{
                         num_patients: 0,
                         username: "therapist1"
