@@ -3,7 +3,6 @@ const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 var jwt = require('jsonwebtoken');
-var connection;
 
 /********************SQL STATEMENTS*******************/
 

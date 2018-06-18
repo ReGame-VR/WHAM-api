@@ -2,8 +2,6 @@ require('dotenv').config();
 const mysql = require('promise-mysql');
 var fs = require('fs');
 
-var connection;
-
 class DBReseter {
 
     constructor(dbName, patientDB) {

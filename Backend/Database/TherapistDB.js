@@ -3,7 +3,6 @@ const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 var jwt = require('jsonwebtoken');
-var connection;
 
 /********************SQL STATEMENTS*******************/
 
@@ -177,6 +176,7 @@ class TherapistDB {
     // Return every patient this therapist has
     get_all_patients(therapistID, callback) {
         var inserts = [therapistID];
+        var connection;
         var get_specific_patient = this.get_specific_patient;
         this.pool.getConnection().then(con => {
             connection = con;

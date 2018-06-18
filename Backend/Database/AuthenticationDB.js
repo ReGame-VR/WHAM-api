@@ -15,8 +15,6 @@ const get_therapist_sql = "SELECT * FROM THERAPIST";
 const get_patient_therapist_join_sql = "SELECT * from PATIENT_THERAPIST WHERE is_accepted = true";
 const get_messages_sql = "SELECT * FROM PATIENT_MESSAGE";
 
-var connection;
-
 class AuthenticationDB {
 
     constructor() {
@@ -39,6 +37,7 @@ class AuthenticationDB {
     login(username, unencrypt_password) {
         var get_salt_insert = [username];
         var password;
+        var connection;
         return this.pool.getConnection().then(con => {
             connection = con
             var get_salt_query = mysql.format(get_user_salt_sql, get_salt_insert);
