@@ -1,8 +1,10 @@
 // Gives all patient info in either JSON or HTML form
 // Request Response PatientDB AuthorizationDB -> Void
 exports.getPatients = function (req, res) {
-    req.patientDB.get_all_patient_info(function (info) {
+    req.patientDB.get_all_patient_info().then(info => {
         req.responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
+    }).catch(error => {
+        req.responder.report_not_found(req, res);
     });
 }
 
@@ -20,15 +22,13 @@ exports.addPatient = function (req, res) {
     var weight = req.body.weight
     var height = req.body.height
     var information = req.body.information
-    req.patientDB.add_patient(username, unencrypt_password, dob, weight, height, information, function (worked) {
-        if (worked !== false) {
-            req.authorizer.addUserRoles(username, username)
+    req.patientDB.add_patient(username, unencrypt_password, dob, weight, height, information).then(worked => {
+        req.authorizer.addUserRoles(username, username)
             req.authorizer.allow(username, username, '*') // this user can do anything to themselves they want
             req.responder.report_sucess_with_info(req, res, {
                 token: worked
             })
-        } else {
-            req.responder.report_fail_with_message(req, res, "User already exists");
-        }
+    }).catch(error => {
+        req.responder.report_fail_with_message(req, res, "User already exists");
     });
 }

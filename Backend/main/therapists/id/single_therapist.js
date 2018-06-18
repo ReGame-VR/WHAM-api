@@ -2,7 +2,7 @@
 // Request Response TherapistDB -> Void
 exports.getTherapist = function (req, res) {
     var therapistID = req.params.therapistID;
-    req.therapistDB.get_all_patients(therapistID, function (info) {
+    req.therapistDB.get_all_patients(therapistID, (info => {
         if (info === false) {
             req.responder.report_not_found(req, res);
         } else {
@@ -11,18 +11,16 @@ exports.getTherapist = function (req, res) {
                 therapistID: therapistID
             })
         }
-    });
+    }));
 }
 
 //Deletes this therapist from the database
 // Request Response TherapistDB -> Void
 exports.deleteTherapist = function (req, res) {
     var therapistID = req.params.therapistID;
-    req.therapistDB.delete_therapist(therapistID, function (worked) {
-        if (worked) {
-            req.responder.report_sucess_no_info(req, res);
-        } else {
-            req.responder.report_not_found(req, res);
-        }
+    req.therapistDB.delete_therapist(therapistID).then(() => {
+        req.responder.report_sucess_no_info(req, res);
+    }).catch(error => {
+        req.responder.report_not_found(req, res);
     });
 }

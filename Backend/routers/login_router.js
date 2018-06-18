@@ -17,28 +17,20 @@ const authDB = new AuthenticationDB();
 // use two LocalStrategies, registered under patient and therapist
 passport.use('patient', new LocalStrategy(
     function (username, password, cb) {
-        authDB.login(username, password, function (error, user) {
-            if (error) {
-                return cb(error, false);
-            }
-            if (!user) {
-                return cb(null, false);
-            }
+        authDB.login(username, password).then(user => {
             return cb(null, user);
+        }).catch(error => {
+            cb(null, false);
         });
     }
 ));
 
 passport.use('therapist', new LocalStrategy(
     function (username, password, cb) {
-        authDB.login(username, password, function (error, user) {
-            if (error) {
-                return cb(error, false);
-            }
-            if (!user) {
-                return cb(null, false);
-            }
+        authDB.login(username, password).then(user => {
             return cb(null, user);
+        }).catch(error => {
+            cb(null, false);
         });
     }
 ));

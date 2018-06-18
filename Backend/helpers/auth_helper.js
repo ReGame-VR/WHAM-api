@@ -44,13 +44,10 @@ exports.hasAdminPriv = function (req, res, next) {
 
 // Vefifies the JWT and writes the info to the req
 exports.verifyJWT = function (req, res, next) {
-    req.authorizer.verifyJWT(req, function (verified) {
-        if (!verified) {
-            req.responder.report_bad_token(req, res);
-            return;
-        } else {
-            req.verified = verified;
-            next();
-        }
+    req.authorizer.verifyJWT(req).then(verified => {
+        req.verified = verified;
+        next();
+    }).catch(error => {
+        req.responder.report_bad_token(req, res);
     });
 }

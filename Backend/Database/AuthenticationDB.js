@@ -1,7 +1,6 @@
 const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const handle_error = require('../helpers/db-helper.js');
 var jwt = require('jsonwebtoken');
 
 var ACL = require('acl');
@@ -32,76 +31,70 @@ class AuthenticationDB {
         this.acl.allow('admin', '*', '*') // the admin can do anything
 
         // Resets the ACL permissions based on the DB entries
-        this.load_all_permissions(function (worked) {
-            
-        });
+        this.load_all_permissions();
     }
 
-    // String String String (Error Maybe-User -> Void) -> Void
+    // String String String -> Promise(User)
     // Tests whether the given login info is valid for the given table
-    login(username, unencrypt_password, callback) {
+    login(username, unencrypt_password) {
         var get_salt_insert = [username];
         var password;
-        this.pool.getConnection().then(con => {
+        return this.pool.getConnection().then(con => {
             connection = con
             var get_salt_query = mysql.format(get_user_salt_sql, get_salt_insert);
             return connection.query(get_salt_query)
         }).then(results => {
             if (results.length == 0) {
+                connection.release();
                 throw new Error("User not found");
             } else {
                 var salt = results[0].salt;
                 password = bcrypt.hashSync(unencrypt_password, salt);
                 var login_insert = [username, password];
                 var login_query = mysql.format(verify_user_password_sql, login_insert);
-                return connection.query(login_query)
+                var res = connection.query(login_query);
+                connection.release();
+                return res;
             }
         }).then(results => {
             if (results.length == 0) {
                 throw new Error("Bad password");
             } else {
-                var token = jwt.sign({
-                    data: {
-                        username: username,
-                        password_hash: password
-                    }
-                }, process.env.JWT_SECRET, {
-                    expiresIn: '10d'
-                });
-
-                connection.release();
-                callback(null, {
-                    token: token
-                });
+                return {
+                    token: jwt.sign({
+                        data: {
+                            username: username,
+                            password_hash: password
+                        }
+                    }, process.env.JWT_SECRET, {
+                        expiresIn: '10d'
+                    })
+                };
             }
-        }).catch(error => {
-            handle_error(error, connection, callback);
         });
     }
 
-    // String String (Maybe-Integer Maybe-String -> Void) -> Void
+    // String String -> (list Int String)
     // Returns the authorization level of this user
-    get_auth_level(salt = 0, callback) {
-        this.get_auth_level_help(salt, callback, this.pool)
+    get_auth_level(salt = 0) {
+        this.get_auth_level_help(salt, this.pool)
     }
 
 
-    // String String (Maybe-Integer Maybe-String -> Void) ConnectionPool -> Void
+    // String String -> (list Int, String)
     // Returns the authorization level of this user
-    get_auth_level_help(salt = 0, callback, pool) {
-        pool.getConnection().then(con => {
-            connection = con;
+    get_auth_level_help(salt = 0, pool) {
+        return pool.getConnection().then(con => {
             var query = mysql.format(get_user_auth_level, [salt]);
-            return connection.query(query);
+            var res = connection.query(query);
+            connection.release();
+            return res;
         }).then(result => {
             if (result.length == 0) {
                 throw new Error("User does not exist");
             } else {
-                connection.release();
-                callback(result[0].auth_level, result[0].username);
+                return [result[0].auth_level, result[0].username];
             }
-        }).catch(error => {
-            handle_error(error, connection, callback);
         });
     }
 
@@ -133,77 +126,70 @@ class AuthenticationDB {
         this.acl.addUserRoles(name, role);
     }
 
-    // String (Maybe-String -> Void)
+    // String -> Promise(String)
     // Verifies this jwt and checks if the hash matches the patient id
     // Gives the username if valid
-    verifyJWT(req, callback) {
+    verifyJWT(req) {
         var token;
         if (req.query !== undefined && req.query.auth_token !== undefined) {
             token = req.query.auth_token;
         } else if (req.cookies !== undefined) {
-            var cookies = req.headers.cookie;
             token = req.cookies.auth_token;
         }
         var decoded;
-        this.pool.getConnection().then(con => {
-            connection = con
+        return this.pool.getConnection().then(connection => {
             decoded = jwt.verify(token, process.env.JWT_SECRET);
             var query = mysql.format(verify_user_password_sql, [decoded.data.username, decoded.data.password_hash]);
-            return connection.query(query);
+            var res = connection.query(query);
+            connection.release();
+            return res;
         }).then(result => {
             if (result.length == 0) {
                 throw new Error("Bad password");
             } else {
-                connection.release();
-                callback(decoded.data.username);
+                return decoded.data.username;
             }
-        }).catch(error => {
-            handle_error(error, connection, callback);
         });
     }
 
+    // Void -> Promise(Void)
     // When the server is shut down, all permissions are cleared from ACL
     // This method loads them back in based on what is written in the DB
-    load_all_permissions(callback) {
+    load_all_permissions() {
         var acl = this.acl;
-        this.pool.getConnection().then(con => {
-            connection = con;
-            return connection.query(get_patients_sql);
-        }).then(result => {
-            for (var i = 0; i < result.length; i += 1) {
-                acl.addUserRoles(result[i].username, result[i].username);
-                acl.allow(result[i].username, result[i].username, '*')
-            }
-            return connection.query(get_therapist_sql)
-        }).then(result => {
-            for (var i = 0; i < result.length; i += 1) {
-                acl.addUserRoles(result[i].username, result[i].username);
-                acl.allow(result[i].username, result[i].username, '*')
-            }
-            return connection.query(get_patient_therapist_join_sql)
-        }).then(result => {
-            for (var i = 0; i < result.length; i += 1) {
-                acl.allow(result[i].therapistID, result[i].patientID, '*')
-            }
-            return connection.query(get_messages_sql)
-        }).then(result => {
-            for (var i = 0; i < result.length; i += 1) {
-                acl.allow(result[i].therapistID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
-                acl.allow(result[i].patientID, " message " + result[i].messageID, '*') // this user can do anything to the message they want
-            }
+        return this.pool.getConnection().then(connection => {
+            var res = Promise.all(
+                [connection.query(get_patients_sql),
+                    connection.query(get_therapist_sql),
+                    connection.query(get_patient_therapist_join_sql),
+                    connection.query(get_messages_sql)
+                ])
             connection.release();
-            callback(true);
-        }).catch(error => {
-            handle_error(error, connection, callback);
+            return res;
+        }).then(([patients, therapists, join, messages]) => {
+            for (var i = 0; i < patients.length; i += 1) {
+                acl.addUserRoles(patients[i].username, patients[i].username);
+                acl.allow(patients[i].username, patients[i].username, '*')
+            }
+            for (var i = 0; i < therapists.length; i += 1) {
+                acl.addUserRoles(therapists[i].username, therapists[i].username);
+                acl.allow(therapists[i].username, therapists[i].username, '*')
+            }
+            for (var i = 0; i < join.length; i += 1) {
+                acl.allow(join[i].therapistID, join[i].patientID, '*')
+            }
+            for (var i = 0; i < messages.length; i += 1) {
+                acl.allow(messages[i].therapistID, " message " + messages[i].messageID, '*') // this user can do anything to the message they want
+                acl.allow(messages[i].patientID, " message " + messages[i].messageID, '*') // this user can do anything to the message they want
+            }
         });
     }
 
     // Resets the ACL storage
-    // (Boolean -> Void) -> Void
-    reset_self(worked) {
+    // Void -> Void
+    reset_self() {
         this.acl = new ACL(new ACL.memoryBackend());
         this.acl.allow('admin', '*', '*') // the admin can do anything
-        worked(true);
     }
 }
 

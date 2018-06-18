@@ -42,7 +42,7 @@ var hbs = exphbs.create({
             if (mm < 10) {
                 mm = '0' + mm
             }
-            today = yyyy + "-" + mm + "-" + dd; 
+            today = yyyy + "-" + mm + "-" + dd;
 
             return JSON.stringify(today);
         },
@@ -94,24 +94,9 @@ app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 
 // The helper to reset the app
 const resetApp = function (callback) {
-    authorizer.reset_self(function (worked) {
-        if (worked === false) {
-            callback(false);
-        } else {
-            resetDB.reset_db(function (token) {
-                if (token === false) {
-                    callback(false)
-                } else {
-                    authorizer.reset_self(function (worked) {
-                        if (worked === false) {
-                            callback(false);
-                        } else {
-                            callback(token);
-                        }
-                    });
-                }
-            });
-        }
+    authorizer.reset_self()
+    resetDB.reset_db().then(token => {
+        callback(token);
     });
 }
 

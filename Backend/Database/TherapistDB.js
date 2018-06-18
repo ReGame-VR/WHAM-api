@@ -2,7 +2,6 @@ require('dotenv').config();
 const mysql = require('promise-mysql');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const handle_error = require('../helpers/db-helper.js');
 var jwt = require('jsonwebtoken');
 var connection;
 
@@ -50,9 +49,9 @@ class TherapistDB {
         this.authorizer = authorizer;
     }
 
-    // String String (Boolean -> Void) -> Void
+    // String String -> Promise(Void)
     // Adds this therapist to the database
-    add_therapist(username, unencrypt_password, callback) {
+    add_therapist(username, unencrypt_password) {
         var salt = bcrypt.genSaltSync(saltRounds);
         var password = bcrypt.hashSync(unencrypt_password, salt);
 
@@ -60,12 +59,11 @@ class TherapistDB {
         var therapist_inserts = [username];
         var user_sql = mysql.format(add_user_sql, user_inserts);
         var therapist_sql = mysql.format(add_therapist_sql, therapist_inserts);
-        this.pool.getConnection().then(con => {
-            connection = con
-            return connection.query(user_sql);
-        }).then(results => {
-            return connection.query(therapist_sql)
-        }).then(results => {
+        return this.pool.getConnection().then(connection => {
+            var res = Promise.all([connection.query(user_sql), connection.query(therapist_sql)])
+            connection.release();
+            return res;
+        }).then(([user, therapist]) => {
             var token = jwt.sign({
                 data: {
                     username: username,
@@ -74,30 +72,26 @@ class TherapistDB {
             }, process.env.JWT_SECRET, {
                 expiresIn: '10d'
             });
-            connection.release();
-            callback(token);
-        }).catch(error => {
-            handle_error(error, connection, callback);
+            return token;
         });
     }
 
-    // String String (Maybe-Error Maybe-User -> Void) -> Void
-    // Calls the callback with true given a proper login
+    // String String -> Promise(User)
+    // Returns true given a proper login
     // False given an incorrect login
-    login(username, unencrypt_password, callback) {
-        this.authorizer.login(username, unencrypt_password, callback);
+    login(username, unencrypt_password) {
+        return this.authorizer.login(username, unencrypt_password);
     }
 
-    // String
-    //([Maybe [List-of Message]] -> Void)
-    // -> Void
+    // String -> Promise([List-of Message])
     // Gives every message that this patient has ever recieved
-    get_all_messages_from(therapistID, callback) {
+    get_all_messages_from(therapistID) {
         var inserts = [therapistID];
         var query = mysql.format(get_message_from_sql, inserts);
-        this.pool.getConnection().then(con => {
-            connection = con;
-            return connection.query(query);
+        return this.pool.getConnection().then(connection => {
+            var res = connection.query(query);
+            connection.release();
+            return res;
         }).then(result => {
             var toSend = [];
             for (var i = 0; i < result.length; i += 1) {
@@ -110,20 +104,18 @@ class TherapistDB {
                     therapistID: therapistID
                 });
             }
-            connection.release();
-            callback(toSend);
-        }).catch(error => {
-            handle_error(error, connection, callback);
+            return toSend;
         });
     }
 
-    // String (Maybe Therapist -> Void) -> Void
+    // String -> Promise(Therapist)
     // Returns just info about this therapist
-    get_specific_therapist(therapistID, callback) {
+    get_specific_therapist(therapistID) {
         var query = mysql.format(get_specif_therapist_info, [therapistID]);
-        this.pool.getConnection().then(con => {
-            connection = con;
-            return connection.query(query);
+        return this.pool.getConnection().then(connection => {
+            var res = connection.query(query);
+            connection.release();
+            return res;
         }).then(results => {
             if (results.length === 0) {
                 throw new Error("Therapist not found");
@@ -132,20 +124,18 @@ class TherapistDB {
                     username: results[0].username,
                     num_patients: results[0].c
                 }
-                connection.release();
-                callback(toSend);
+                return toSend;
             }
-        }).catch(error => {
-            handle_error(error, connection, callback);
         });
     }
 
-    // (Maybe(List-of (Object String Number) -> Void) -> Void
+    // Void -> Promise(List-of (Object String Number))
     // Gives a list of every therapist and the number of patients they have
-    get_all_therapists(callback) {
-        this.pool.getConnection().then(con => {
-            connection = con;
-            return connection.query(get_all_therapist_info);
+    get_all_therapists() {
+        return this.pool.getConnection().then(connection => {
+            var res = connection.query(get_all_therapist_info);
+            connection.release();
+            return res;
         }).then(results => {
             var toSend = [];
             for (var i = 0; i < results.length; i += 1) {
@@ -154,47 +144,40 @@ class TherapistDB {
                     num_patients: results[i].c
                 });
             }
-            connection.release();
-            callback(toSend);
-        }).catch(error => {
-            handle_error(error, connection, callback);
+            return toSend;
         });
     }
 
-    // String (Boolean -> Void) -> Void
+    // String -> Promise(Void)
     // Deletes this therapist
-    delete_therapist(therapistID, callback) {
+    delete_therapist(therapistID) {
         var inserts = [therapistID];
         var deleteMessageQuery = mysql.format(delete_therapist_message_sql, inserts);
         var deleteJoinQuery = mysql.format(delete_therapist_patient_sql, inserts);
         var deleteInfoQuery = mysql.format(delete_therapist_sql, inserts);
         var deleteUserQuery = mysql.format(delete_user_sql, inserts);
-        this.pool.getConnection().then(con => {
-            connection = con;
-            return connection.query(deleteMessageQuery);
-        }).then(result => {
-            return connection.query(deleteJoinQuery);
-        }).then(result => {
-            return connection.query(deleteInfoQuery);
-        }).then(result => {
-            return connection.query(deleteUserQuery);
-        }).then(result => {
-            if (result.affectedRows === 0) {
+        return this.pool.getConnection().then(connection => {
+            var res = Promise.all(
+                [connection.query(deleteMessageQuery),
+                connection.query(deleteJoinQuery),
+                connection.query(deleteInfoQuery),
+                connection.query(deleteUserQuery)])
+            connection.release();
+            return res;
+        }).then(([a, b, c, d]) => {
+            if (d.affectedRows === 0) {
                 throw new Error("User not found");
             } else {
-                connection.release();
-                callback(true);
+                return;
             }
-        }).catch(error => {
-            handle_error(error, connection, callback);
         });
-
     }
 
-    // String (Listof Patient-Session -> Void) -> Void
+    // String -> Promise([List-of Patient-Session])
     // Return every patient this therapist has
     get_all_patients(therapistID, callback) {
         var inserts = [therapistID];
+        var get_specific_patient = this.get_specific_patient;
         this.pool.getConnection().then(con => {
             connection = con;
             var query = mysql.format(get_therapist_patients_sql, inserts);
@@ -212,24 +195,9 @@ class TherapistDB {
                         var weight = results1[i].weight;
                         var height = results1[i].height;
                         var information = results1[i].information;
-                        var query = mysql.format(get_patient_recent_sessions_sql, [username]);
-                        connection.query(query).then(results2 => {
-                            var score = undefined;
-                            var time = undefined;
-                            if (results2.length > 0) {
-                                score = results2[0].score;
-                                time = results2[0].time;
-                            }
-                            toReturn.push({
-                                username: username,
-                                dob: dob,
-                                weight: weight,
-                                height: height,
-                                information: information,
-                                last_score: score,
-                                last_activity_time: time
-                            });
-                            if (i === results1.length - 1) {
+                        get_specific_patient(username, dob, weight, height, information, connection).then(patient => {
+                            toReturn.push(patient);
+                            if(i === results1.length - 1) {
                                 connection.release();
                                 callback(toReturn);
                             }
@@ -237,8 +205,28 @@ class TherapistDB {
                     })(a)
                 }
             }
-        }).catch(error => {
-            chandle_error(error, connection, callback);
+        });
+    }
+
+    // String Date Number Number String DBConnection -> Promise(Patient)
+    get_specific_patient(username, dob, weight, height, information, connection) {
+        var query = mysql.format(get_patient_recent_sessions_sql, [username]);
+        return connection.query(query).then(results2 => {
+            var score = undefined;
+            var time = undefined;
+            if (results2.length > 0) {
+                score = results2[0].score;
+                time = results2[0].time;
+            }
+            return {
+                username: username,
+                dob: dob,
+                weight: weight,
+                height: height,
+                information: information,
+                last_score: score,
+                last_activity_time: time
+            };
         });
     }
 }
