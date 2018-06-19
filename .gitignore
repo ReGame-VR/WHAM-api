@@ -73,3 +73,6 @@ WHAMBackend.code-workspace
 
 # Duplicate HTML
 Backend/RAML/api.html
+
+# NYC Testing
+Backend/.nyc_output
