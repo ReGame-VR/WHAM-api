@@ -371,6 +371,37 @@ describe('HTTPTests', function () {
         });
     });
 
+    describe('Get all individual patient info', function () {
+        it('should return the patient info, sessions, and messages for the given patient', function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    let info_expectation = {
+                        dob: '1999-05-05T04:00:00.000Z',
+                        height: 71,
+                        information: 'He is a developer of this app!',
+                        username: 'ryan',
+                        weight: 160,
+                    };
+                    let session_expectation = [];
+                    let message_expectation = [];
+                    let expectation = {
+                        info: info_expectation,
+                        sessions: session_expectation,
+                        messages: message_expectation,
+                        requests: ['therapist1', 'therapist2']
+                    };
+                    expect(res.body).to.be.deep.equal(expectation);
+                    done();
+                });
+        });
+    });
+
     describe("Accept Joins", function () {
         it('should give status 204 if the accept was sucessful', function (done) {
             chai.request(app)
