@@ -734,6 +734,8 @@ describe('HTTPTests', function () {
                         'is_read': 0,
                         'message_content': 'This is a message',
                         'therapistID': 'therapist1',
+                        'patientID': 'ryan',
+                        'messageID': 1
                     });
                     let expectation = {
                         info: info_expectation,

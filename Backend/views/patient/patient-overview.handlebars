@@ -37,8 +37,8 @@
         {{#each patients}}
         <tr class="click-row" onclick={{concat "window.location='/patients/" username "'"}}>
           <td>{{username}}</td>
-          <td>{{time}}</td>
-          <td>{{score}}</td>
+          <td>{{last_activity_time}}</td>
+          <td>{{last_score}}</td>
         </tr>
         {{/each}}
       </tbody>

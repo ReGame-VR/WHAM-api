@@ -80,7 +80,25 @@
         {{/each}}
       </tbody>
     </table>
+    <h3>All Messages For {{info.username}}</h1>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Message Content</th>
+          <th>Who Sent It</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each messages}}
+        <tr class="click-row" onclick={{concat "window.location='/patients/" patientID "/messages/" messageID "'"}}>
+          <td>{{message_content}}</td>
+          <td>{{therapistID}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
   </div>
+  
 </body>
 
 </html>

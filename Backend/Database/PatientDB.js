@@ -13,7 +13,7 @@ const get_all_patient_info_sql = `SELECT username, dob, weight, height, informat
 FROM PATIENT P`
 const get_patient_info_sql = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
 const get_all_patient_sessions_sql = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ? ORDER BY time DESC";
-const get_all_patient_message_sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
+const get_all_patient_message_sql = "SELECT * FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
 const get_all_patient_requests_sql = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
 const get_specif_patient_session_sql = "SELECT score, sessionID, time FROM PATIENT_SESSION WHERE patientID = ? AND (sessionID = ? or time = ?)";
 const get_all_patient_message_replies_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
@@ -132,7 +132,9 @@ class PatientDB {
                     therapistID: message_results[i].therapistID,
                     message_content: message_results[i].message,
                     date_sent: message_results[i].date_sent,
-                    is_read: message_results[i].is_read
+                    is_read: message_results[i].is_read,
+                    patientID: message_results[i].patientID,
+                    messageID: message_results[i].messageID
                 });
             }
 
