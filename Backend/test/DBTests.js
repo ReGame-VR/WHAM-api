@@ -10,11 +10,28 @@ var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
 
+var adminToken;
+
 describe("DBTests", function () {
     describe('DBReseter', function () {
         it("should not error if the reset is sucessful", function (done) {
             resetDB.reset_db().then(worked => {
                 expect(worked).to.be.a('string');
+                adminToken = worked;
+                done();
+            });
+        });
+    });
+
+    describe("AuthDB", function() {
+        it("should verify the admin's auth token", function(done) {
+            var req = {
+                cookies: {
+                    auth_token: adminToken
+                }
+            }
+            authorizer.verifyJWT(req).then(username => {
+                expect(username).to.be.equal('admin');
                 done();
             });
         });

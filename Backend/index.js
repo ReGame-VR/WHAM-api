@@ -100,8 +100,15 @@ const resetApp = function (callback) {
     });
 }
 
+// Clears permissions and loads then from the database
+const resetPerms = function() {
+    authorizer.reset_self();
+    return authorizer.load_all_permissions();
+}
+
 
 module.exports = {
     app: app,
-    reset: resetApp
+    reset: resetApp,
+    load: resetPerms
 }; // for testing with chai

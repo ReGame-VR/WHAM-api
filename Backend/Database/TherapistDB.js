@@ -107,27 +107,6 @@ class TherapistDB {
         });
     }
 
-    // String -> Promise(Therapist)
-    // Returns just info about this therapist
-    get_specific_therapist(therapistID) {
-        var query = mysql.format(get_specif_therapist_info, [therapistID]);
-        return this.pool.getConnection().then(connection => {
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        }).then(results => {
-            if (results.length === 0) {
-                throw new Error("Therapist not found");
-            } else {
-                var toSend = {
-                    username: results[0].username,
-                    num_patients: results[0].c
-                }
-                return toSend;
-            }
-        });
-    }
-
     // Void -> Promise(List-of (Object String Number))
     // Gives a list of every therapist and the number of patients they have
     get_all_therapists() {
@@ -158,9 +137,10 @@ class TherapistDB {
         return this.pool.getConnection().then(connection => {
             var res = Promise.all(
                 [connection.query(deleteMessageQuery),
-                connection.query(deleteJoinQuery),
-                connection.query(deleteInfoQuery),
-                connection.query(deleteUserQuery)])
+                    connection.query(deleteJoinQuery),
+                    connection.query(deleteInfoQuery),
+                    connection.query(deleteUserQuery)
+                ])
             connection.release();
             return res;
         }).then(([a, b, c, d]) => {
@@ -197,7 +177,7 @@ class TherapistDB {
                         var information = results1[i].information;
                         get_specific_patient(username, dob, weight, height, information, connection).then(patient => {
                             toReturn.push(patient);
-                            if(i === results1.length - 1) {
+                            if (i === results1.length - 1) {
                                 connection.release();
                                 callback(toReturn);
                             }

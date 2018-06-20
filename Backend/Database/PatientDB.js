@@ -191,13 +191,14 @@ class PatientDB {
             var delete_indiv_user_query = mysql.format(delete_indiv_user_sql, inserts);
             connection.release();
             var res = Promise.all(
-                [connection.query(delete_indiv_patient_session_query), 
-                connection.query(delete_indiv_patient_message_query),
-                connection.query(delete_indiv_patient_therapist_query),
-                connection.query(delete_indiv_patient_query),
-                connection.query(delete_indiv_user_query)]);
+                [connection.query(delete_indiv_patient_session_query),
+                    connection.query(delete_indiv_patient_message_query),
+                    connection.query(delete_indiv_patient_therapist_query),
+                    connection.query(delete_indiv_patient_query),
+                    connection.query(delete_indiv_user_query)
+                ]);
             return res;
-        }).then(([a,b, c, d, e]) => {
+        }).then(([a, b, c, d, e]) => {
             if (e.affectedRows !== 0) {
                 return
             } else {
@@ -278,14 +279,10 @@ class PatientDB {
             connection.release();
             return res;
         }).then(result => {
-            if (result.length == 0) {
-                throw new Error("Patient not found");
-            } else {
-                return {
-                    activityLevel: result[0].score,
-                    time: result[0].time,
-                    id: result[0].sessionID
-                }
+            return {
+                activityLevel: result[0].score,
+                time: result[0].time,
+                id: result[0].sessionID
             }
         });
 

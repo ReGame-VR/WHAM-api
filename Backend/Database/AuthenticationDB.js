@@ -73,30 +73,6 @@ class AuthenticationDB {
         });
     }
 
-    // String String -> (list Int String)
-    // Returns the authorization level of this user
-    get_auth_level(salt = 0) {
-        this.get_auth_level_help(salt, this.pool)
-    }
-
-
-    // String String -> (list Int, String)
-    // Returns the authorization level of this user
-    get_auth_level_help(salt = 0, pool) {
-        return pool.getConnection().then(con => {
-            var query = mysql.format(get_user_auth_level, [salt]);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        }).then(result => {
-            if (result.length == 0) {
-                throw new Error("User does not exist");
-            } else {
-                return [result[0].auth_level, result[0].username];
-            }
-        });
-    }
-
     // Any Any Any -> Void
     // Adds these permissions to acl
     allow(user, stuff, able) {

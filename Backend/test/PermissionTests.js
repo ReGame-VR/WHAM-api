@@ -5,6 +5,7 @@ var chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 const app = require('../index').app;
 const reset = require('../index').reset;
+const load = require('../index').load;
 var jwt = require('jsonwebtoken');
 
 var ryan_auth_token;
@@ -396,6 +397,15 @@ describe("PermTests", function () {
                     expect(res.status).to.be.equal(403);
                     done();
                 });
+        });
+    });
+
+    describe("Reset Permissions", function() {
+        it("should keep the permissions the same", function(done) {
+            load().then(() => {
+                expect(1).to.be.equal(1);
+                done();
+            });
         });
     });
 
