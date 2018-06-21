@@ -212,6 +212,27 @@ describe('LoadTestData', function () {
     });
 
     describe('Adds patient sessions', function () {
+        for (let i = 10; i < 50; i++) {
+            (function (cntr) {
+                it('should give status 204 if the session add was sucessful', function (done) {
+                    chai.request(app)
+                        .post('/patients/ryan/sessions')
+                        .accept('application/json')
+                        .query({
+                            auth_token: admin_auth_token,
+                        })
+                        .send({
+                            score: 10+cntr,
+                            time: '2016-02-28T16:' + cntr + ':10',
+                        })
+                        .end(function (err, res) {
+                            expect(res.status).to.be.equal(204);
+                            done();
+                        });
+                });
+            })(i);
+        }
+
         for (let i = 10; i < 30; i++) {
             (function (cntr) {
                 it('should give status 204 if the session add was sucessful', function (done) {
@@ -222,8 +243,50 @@ describe('LoadTestData', function () {
                             auth_token: admin_auth_token,
                         })
                         .send({
-                            score: 100 + cntr,
-                            time: '2016-02-28T16:41:' + cntr,
+                            score: 10,
+                            time: '2016-02-25T16:' + 2*cntr + ':10',
+                        })
+                        .end(function (err, res) {
+                            expect(res.status).to.be.equal(204);
+                            done();
+                        });
+                });
+            })(i);
+        }
+
+        for (let i = 10; i < 30; i++) {
+            (function (cntr) {
+                it('should give status 204 if the session add was sucessful', function (done) {
+                    chai.request(app)
+                        .post('/patients/ryan/sessions')
+                        .accept('application/json')
+                        .query({
+                            auth_token: admin_auth_token,
+                        })
+                        .send({
+                            score: 10  - cntr,
+                            time: '2016-02-23T16:' + cntr + ':10',
+                        })
+                        .end(function (err, res) {
+                            expect(res.status).to.be.equal(204);
+                            done();
+                        });
+                });
+            })(i);
+        }
+
+        for (let i = 10; i < 30; i++) {
+            (function (cntr) {
+                it('should give status 204 if the session add was sucessful', function (done) {
+                    chai.request(app)
+                        .post('/patients/ryan/sessions')
+                        .accept('application/json')
+                        .query({
+                            auth_token: admin_auth_token,
+                        })
+                        .send({
+                            score: 10*Math.sin(cntr),
+                            time: '2016-02-24T16:' + 2*cntr + ':10',
                         })
                         .end(function (err, res) {
                             expect(res.status).to.be.equal(204);
@@ -243,7 +306,7 @@ describe('LoadTestData', function () {
                     auth_token: admin_auth_token,
                 })
                 .send({
-                    therapistID: 'ryan',
+                    patientID: 'ryan',
                     message_content: 'This is a message',
                     date_sent: '2016-02-28T16:41:41',
                 })
@@ -264,6 +327,26 @@ describe('LoadTestData', function () {
                     patientID: 'timmy',
                     message_content: 'This is a very good message',
                     date_sent: '2016-02-28T16:41:41',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+    });
+
+    describe("Add message reply", function () {
+        it("should return 204 if the reply was sucesfully sent", function (done) {
+            chai.request(app)
+                .put('/patients/ryan/messages/1')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({
+                    sentID: 'therapist1',
+                    reply_content: 'This is a reply',
+                    date_sent: '2016-02-28T16:42:41',
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
