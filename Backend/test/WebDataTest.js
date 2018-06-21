@@ -105,7 +105,7 @@ describe('LoadTestData', function () {
                 .accept('application/json')
                 .send({
                     username: 'therapist1',
-                    password: 'passworddddd',
+                    password: 'password',
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);

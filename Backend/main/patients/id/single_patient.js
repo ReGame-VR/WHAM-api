@@ -2,6 +2,15 @@
 // Request Response PatientDB -> Void
 exports.getPatient = function (req, res) {
     req.patientDB.get_patient_info(req.params.patientID).then(([info, sessions, messages, requests]) => {
+            var shouldFilter = req.verified !== req.params.patientID && req.verified !== 'admin';
+            if(shouldFilter) {
+                for(var i = 0; i < messages.length; i += 1) {
+                    if(messages[i].therapistID !== req.verified) {
+                        messages.splice(i, 1);
+                    }
+                }
+                requests = [];
+            }
             var realSessions = [];
             for (var i = 0; i < sessions.length; i += 1) {
                 realSessions.push([sessions[i].time, sessions[i].score]);

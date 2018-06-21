@@ -207,6 +207,32 @@ describe("PermTests", function () {
                 });
         });
 
+        it("should reject another user", function (done) {
+            chai.request(app)
+                .patch('/patients/ryan/therapists/therapist2')
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+
+        it("should not let therapist1 see therapist2's request", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body.requests.length).to.be.equal(0);
+                    done();
+                });
+        });
+
         it("should give status 204 if the pair was sucessful", function (done) {
             chai.request(app)
                 .patch('/patients/ryan/therapists/therapist2')
@@ -224,6 +250,82 @@ describe("PermTests", function () {
                 .patch('/patients/ryan/therapists/therapist2')
                 .query({
                     auth_token: timmy_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+    });
+
+    describe("Message Permissions", function () {
+        it("should let users assigned therapists add messages to their accounts", function (done) {
+            chai.request(app)
+                .post('/therapists/therapist1/messages')
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .send({
+                    patientID: "ryan",
+                    message_content: "This is a message",
+                    date_sent: "2016-02-28T16:41:41"
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+    });
+
+    describe("Get messages", function () {
+        it("should return no messages from therapist1's perspective", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist2_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body.messages.length).to.be.equal(0);
+                    done();
+                });
+        });
+
+        it("should return 1 message from therapist2's perspective", function (done) {
+            chai.request(app)
+                .get('/patients/ryan')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist1_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body.messages.length).to.be.equal(1);
+                    done();
+                });
+        });
+
+        it("should return no messages from therapist1's perspective", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist2_auth_token
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body.length).to.be.equal(0);
+                    done();
+                });
+        });
+
+        it("should return no messages from therapist1's perspective", function (done) {
+            chai.request(app)
+                .get('/patients/ryan/messages/1')
+                .accept("application/json")
+                .query({
+                    auth_token: therapist2_auth_token
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(403);
@@ -400,8 +502,8 @@ describe("PermTests", function () {
         });
     });
 
-    describe("Reset Permissions", function() {
-        it("should keep the permissions the same", function(done) {
+    describe("Reset Permissions", function () {
+        it("should keep the permissions the same", function (done) {
             load().then(() => {
                 expect(1).to.be.equal(1);
                 done();

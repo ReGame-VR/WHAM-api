@@ -7,7 +7,7 @@ const single_session = require('../main/patients/id/sessions/id/single_session.j
 const patient_messages = require('../main/patients/id/messages/patient_messages.js');
 const single_message = require('../main/patients/id/messages/id/single_message.js');
 const therapist_patient = require('../main/therapists/id/patients/id/therapist_patient.js');
-
+const patient_therapist = require('../main/patients/id/therapists/id/patient_therapist.js');
 // The file path that has the code for verifying the JWT and checking permissions
 const auth_helpers = require('../helpers/auth_helper.js');
 
@@ -57,6 +57,6 @@ patient_route.delete('/:patientID/messages/:messageID', single_message.deletePat
 
 // Accepts this patient-therapist join
 // Marks is_accepted as true
-patient_route.patch('/:patientID/therapists/:therapistID', therapist_patient.acceptPair);
+patient_route.patch('/:patientID/therapists/:therapistID', patient_therapist.acceptPair);
 
 module.exports = patient_route;
