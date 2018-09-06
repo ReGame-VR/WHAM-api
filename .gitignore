@@ -61,7 +61,7 @@ typings/
 .next
 
 # Login Info
-Backend/.env
+.env
 
 # VSCode Workspce
 .vscode
@@ -72,7 +72,7 @@ WHAMBackend.code-workspace
 .DS_Store
 
 # Duplicate HTML
-Backend/RAML/api.html
+RAML/api.html
 
 # NYC Testing
-Backend/.nyc_output
+.nyc_output
