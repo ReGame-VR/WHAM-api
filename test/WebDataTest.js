@@ -212,89 +212,90 @@ describe('LoadTestData', function () {
     });
 
     describe('Adds patient sessions', function () {
+        var to_send = []
         for (let i = 10; i < 50; i++) {
-            (function (cntr) {
-                it('should give status 204 if the session add was sucessful', function (done) {
-                    chai.request(app)
-                        .post('/patients/ryan/sessions')
-                        .accept('application/json')
-                        .query({
-                            auth_token: admin_auth_token,
-                        })
-                        .send({
-                            score: 10+cntr,
-                            time: '2016-02-28T16:' + cntr + ':10',
-                        })
-                        .end(function (err, res) {
-                            expect(res.status).to.be.equal(204);
-                            done();
-                        });
-                });
-            })(i);
+            to_send.push({
+                score: 10 + i,
+                time: '2016-02-28T16:' + i + ':10'
+            })
         }
 
-        for (let i = 10; i < 30; i++) {
-            (function (cntr) {
-                it('should give status 204 if the session add was sucessful', function (done) {
-                    chai.request(app)
-                        .post('/patients/ryan/sessions')
-                        .accept('application/json')
-                        .query({
-                            auth_token: admin_auth_token,
-                        })
-                        .send({
-                            score: 10,
-                            time: '2016-02-25T16:' + 2*cntr + ':10',
-                        })
-                        .end(function (err, res) {
-                            expect(res.status).to.be.equal(204);
-                            done();
-                        });
+        it('should give status 204 if the session add was sucessful', function (done) {
+            chai.request(app)
+                .post('/patients/ryan/sessions')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({scores: to_send})
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
                 });
-            })(i);
+        });
+
+        to_send = []
+        for (let i = 10; i < 30; i++) {
+            to_send.push({
+                score: 10,
+                time: '2016-02-25T16:' + 2 * i + ':10',
+            })
         }
 
-        for (let i = 10; i < 30; i++) {
-            (function (cntr) {
-                it('should give status 204 if the session add was sucessful', function (done) {
-                    chai.request(app)
-                        .post('/patients/ryan/sessions')
-                        .accept('application/json')
-                        .query({
-                            auth_token: admin_auth_token,
-                        })
-                        .send({
-                            score: 10  - cntr,
-                            time: '2016-02-23T16:' + cntr + ':10',
-                        })
-                        .end(function (err, res) {
-                            expect(res.status).to.be.equal(204);
-                            done();
-                        });
+        it('should give status 204 if the session add was sucessful', function (done) {
+            chai.request(app)
+                .post('/patients/ryan/sessions')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({scores: to_send})
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
                 });
-            })(i);
-        }
+        });
 
+        to_send = []
         for (let i = 10; i < 30; i++) {
-            (function (cntr) {
-                it('should give status 204 if the session add was sucessful', function (done) {
-                    chai.request(app)
-                        .post('/patients/ryan/sessions')
-                        .accept('application/json')
-                        .query({
-                            auth_token: admin_auth_token,
-                        })
-                        .send({
-                            score: 10*Math.sin(cntr),
-                            time: '2016-02-24T16:' + 2*cntr + ':10',
-                        })
-                        .end(function (err, res) {
-                            expect(res.status).to.be.equal(204);
-                            done();
-                        });
-                });
-            })(i);
+            to_send.push({
+                score: 10 - i,
+                time: '2016-02-23T16:' + i + ':10',
+            })
         }
+        it('should give status 204 if the session add was sucessful', function (done) {
+            chai.request(app)
+                .post('/patients/ryan/sessions')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({scores: to_send})
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
+        to_send = []
+        for (let i = 10; i < 30; i++) {
+            to_send.push({
+                score: 10 * Math.sin(i),
+                time: '2016-02-24T16:' + 2 * i + ':10',
+            })
+        }
+        it('should give status 204 if the session add was sucessful', function (done) {
+            chai.request(app)
+                .post('/patients/ryan/sessions')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({scores: to_send})
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(204);
+                    done();
+                });
+        });
     });
 
     describe('Adds patient messages', function () {

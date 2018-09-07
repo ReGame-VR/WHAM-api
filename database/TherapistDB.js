@@ -19,7 +19,7 @@ const get_therapist_patients_sql =
     `SELECT username, dob, weight, height, information
 FROM PATIENT P, PATIENT_THERAPIST PT
 WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL AND is_accepted = true`
-const get_patient_recent_sessions_sql = "SELECT score, time FROM PATIENT P JOIN PATIENT_SESSION PS ON P.username = PS.patientID WHERE P.username = ? ORDER BY PS.time DESC";
+const get_patient_recent_sessions_sql = "SELECT score, time FROM PATIENT P JOIN SESSION PS JOIN SESSION_ITEM SI on PS.sessionID = SI.sessionID ON P.username = PS.patientID WHERE P.username = ? ORDER BY SI.time DESC";
 //DELETING
 const delete_therapist_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE therapistID = ?";
 const delete_therapist_patient_sql = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
@@ -27,7 +27,7 @@ const delete_therapist_sql = "DELETE FROM THERAPIST WHERE username = ?";
 const delete_user_sql = "DELETE FROM USER WHERE username = ?";
 //ADDING
 const add_user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)"
-const add_therapist_sql = "INSERT INTO THERAPIST VALUES (?)"
+const add_therapist_sql = "INSERT INTO THERAPIST VALUES (?)" 
 //UPDATING
 
 class TherapistDB {

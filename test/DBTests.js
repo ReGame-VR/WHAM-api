@@ -103,28 +103,17 @@ describe("DBTests", function () {
 
         describe('#add_patient_session()', function () {
             it('should return true if the insert is sucessful', function (done) {
-                patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                    expect(1).to.be.equal(1);
-                    patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                        expect(1).to.be.equal(1);
-                        patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                            expect(1).to.be.equal(1);
-                            patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                                expect(1).to.be.equal(1);
-                                patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                                    expect(1).to.be.equal(1);
-                                    patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                                        expect(1).to.be.equal(1);
-                                        patientDB.add_patient_session('cole', 20, "2012-03-04 4:1:01").then(worked => {
-                                            expect(1).to.be.equal(1);
-                                            done();
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+                patientDB.add_patient_session('cole', [
+                    {score: 20, time: "2012-03-04 4:1:01"},
+                    {score: 20, time: "2012-03-04 4:1:01"},
+                    {score: 20, time: "2012-03-04 4:1:01"},
+                    {score: 20, time: "2012-03-04 4:1:01"},
+                    {score: 20, time: "2012-03-04 4:1:01"},
+                    {score: 20, time: "2012-03-04 4:1:01"},
+                    {score: 20, time: "2012-03-04 4:1:01"}
+                ]).then(res => {
+                    done();
+                })
             });
         });
 
@@ -158,6 +147,7 @@ describe("DBTests", function () {
                 });
             });
         });
+
 
         describe('#get_patient_info()', function () {
             it('should return false given a non-existing user', function (done) {
@@ -206,23 +196,10 @@ describe("DBTests", function () {
             });
         });
 
-        describe("#delete_patient_session()", function () {
-            it("should return true if the session is sucessful deleted", function (done) {
-                patientDB.delete_patient_session("cole", 2).then(() => {
-                    expect(1).to.be.equal(1);
-                    done();
-                });
-            });
-        });
-
         describe('#get_patient_session_specific()', function () {
             it("should return the score of the given session time", function (done) {
-                patientDB.get_patient_session_specific("cole", 4).then(score => {
-                    expect(score).to.be.deep.equal({
-                        activityLevel: 20,
-                        id: 4,
-                        time: new Date('2012-03-04T09:01:01.000Z')
-                    });
+                patientDB.get_patient_session_specific("cole", 1).then(score => {
+                    expect(score.length).to.be.equal(7);
                     done();
                 });
             });
@@ -230,13 +207,17 @@ describe("DBTests", function () {
 
         describe("#get_patient_sessions()", function () {
             it("should return every session this user has had", function (done) {
-                patientDB.get_patient_sessions("cole").then(sessions => {
-                    var sessions = [];
-                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
-                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
-                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
-                    sessions.push([20, new Date('2012-03-04 4:1:01')]);
-                    expect(sessions).to.be.deep.equal(sessions);
+                patientDB.get_patient_sessions("cole").then(online_sessions => {
+                    expect(online_sessions.length).to.be.equal(1);
+                    done();
+                });
+            });
+        });
+
+        describe("#delete_patient_session()", function () {
+            it("should return true if the session is sucessful deleted", function (done) {
+                patientDB.delete_patient_session("cole", 1).then(() => {
+                    expect(1).to.be.equal(1);
                     done();
                 });
             });
@@ -413,5 +394,4 @@ describe("DBTests", function () {
             });
         });
     });
-
 });

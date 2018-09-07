@@ -8,35 +8,34 @@ var jwt = require('jsonwebtoken');
 
 //GETTING
 const get_all_patient_info_sql = `SELECT username, dob, weight, height, information,
-(SELECT score FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as score,
-(SELECT time FROM PATIENT_SESSION PS WHERE P.username = PS.patientID ORDER BY time DESC LIMIT 1) as time
+(SELECT score FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_score,
+(SELECT time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_activity_time
 FROM PATIENT P`
 const get_patient_info_sql = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
-const get_all_patient_sessions_sql = "SELECT score, time, sessionID FROM PATIENT_SESSION PS WHERE PS.patientID = ? ORDER BY time DESC";
+const get_all_patient_sessions_sql = `SELECT score, time, SESSION.sessionID FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? ORDER BY time DESC`;
 const get_all_patient_message_sql = "SELECT * FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
 const get_all_patient_requests_sql = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
-const get_specif_patient_session_sql = "SELECT score, sessionID, time FROM PATIENT_SESSION WHERE patientID = ? AND (sessionID = ? or time = ?)";
+const get_specif_patient_session_sql = "SELECT score, time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? AND SESSION.sessionID = ?";
 const get_all_patient_message_replies_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
 const get_specif_message_sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
 
 //ADDING
 const add_user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)";
 const add_patient_sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?)";
-const add_patient_session_sql = "INSERT INTO PATIENT_SESSION (patientID, score, time) VALUES (?, ?, ?)";
+const add_patient_session_sql = "INSERT INTO SESSION (patientID) VALUES (?)";
+const add_patient_session_item_sql = "INSERT INTO SESSION_ITEM VALUES (?, ?, ?)"
 const add_patient_message_sql = "INSERT INTO PATIENT_MESSAGE (patientID, therapistID, message, date_sent, is_read) VALUES (?, ?, ?, ?, false)";
 const add_patient_therapist_join_sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null, false)";
 const add_reply_to_message_sql = "INSERT INTO MESSAGE_REPLY (messageID, fromID, date_sent, content) VALUES (?, ?, ?, ?)";
 
 //DELETING
-const delete_indiv_patient_session_sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ?";
+const delete_indiv_patient_session_sql = "DELETE FROM SESSION WHERE patientID = ?";
 const delete_indiv_patient_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ?";
 const delete_indiv_patient_therapist_sql = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ?";
 const delete_indiv_patient_sql = "DELETE FROM PATIENT where username = ?";
 const delete_indiv_user_sql = "DELETE FROM USER where username = ?";
-const delete_specif_session_sql = "DELETE FROM PATIENT_SESSION WHERE patientID = ? AND sessionID = ?";
+const delete_specif_session_sql = "DELETE FROM SESSION WHERE patientID = ? AND SESSION.sessionID = ?";
 const delete_specif_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
-const delete_message_replies_for_message = `DELETE MESSAGE_REPLY FROM PATIENT_MESSAGE JOIN MESSAGE_REPLY ON PATIENT_MESSAGE.messageID = MESSAGE_REPLY.messageID
-                                            WHERE patientID = ? AND MESSAGE_REPLY.messageID = ?`;
 
 //UPDATING
 const mark_message_as_read_sql = "UPDATE PATIENT_MESSAGE SET is_read = true WHERE patientID = ? AND messageID = ?";
@@ -48,7 +47,7 @@ class PatientDB {
     // Objects:
     // Patient = Object(String Date Number Number String)
     // Patient-Session = Object(String Date Number Number String Number Date)
-    // Session = Object(Number Date)
+    // Session = Object(score: Number time: Date)
     // Message = Object(String String Date Boolean Number)
 
     constructor(connection, authorizer) {
@@ -68,20 +67,6 @@ class PatientDB {
             var res = connection.query(get_all_patient_info_sql);
             connection.release();
             return res;
-        }).then(results => {
-            var toReturn = [];
-            for (var i = 0; i < results.length; i += 1) {
-                toReturn.push({
-                    username: results[i].username,
-                    dob: results[i].dob,
-                    weigth: results[i].weight,
-                    height: results[i].height,
-                    information: results[i].information,
-                    last_score: results[i].score,
-                    last_activity_time: results[i].time
-                });
-            }
-            return toReturn
         });
 
     }
@@ -186,22 +171,12 @@ class PatientDB {
     delete_patient(patientID) {
         var inserts = [patientID];
         return this.pool.getConnection().then(connection => {
-            var delete_indiv_patient_session_query = mysql.format(delete_indiv_patient_session_sql, inserts);
-            var delete_indiv_patient_message_query = mysql.format(delete_indiv_patient_message_sql, inserts);
-            var delete_indiv_patient_therapist_query = mysql.format(delete_indiv_patient_therapist_sql, inserts);
-            var delete_indiv_patient_query = mysql.format(delete_indiv_patient_sql, inserts);
             var delete_indiv_user_query = mysql.format(delete_indiv_user_sql, inserts);
             connection.release();
-            var res = Promise.all(
-                [connection.query(delete_indiv_patient_session_query),
-                    connection.query(delete_indiv_patient_message_query),
-                    connection.query(delete_indiv_patient_therapist_query),
-                    connection.query(delete_indiv_patient_query),
-                    connection.query(delete_indiv_user_query)
-                ]);
+            var res = connection.query(delete_indiv_user_query)
             return res;
-        }).then(([a, b, c, d, e]) => {
-            if (e.affectedRows !== 0) {
+        }).then(res => {
+            if (res.affectedRows !== 0) {
                 return
             } else {
                 throw new Error("No User Deleted");
@@ -219,33 +194,75 @@ class PatientDB {
             var res = connection.query(session_query);
             connection.release();
             return res;
-        }).then(session_results => {
-            var session_info = [];
-            for (var i = 0; i < session_results.length; i += 1) {
-                session_info.push({
-                    score: session_results[i].score,
-                    time: session_results[i].time,
-                    sessionID: session_results[i].sessionID
-                });
+        }).then(result => {
+            var to_output = []
+            var lastID = undefined
+            var curSessionItems = []
+            for(var i = 0; i < result.length; i++) {
+                if(lastID == undefined || result[i].sessionID !== lastID) {
+                    if(lastID != undefined) {
+                        to_output.push({
+                            sessionID: lastID,
+                            scores: curSessionItems
+                        })
+                    }
+                    lastID = result[i].sessionID
+                }
+                curSessionItems.push({
+                    score: result[i].score,
+                    time: result[i].time
+                })
             }
-            return session_info;
+            if(lastID != undefined) {
+                to_output.push({
+                    sessionID: lastID,
+                    scores: curSessionItems
+                })
+            }
+            return to_output;
         })
     }
 
-    // String Number String -> Promise(Void)
+    // String [List-of Session] -> Promise(Void)
     // Adds an entry for a session to the DB
     // If suceed, gives true
     // If fail, gives false (server error or already added)
-    add_patient_session(patientID, score, time) {
-        var inserts = [patientID, score, time];
-
-        return this.pool.getConnection().then(connection => {
-            var add_patient_session_query = mysql.format(add_patient_session_sql, inserts);
+    add_patient_session(patientID, scores) {
+        var connection;
+        return this.pool.getConnection().then(con => {
+            connection = con;
+            var add_patient_session_query = mysql.format(add_patient_session_sql, [patientID]);
             var res = connection.query(add_patient_session_query);
-            connection.release();
             return res;
+        }).then(res => {
+            let sessionID = res.insertId;
+            var promises = [];
+            for(var i = 0; i < scores.length; i++) {
+                var add_patient_session_item_query = mysql.format(add_patient_session_item_sql, [sessionID, scores[i].score, scores[i].time]);
+                promises.push(connection.query(add_patient_session_item_query))
+            }
+            var res = Promise.all(promises);
+            connection.release();
+            return res
         });
 
+    }
+
+    // String String -> Promise(Session)
+    // Gives the score for the session at the given time/sessionID (accepts both)
+    get_patient_session_specific(patientID, sessionID) {
+        var inserts = [patientID, sessionID];
+        return this.pool.getConnection().then(connection => {
+            var get_specif_patient_session_query = mysql.format(get_specif_patient_session_sql, inserts);
+            var res = connection.query(get_specif_patient_session_query);
+            connection.release();
+            return res;
+        }).then(result => { 
+            if(result.length === 0) {
+                throw new Error("No session found");
+            }
+            return result
+        });
     }
 
     // String String -> Promise(Void)
@@ -262,32 +279,11 @@ class PatientDB {
             return res;
         }).then(result => {
             if (result.affectedRows === 0) {
-                throw new Error("Patient not found");
+                throw new Error("Session not found");
             } else {
                 return;
             }
         })
-    }
-
-
-    // String String -> Promise(Session)
-    // Gives the score for the session at the given time/sessionID (accepts both)
-    get_patient_session_specific(patientID, sessionID) {
-        var inserts = [patientID, sessionID, sessionID];
-
-        return this.pool.getConnection().then(connection => {
-            var get_specif_patient_session_query = mysql.format(get_specif_patient_session_sql, inserts);
-            var res = connection.query(get_specif_patient_session_query);
-            connection.release();
-            return res;
-        }).then(result => {
-            return {
-                activityLevel: result[0].score,
-                time: result[0].time,
-                id: result[0].sessionID
-            }
-        });
-
     }
 
     // String String (Maybe-Error Maybe-User -> Void) -> Void
@@ -442,12 +438,11 @@ class PatientDB {
     // Deletes this message
     delete_message(patientID, messageID) {
         return this.pool.getConnection().then(connection => {
-            var reply_query = mysql.format(delete_message_replies_for_message, [patientID, messageID])
             var message_query = mysql.format(delete_specif_message_sql, [patientID, messageID])
-            var res = Promise.all([connection.query(reply_query), connection.query(message_query)]);
+            var res = connection.query(message_query);
             connection.release();
             return res;
-        }).then(([replies, message]) => {
+        }).then(message => {
             if (message.affectedRows === 0) {
                 throw new Error("Message not found");
             }

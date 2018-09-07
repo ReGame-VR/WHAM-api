@@ -457,46 +457,47 @@ describe('HTTPTests', function () {
     })
 
     describe('Adds patient sessions', function () {
+        var to_send = []
         for (let i = 10; i < 30; i++) {
-            (function (cntr) {
-                it('should give status 204 if the session add was sucessful', function (done) {
-                    chai.request(app)
-                        .post('/patients/ryan/sessions')
-                        .accept('application/json')
-                        .query({
-                            auth_token: admin_auth_token,
-                        })
-                        .send({
-                            score: 100 + cntr,
-                            time: '2016-02-28T16:41:' + cntr,
-                        })
-                        .end(function (err, res) {
-                            expect(res.status).to.be.equal(204);
-                            done();
-                        });
-                });
-            })(i);
+            to_send.push({
+                score: 100 + i,
+                time: '2016-02-28T16:41:' + i,
+            });
         }
-
-
-        it('should give status 403 if the session add was unsucessful', function (done) {
+        it('should give status 204 if the session add was sucessful', function (done) {
             chai.request(app)
-                .post('/patients/hello/sessions')
+                .post('/patients/ryan/sessions')
                 .accept('application/json')
                 .query({
                     auth_token: admin_auth_token,
                 })
                 .send({
-                    score: 100,
-                    time: '2016-02-28T16:41:41',
+                    scores: to_send
                 })
                 .end(function (err, res) {
-                    expect(res.status).to.be.equal(403);
+                    expect(res.status).to.be.equal(204);
                     done();
                 });
         });
-    });
+    })
 
+
+    it('should give status 403 if the session add was unsucessful', function (done) {
+        chai.request(app)
+            .post('/patients/hello/sessions')
+            .accept('application/json')
+            .query({
+                auth_token: admin_auth_token,
+            })
+            .send([{
+                score: 100,
+                time: '2016-02-28T16:41:41',
+            }])
+            .end(function (err, res) {
+                expect(res.status).to.be.equal(403);
+                done();
+            });
+    });
     describe('Adds patient messages', function () {
         it('should give status 204 if the message was sucessfully added', function (done) {
             chai.request(app)
@@ -607,7 +608,7 @@ describe('HTTPTests', function () {
                     done();
                 });
         });
-    })
+    });
 
     describe('Mark messages as read', function () {
         it('should give status 204 if the message was sucessfully marked as read', function (done) {
@@ -666,7 +667,7 @@ describe('HTTPTests', function () {
                         last_score: null,
                         last_activity_time: null,
                         username: 'admin',
-                        weigth: 160,
+                        weight: 160,
                     });
                     toExpect.push({
                         dob: '1975-12-31T05:00:00.000Z',
@@ -675,7 +676,7 @@ describe('HTTPTests', function () {
                         last_score: null,
                         last_activity_time: null,
                         username: 'cole',
-                        weigth: 175,
+                        weight: 175,
                     });
                     toExpect.push({
                         dob: '1999-05-05T04:00:00.000Z',
@@ -684,7 +685,7 @@ describe('HTTPTests', function () {
                         last_score: 129,
                         last_activity_time: '2016-02-28T21:41:29.000Z',
                         username: 'ryan',
-                        weigth: 160,
+                        weight: 160,
                     });
                     toExpect.push({
                         dob: '1981-02-27T05:00:00.000Z',
@@ -693,7 +694,7 @@ describe('HTTPTests', function () {
                         last_score: null,
                         last_activity_time: null,
                         username: 'timmy',
-                        weigth: 155,
+                        weight: 155,
                     });
 
                     expect(res.body).to.be.deep.equal(toExpect);
@@ -723,7 +724,7 @@ describe('HTTPTests', function () {
                     let session_expectation = [];
                     for (let i = 29; i >= 10; i--) {
                         session_expectation.push({
-                            sessionID: i - 9,
+                            sessionID: 1,
                             score: 100 + i,
                             time: '2016-02-28T21:41:' + i + '.000Z',
                         });
@@ -790,8 +791,7 @@ describe('HTTPTests', function () {
                         is_read: 0,
                         messageID: 1,
                         viewerID: "admin",
-                        replies: [
-                            {
+                        replies: [{
                                 date_sent: "2016-02-28T21:42:41.000Z",
                                 messageID: "1",
                                 reply_content: "This is a reply",
@@ -845,14 +845,17 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
-                    let session_expectation = [];
+                    var item_expectation = []
                     for (let i = 29; i >= 10; i--) {
-                        session_expectation.push({
-                            sessionID: i - 9,
+                        item_expectation.push({
                             score: 100 + i,
                             time: '2016-02-28T21:41:' + i + '.000Z',
                         });
                     }
+                    var session_expectation = [{
+                        sessionID: 1,
+                        scores: item_expectation
+                    }];
                     expect(res.body).to.be.deep.equal(session_expectation);
                     done();
                 });
@@ -998,21 +1001,13 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
-                    let session_expectation = [];
-                    for (let i = 29; i >= 11; i--) {
-                        session_expectation.push({
-                            sessionID: i - 9,
-                            score: 100 + i,
-                            time: '2016-02-28T21:41:' + i + '.000Z',
-                        });
-                    }
-                    expect(res.body).to.be.deep.equal(session_expectation);
+                    expect(res.body).to.be.deep.equal([]);
                     done();
                 });
         });
     });
 
-    describe('Delete a patient messagee', function () {
+    describe('Delete a patient message', function () {
         it('should respond status 204 if the deletion is sucessful', function (done) {
             chai.request(app)
                 .delete('/patients/ryan/messages/1')
