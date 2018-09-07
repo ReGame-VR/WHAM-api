@@ -91,13 +91,19 @@ types:
 
   PatientSession:
     properties:
+      scores: PatientSessionItem[]
+      id: number 
+    example:
+      scores: []
+      id: 1427828
+
+  PatientSessionItem:
+    properties:
       activityLevel: number
       time: datetime
-      id: number 
     example:
       activityLevel: 88
       time: 2016-02-28T16:41:41.090Z
-      id: 1427828
   
   Message:
     properties: 

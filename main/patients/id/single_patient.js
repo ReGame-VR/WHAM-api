@@ -12,8 +12,28 @@ exports.getPatient = function (req, res) {
                 requests = [];
             }
             var realSessions = [];
-            for (var i = 0; i < sessions.length; i += 1) {
-                realSessions.push([sessions[i].time, sessions[i].score]);
+            var lastID = undefined
+            var curSessionItems = []
+            for(var i = 0; i < sessions.length; i++) {
+                if(lastID == undefined || sessions[i].sessionID !== lastID) {
+                    if(lastID != undefined) {
+                        realSessions.push({
+                            sessionID: lastID,
+                            scores: curSessionItems
+                        })
+                    }
+                    lastID = sessions[i].sessionID
+                }
+                curSessionItems.push({
+                    score: sessions[i].score,
+                    time: sessions[i].time
+                })
+            }
+            if(lastID != undefined) {
+                realSessions.push({
+                    sessionID: lastID,
+                    scores: curSessionItems
+                })
             }
             req.responder.report_sucess(req, res, {
                 info: info,

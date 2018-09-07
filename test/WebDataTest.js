@@ -227,7 +227,7 @@ describe('LoadTestData', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send({scores: to_send})
+                .send(to_send)
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -249,7 +249,7 @@ describe('LoadTestData', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send({scores: to_send})
+                .send(to_send)
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -270,7 +270,7 @@ describe('LoadTestData', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send({scores: to_send})
+                .send(to_send)
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -290,7 +290,7 @@ describe('LoadTestData', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send({scores: to_send})
+                .send(to_send)
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
