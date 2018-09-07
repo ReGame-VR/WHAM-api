@@ -13,10 +13,10 @@ Required Setup:
 3. Create a .env file in the /Backend folder. 
 Required Fields:
 
-DB_HOST=?
-DB_USER=?
-DB_PASS=?
-JWT_SECRET=?
+DB_HOST=?<br>
+DB_USER=?<br>
+DB_PASS=?<br>
+JWT_SECRET=?<br>
 ADMIN_PASSWORD=?
 
 
