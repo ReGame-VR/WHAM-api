@@ -12,7 +12,7 @@ const get_all_patient_info_sql = `SELECT username, dob, weight, height, informat
 (SELECT time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_activity_time
 FROM PATIENT P`
 const get_patient_info_sql = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
-const get_all_patient_sessions_sql = `SELECT score, time, SESSION.sessionID FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? ORDER BY time DESC`;
+const get_all_patient_sessions_sql = `SELECT score, time, SESSION.sessionID FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? ORDER BY sessionID, time DESC`;
 const get_all_patient_message_sql = "SELECT * FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
 const get_all_patient_requests_sql = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
 const get_specif_patient_session_sql = "SELECT score, time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? AND SESSION.sessionID = ?";
@@ -103,14 +103,30 @@ class PatientDB {
             };
 
             session_info = [];
-            for (var i = 0; i < session_results.length; i += 1) {
-                session_info.push({
+            var lastID = undefined
+            var curSessionItems = []
+            for(var i = 0; i < session_results.length; i++) {
+                if(lastID == undefined || session_results[i].sessionID !== lastID) {
+                    if(lastID != undefined) {
+                        session_info.push({
+                            sessionID: lastID,
+                            scores: curSessionItems
+                        })
+                    }
+                    lastID = session_results[i].sessionID
+                    curSessionItems = []
+                }
+                curSessionItems.push({
                     score: session_results[i].score,
-                    time: session_results[i].time,
-                    sessionID: session_results[i].sessionID
-                });
+                    time: session_results[i].time
+                })
             }
-
+            if(lastID != undefined) {
+                session_info.push({
+                    sessionID: lastID,
+                    scores: curSessionItems
+                })
+            }
             message_info = []
             for (var i = 0; i < message_results.length; i += 1) {
                 message_info.push({
@@ -207,6 +223,7 @@ class PatientDB {
                         })
                     }
                     lastID = result[i].sessionID
+                    curSessionItems = []
                 }
                 curSessionItems.push({
                     score: result[i].score,
