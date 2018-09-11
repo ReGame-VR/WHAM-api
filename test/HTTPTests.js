@@ -9,6 +9,22 @@ var jwt = require('jsonwebtoken');
 
 var admin_auth_token;
 
+const session_expectation = [];
+for (let i = 29; i >= 10; i--) {
+    session_expectation.push({
+        score: 100 + i,
+        time: '2016-02-28T21:41:' + i + '.000Z',
+    });
+}
+
+const session_send = [];
+for (let i = 29; i >= 10; i--) {
+    session_send.push({
+        score: 100 + i,
+        time: '2016-02-28T16:41:' + i,
+    });
+}
+
 describe('HTTPTests', function () {
 
     describe('DBReseter', function () {
@@ -457,13 +473,6 @@ describe('HTTPTests', function () {
     })
 
     describe('Adds patient sessions', function () {
-        var to_send = []
-        for (let i = 10; i < 30; i++) {
-            to_send.push({
-                score: 100 + i,
-                time: '2016-02-28T16:41:' + i,
-            });
-        }
         it('should give status 204 if the session add was sucessful', function (done) {
             chai.request(app)
                 .post('/patients/ryan/sessions')
@@ -471,7 +480,7 @@ describe('HTTPTests', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send(to_send)
+                .send(session_send)
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -485,7 +494,7 @@ describe('HTTPTests', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send(to_send)
+                .send(session_send)
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -733,28 +742,13 @@ describe('HTTPTests', function () {
                         username: 'ryan',
                         weight: 160,
                     };
-                    let session_expectation_1 = [];
-                    for (let i = 29; i >= 10; i--) {
-                        session_expectation_1.push({
-                            score: 100 + i,
-                            time: '2016-02-28T21:41:' + i + '.000Z',
-                        });
-                    }
-                    let session_expectation_2 = [];
-                    for (let i = 29; i >= 10; i--) {
-                        session_expectation_2.push({
-                            score: 100 + i,
-                            time: '2016-02-28T21:41:' + i + '.000Z',
-                        });
-                    }
-                    var session_expectation = [
-                        {
+                    var ses_expect = [{
                             sessionID: 1,
-                            scores: session_expectation_1
+                            scores: session_expectation
                         },
                         {
                             sessionID: 2,
-                            scores: session_expectation_2
+                            scores: session_expectation
                         }
                     ]
                     let message_expectation = [];
@@ -768,7 +762,7 @@ describe('HTTPTests', function () {
                     });
                     let expectation = {
                         info: info_expectation,
-                        sessions: session_expectation,
+                        sessions: ses_expect,
                         messages: message_expectation,
                         requests: []
                     };
@@ -873,22 +867,16 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
-                    var item_expectation = []
-                    for (let i = 29; i >= 10; i--) {
-                        item_expectation.push({
-                            score: 100 + i,
-                            time: '2016-02-28T21:41:' + i + '.000Z',
-                        });
-                    }
-                    var session_expectation = [{
-                        sessionID: 1,
-                        scores: item_expectation
-                    },
-                    {
-                        sessionID: 2,
-                        scores: item_expectation
-                    }];
-                    expect(res.body).to.be.deep.equal(session_expectation);
+                    var ses_expect = [{
+                            sessionID: 1,
+                            scores: session_expectation
+                        },
+                        {
+                            sessionID: 2,
+                            scores: session_expectation
+                        }
+                    ];
+                    expect(res.body).to.be.deep.equal(ses_expect);
                     done();
                 });
         });
@@ -1032,19 +1020,12 @@ describe('HTTPTests', function () {
                     auth_token: admin_auth_token,
                 })
                 .end(function (err, res) {
-                    var item_expectation = []
-                    for (let i = 29; i >= 10; i--) {
-                        item_expectation.push({
-                            score: 100 + i,
-                            time: '2016-02-28T21:41:' + i + '.000Z',
-                        });
-                    }
-                    var session_expectation = [{
+                    var ses_expect = [{
                         sessionID: 2,
-                        scores: item_expectation
+                        scores: session_expectation
                     }]
                     expect(res.status).to.be.equal(200);
-                    expect(res.body).to.be.deep.equal(session_expectation);
+                    expect(res.body).to.be.deep.equal(ses_expect);
                     done();
                 });
         });

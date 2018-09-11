@@ -17,6 +17,7 @@ exports.addPatientSession = function (req, res) {
     req.patientDB.add_patient_session(req.params.patientID, req.body).then(() => {
         req.responder.report_sucess_no_info(req, res);
     }).catch(error => {
+        throw error;
         req.responder.report_not_found(req, res);
     })
 }
