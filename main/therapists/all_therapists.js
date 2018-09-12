@@ -17,8 +17,6 @@ exports.addTherapist = function (req, res) {
     var username = req.body.username
     var unencrypt_password = req.body.password
     req.therapistDB.add_therapist(username, unencrypt_password).then((token) => {
-        req.authorizer.addUserRoles(username, username)
-        req.authorizer.allow(username, username, '*') // this user can do anything to themselves they want
         req.responder.report_sucess_with_info(req, res, {
             token: token
         })

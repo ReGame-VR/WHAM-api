@@ -3,8 +3,6 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 var jwt = require('jsonwebtoken');
 
-var ACL = require('acl');
-
 /********************SQL STATEMENTS*******************/
 const get_user_salt_sql = "SELECT salt FROM USER T WHERE T.username = ?";
 const verify_user_password_sql = "SELECT * FROM USER T where T.username = ? AND T.password = ?";
@@ -15,6 +13,9 @@ const get_therapist_sql = "SELECT * FROM THERAPIST";
 const get_patient_therapist_join_sql = "SELECT * from PATIENT_THERAPIST WHERE is_accepted = true";
 const get_messages_sql = "SELECT * FROM PATIENT_MESSAGE";
 
+const get_therapist_patient_sql = "SELECT patientID from PATIENT_THERAPIST WHERE is_accepted = true AND therapistID = ? AND patientID = ?";
+const get_message_sender_and_receiver_sql = "SELECT patientID, therapistID FROM PATIENT_MESSAGE PM WHERE PM.messageID = ?"
+
 class AuthenticationDB {
 
     constructor() {
@@ -24,12 +25,6 @@ class AuthenticationDB {
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
-
-        this.acl = new ACL(new ACL.memoryBackend());
-        this.acl.allow('admin', '*', '*') // the admin can do anything
-
-        // Resets the ACL permissions based on the DB entries
-        this.load_all_permissions();
     }
 
     // String String -> Promise(User)
@@ -73,34 +68,6 @@ class AuthenticationDB {
         });
     }
 
-    // Any Any Any -> Void
-    // Adds these permissions to acl
-    allow(user, stuff, able) {
-        this.acl.allow(user, stuff, able);
-    }
-
-    // Any Any Any -> Void
-    // removed these permissions from acl
-    removeAllow(user, stuff, able) {
-        this.acl.removeAllow(user, stuff, able);
-    }
-
-    // Any Any Any Callback -> Void
-    // Passes to acl
-    isAllowed(user, stuff, able, callback) {
-        if (user === 'admin') {
-            callback(null, true);
-        } else {
-            this.acl.isAllowed(user, stuff, able, callback);
-        }
-    }
-
-    // Any Any -> Void
-    // Adds this role
-    addUserRoles(name, role) {
-        this.acl.addUserRoles(name, role);
-    }
-
     // String -> Promise(String)
     // Verifies this jwt and checks if the hash matches the patient id
     // Gives the username if valid
@@ -127,45 +94,70 @@ class AuthenticationDB {
         });
     }
 
-    // Void -> Promise(Void)
-    // When the server is shut down, all permissions are cleared from ACL
-    // This method loads them back in based on what is written in the DB
-    load_all_permissions() {
-        var acl = this.acl;
+    // Any Any Any Callback -> Void
+    // Passes to acl
+    isAllowed(user, stuff, able, callback) {
+        if (user === 'admin') {
+            callback(null, true);
+        } else {
+            this.acl.isAllowed(user, stuff, able, callback);
+        }
+    }
+
+    // String String -> Promise(Boolean)
+    // Says if this user can view this patient
+    canViewPatient(user, patient) {
+        // Either they are the patient, the admin, or a therapist joined to the patient
         return this.pool.getConnection().then(connection => {
-            var res = Promise.all(
-                [connection.query(get_patients_sql),
-                    connection.query(get_therapist_sql),
-                    connection.query(get_patient_therapist_join_sql),
-                    connection.query(get_messages_sql)
-                ])
-            connection.release();
-            return res;
-        }).then(([patients, therapists, join, messages]) => {
-            for (var i = 0; i < patients.length; i += 1) {
-                acl.addUserRoles(patients[i].username, patients[i].username);
-                acl.allow(patients[i].username, patients[i].username, '*')
-            }
-            for (var i = 0; i < therapists.length; i += 1) {
-                acl.addUserRoles(therapists[i].username, therapists[i].username);
-                acl.allow(therapists[i].username, therapists[i].username, '*')
-            }
-            for (var i = 0; i < join.length; i += 1) {
-                acl.allow(join[i].therapistID, join[i].patientID, '*')
-            }
-            for (var i = 0; i < messages.length; i += 1) {
-                acl.allow(messages[i].therapistID, " message " + messages[i].messageID, '*') // this user can do anything to the message they want
-                acl.allow(messages[i].patientID, " message " + messages[i].messageID, '*') // this user can do anything to the message they want
-            }
+            var get_patients_query = mysql.format(get_therapist_patient_sql, [user, patient]);
+            var res = connection.query(get_patients_query)
+            connection.release()
+            return res
+        }).then(patients => {
+            return patients.length > 0 || user === patient || isAdmin(user)
+        }).catch(error => {
+            return false
+        })
+    }
+
+    // String String -> Promise(Boolean)
+    // Says if this user can view this therapist
+    canViewTherapist(user, therapist) {
+        return new Promise(function (resolve, reject) {
+            resolve(user === therapist || isAdmin(user))
         });
     }
 
-    // Resets the ACL storage
-    // Void -> Void
-    reset_self() {
-        this.acl = new ACL(new ACL.memoryBackend());
-        this.acl.allow('admin', '*', '*') // the admin can do anything
+    // String Int -> Promise(Boolean)
+    // Says if this user can view this message
+    canViewMessage(user, messageID) {
+        // Either they sent the message or recieved it
+        return this.pool.getConnection().then(connection => {
+            var get_message_query = mysql.format(get_message_sender_and_receiver_sql, [messageID]);
+            var res = connection.query(get_message_query)
+            connection.release()
+            return res
+        }).then(message => {
+            return (message.length > 0 && (message[0].patientID === user || message[0].therapistID === user))
+             || isAdmin(user)
+        }).catch(error => {
+            return false
+        })
     }
+
+    // String String -> Promise(Boolean)
+    // Says if this user is an admin
+    hasAdminPriv(user) {
+        return new Promise(function (resolve, reject) {
+            resolve(isAdmin(user))
+        });
+    }
+}
+
+// String -> Boolean
+// Says if this user is an admin
+function isAdmin(user) {
+    return user === 'admin'
 }
 
 module.exports = AuthenticationDB;

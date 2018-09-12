@@ -94,21 +94,13 @@ app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 
 // The helper to reset the app
 const resetApp = function (callback) {
-    authorizer.reset_self()
     resetDB.reset_db().then(token => {
         callback(token);
     });
 }
 
-// Clears permissions and loads then from the database
-const resetPerms = function() {
-    authorizer.reset_self();
-    return authorizer.load_all_permissions();
-}
-
 
 module.exports = {
     app: app,
-    reset: resetApp,
-    load: resetPerms
+    reset: resetApp
 }; // for testing with chai

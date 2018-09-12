@@ -361,6 +361,7 @@ describe("PermTests", function () {
         });
     });
 
+
     describe("Adds patient session permissions", function () {
         it("should accept a user trying to add sessions to his account", function (done) {
             chai.request(app)
@@ -499,15 +500,6 @@ describe("PermTests", function () {
                     expect(res.status).to.be.equal(403);
                     done();
                 });
-        });
-    });
-
-    describe("Reset Permissions", function () {
-        it("should keep the permissions the same", function (done) {
-            load().then(() => {
-                expect(1).to.be.equal(1);
-                done();
-            });
         });
     });
 
