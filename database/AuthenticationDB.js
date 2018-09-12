@@ -32,7 +32,7 @@ class AuthenticationDB {
         this.load_all_permissions();
     }
 
-    // String String String -> Promise(User)
+    // String String -> Promise(User)
     // Tests whether the given login info is valid for the given table
     login(username, unencrypt_password) {
         var get_salt_insert = [username];
