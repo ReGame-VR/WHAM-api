@@ -9,20 +9,23 @@ var jwt = require('jsonwebtoken');
 //GETTING
 const get_all_patient_info_sql = `SELECT username, dob, weight, height, information,
 (SELECT score FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_score,
-(SELECT time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_activity_time
+(SELECT time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_activity_time,
+(SELECT effort FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_effort,
+(SELECT motivation FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_motivation,
+(SELECT engagement FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_engagement
 FROM PATIENT P`
 const get_patient_info_sql = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
-const get_all_patient_sessions_sql = `SELECT score, time, SESSION.sessionID FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? ORDER BY sessionID, time DESC`;
+const get_all_patient_sessions_sql = `SELECT score, time, effort, motivation, engagement, SESSION.sessionID FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? ORDER BY sessionID, time DESC`;
 const get_all_patient_message_sql = "SELECT * FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
 const get_all_patient_requests_sql = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
-const get_specif_patient_session_sql = "SELECT score, time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? AND SESSION.sessionID = ?";
+const get_specif_patient_session_sql = "SELECT score, time, effort, motivation, engagement FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? AND SESSION.sessionID = ?";
 const get_all_patient_message_replies_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
 const get_specif_message_sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
 
 //ADDING
 const add_user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)";
 const add_patient_sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?)";
-const add_patient_session_sql = "INSERT INTO SESSION (patientID) VALUES (?)";
+const add_patient_session_sql = "INSERT INTO SESSION (patientID, effort, motivation, engagement) VALUES (?, ?, ?, ?)";
 const add_patient_session_item_sql = "INSERT INTO SESSION_ITEM VALUES (?, ?, ?)"
 const add_patient_message_sql = "INSERT INTO PATIENT_MESSAGE (patientID, therapistID, message, date_sent, is_read) VALUES (?, ?, ?, ?, false)";
 const add_patient_therapist_join_sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null, false)";
@@ -110,6 +113,9 @@ class PatientDB {
                     if(lastID != undefined) {
                         session_info.push({
                             sessionID: lastID,
+                            effort: session_results[i-1].effort,
+                            motivation: session_results[i-1].motivation,
+                            engagement: session_results[i-1].engagement,
                             scores: curSessionItems
                         })
                     }
@@ -124,6 +130,9 @@ class PatientDB {
             if(lastID != undefined) {
                 session_info.push({
                     sessionID: lastID,
+                    effort: session_results[session_results.length-1].effort,
+                    motivation: session_results[session_results.length-1].motivation,
+                    engagement: session_results[session_results.length-1].engagement,
                     scores: curSessionItems
                 })
             }
@@ -219,6 +228,9 @@ class PatientDB {
                     if(lastID != undefined) {
                         to_output.push({
                             sessionID: lastID,
+                            effort: result[i-1].effort,
+                            motivation: result[i-1].motivation,
+                            engagement: result[i-1].engagement,
                             scores: curSessionItems
                         })
                     }
@@ -233,6 +245,9 @@ class PatientDB {
             if(lastID != undefined) {
                 to_output.push({
                     sessionID: lastID,
+                    effort: result[result.length-1].effort,
+                    motivation: result[result.length-1].motivation,
+                    engagement: result[result.length-1].engagement,
                     scores: curSessionItems
                 })
             }
@@ -240,15 +255,15 @@ class PatientDB {
         })
     }
 
-    // String [List-of Session] -> Promise(Void)
+    // String Number Number Number [List-of Session] -> Promise(Void)
     // Adds an entry for a session to the DB
     // If suceed, gives true
     // If fail, gives false (server error or already added)
-    add_patient_session(patientID, scores) {
+    add_patient_session(patientID, effort, motivation, engagement, scores) {
         var connection;
         return this.pool.getConnection().then(con => {
             connection = con;
-            var add_patient_session_query = mysql.format(add_patient_session_sql, [patientID]);
+            var add_patient_session_query = mysql.format(add_patient_session_sql, [patientID, effort, motivation, engagement]);
             var res = connection.query(add_patient_session_query);
             return res;
         }).then(res => {

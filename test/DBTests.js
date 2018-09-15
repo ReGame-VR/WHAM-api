@@ -103,7 +103,7 @@ describe("DBTests", function () {
 
         describe('#add_patient_session()', function () {
             it('should return true if the insert is sucessful', function (done) {
-                patientDB.add_patient_session('cole', [
+                patientDB.add_patient_session('cole',1,1,1, [
                     {score: 20, time: "2012-03-04 4:1:01"},
                     {score: 20, time: "2012-03-04 4:1:01"},
                     {score: 20, time: "2012-03-04 4:1:01"},

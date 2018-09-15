@@ -369,10 +369,15 @@ describe("PermTests", function () {
                 .query({
                     auth_token: ryan_auth_token
                 })
-                .send({scores: [{
-                    score: 100,
-                    time: "2016-02-28T16:41:11"
-                }]})
+                .send({
+                    effort: 10,
+                    motivation: 5,
+                    engagement: 2,
+                    scores: [{
+                        score: 100,
+                        time: "2016-02-28T16:41:11"
+                    }]
+                })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -384,10 +389,15 @@ describe("PermTests", function () {
                 .query({
                     auth_token: timmy_auth_token
                 })
-                .send([{
-                    score: 100,
-                    time: "2016-02-28T16:41:11"
-                }])
+                .send({
+                    effort: 10,
+                    motivation: 5,
+                    engagement: 2,
+                    scores: [{
+                        score: 100,
+                        time: "2016-02-28T16:41:11"
+                    }]
+                })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(403);
                     done();

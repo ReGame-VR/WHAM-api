@@ -19,7 +19,7 @@ const get_therapist_patients_sql =
     `SELECT username, dob, weight, height, information
 FROM PATIENT P, PATIENT_THERAPIST PT
 WHERE P.username = PT.patientID AND PT.therapistID = ? AND PT.date_removed IS NULL AND is_accepted = true`
-const get_patient_recent_sessions_sql = "SELECT score, time FROM PATIENT P JOIN SESSION PS JOIN SESSION_ITEM SI on PS.sessionID = SI.sessionID ON P.username = PS.patientID WHERE P.username = ? ORDER BY SI.time DESC";
+const get_patient_recent_sessions_sql = "SELECT score, time, effort, motivation, engagement FROM PATIENT P JOIN SESSION PS JOIN SESSION_ITEM SI on PS.sessionID = SI.sessionID ON P.username = PS.patientID WHERE P.username = ? ORDER BY SI.time DESC";
 //DELETING
 const delete_therapist_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE therapistID = ?";
 const delete_therapist_patient_sql = "DELETE FROM PATIENT_THERAPIST WHERE therapistID = ?";
@@ -194,9 +194,15 @@ class TherapistDB {
         return connection.query(query).then(results2 => {
             var score = undefined;
             var time = undefined;
+            var effort = undefined;
+            var motivation = undefined;
+            var engagement = undefined;
             if (results2.length > 0) {
                 score = results2[0].score;
                 time = results2[0].time;
+                effort = results2[0].effort;
+                motivation = results2[0].motivation;
+                engagement = results2[0].engagement;
             }
             return {
                 username: username,
@@ -205,7 +211,10 @@ class TherapistDB {
                 height: height,
                 information: information,
                 last_score: score,
-                last_activity_time: time
+                last_activity_time: time,
+                last_effort: effort,
+                last_motivation: motivation,
+                last_engagement: engagement
             };
         });
     }

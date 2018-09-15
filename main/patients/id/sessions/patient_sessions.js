@@ -14,7 +14,7 @@ exports.getPatientSessions = function (req, res) {
 //Adds the session for the given patient to the database
 // Request Response PatientDB -> Void
 exports.addPatientSession = function (req, res) {
-    req.patientDB.add_patient_session(req.params.patientID, req.body).then(() => {
+    req.patientDB.add_patient_session(req.params.patientID, req.body.effort, req.body.motivation, req.body.engagement, req.body.scores).then(() => {
         req.responder.report_sucess_no_info(req, res);
     }).catch(error => {
         throw error;

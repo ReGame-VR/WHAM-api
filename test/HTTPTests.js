@@ -480,7 +480,12 @@ describe('HTTPTests', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send(session_send)
+                .send({
+                    effort: 10,
+                    motivation: 5,
+                    engagement: 2,
+                    scores: session_send
+                })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -494,7 +499,12 @@ describe('HTTPTests', function () {
                 .query({
                     auth_token: admin_auth_token,
                 })
-                .send(session_send)
+                .send({
+                    effort: 4,
+                    motivation: 10,
+                    engagement: 3,
+                    scores: session_send
+                })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(204);
                     done();
@@ -510,10 +520,15 @@ describe('HTTPTests', function () {
             .query({
                 auth_token: admin_auth_token,
             })
-            .send([{
-                score: 100,
-                time: '2016-02-28T16:41:41',
-            }])
+            .send({
+                scores: [{
+                    score: 100,
+                    time: '2016-02-28T16:41:41',
+                }],
+                effort: 10,
+                motivation: 5,
+                engagement: 2
+            })
             .end(function (err, res) {
                 expect(res.status).to.be.equal(403);
                 done();
@@ -687,6 +702,9 @@ describe('HTTPTests', function () {
                         information: '',
                         last_score: null,
                         last_activity_time: null,
+                        last_effort: null,
+                        last_motivation: null,
+                        last_engagement: null,
                         username: 'admin',
                         weight: 160,
                     });
@@ -696,6 +714,9 @@ describe('HTTPTests', function () {
                         information: 'laksmdlams',
                         last_score: null,
                         last_activity_time: null,
+                        last_effort: null,
+                        last_motivation: null,
+                        last_engagement: null,
                         username: 'cole',
                         weight: 175,
                     });
@@ -705,6 +726,9 @@ describe('HTTPTests', function () {
                         information: 'He is a developer of this app!',
                         last_score: 129,
                         last_activity_time: '2016-02-28T21:41:29.000Z',
+                        last_effort: 4,
+                        last_motivation: 10,
+                        last_engagement: 3,
                         username: 'ryan',
                         weight: 160,
                     });
@@ -714,6 +738,9 @@ describe('HTTPTests', function () {
                         information: '',
                         last_score: null,
                         last_activity_time: null,
+                        last_effort: null,
+                        last_motivation: null,
+                        last_engagement: null,
                         username: 'timmy',
                         weight: 155,
                     });
@@ -744,10 +771,16 @@ describe('HTTPTests', function () {
                     };
                     var ses_expect = [{
                             sessionID: 1,
+                            effort: 10,
+                            engagement: 2,
+                            motivation: 5,
                             scores: session_expectation
                         },
                         {
                             sessionID: 2,
+                            effort: 4,
+                            engagement: 3,
+                            motivation: 10,
                             scores: session_expectation
                         }
                     ]
@@ -869,10 +902,16 @@ describe('HTTPTests', function () {
                     expect(res.status).to.be.equal(200);
                     var ses_expect = [{
                             sessionID: 1,
+                            effort: 10,
+                            engagement: 2,
+                            motivation: 5,
                             scores: session_expectation
                         },
                         {
                             sessionID: 2,
+                            effort: 4,
+                            engagement: 3,
+                            motivation: 10,
                             scores: session_expectation
                         }
                     ];
@@ -926,6 +965,9 @@ describe('HTTPTests', function () {
                         information: "He is a developer of this app!",
                         last_activity_time: "2016-02-28T21:41:29.000Z",
                         last_score: 129,
+                        last_effort: 10,
+                        last_engagement: 2,
+                        last_motivation: 5,
                         username: "ryan",
                         weight: 160
                     }]);
@@ -977,6 +1019,9 @@ describe('HTTPTests', function () {
                             information: 'He is a developer of this app!',
                             last_score: 129,
                             last_activity_time: '2016-02-28T21:41:29.000Z',
+                            last_effort: 10,
+                            last_engagement: 2,
+                            last_motivation: 5
                         }]);
                     done();
                 });
@@ -1022,6 +1067,9 @@ describe('HTTPTests', function () {
                 .end(function (err, res) {
                     var ses_expect = [{
                         sessionID: 2,
+                        effort: 4,
+                        engagement: 3,
+                        motivation: 10,
                         scores: session_expectation
                     }]
                     expect(res.status).to.be.equal(200);
