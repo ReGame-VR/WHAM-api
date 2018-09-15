@@ -1,15 +1,10 @@
 const express = require('express');
-const exphbs = require('express-handlebars');
-
-const AuthenticationDB = require('../database/AuthenticationDB.js');
 
 const patient_login = require('../main/login/patient/patient_login.js');
 const therapist_login = require('../main/login/therapist/therapist_login.js');
 const login = require('../main/login/login.js');
 
 const login_route = express.Router();
-
-const authDB = new AuthenticationDB();
 
 // Renders the login choosing screen as HTML
 login_route.get('/', login.show_login);

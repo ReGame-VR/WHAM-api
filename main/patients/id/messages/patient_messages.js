@@ -2,7 +2,7 @@
 // Request Response PatientDB -> Void
 exports.getPatientMessages = function (req, res) {
     var patientID = req.params.patientID;
-    req.patientDB.get_all_messages_for(patientID).then(messages => {
+    req.messageDB.get_all_messages_for(patientID).then(messages => {
         var shouldFilter = req.verified !== req.params.patientID && req.verified !== 'admin';
         if (shouldFilter) {
             for (var i = 0; i < messages.length; i += 1) {

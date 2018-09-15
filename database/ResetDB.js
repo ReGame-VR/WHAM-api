@@ -17,6 +17,7 @@ class DBReseter {
 
     // Void -> Promise(Void)
     // Sets the DB schema to the most current one and clears the data
+    // Also adds the admin user
     reset_db() {
         var sql = fs.readFileSync(__dirname + '/schemas' + '/schemas.sql').toString();
         var patientDB = this.patientDB;

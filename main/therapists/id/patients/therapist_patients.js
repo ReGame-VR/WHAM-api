@@ -19,7 +19,7 @@ exports.getTherapistPatients = function (req, res) {
 exports.addPatientTherapist = function (req, res) {
     var therapistID = req.params.therapistID;
     var patientID = req.body.patientID;
-    req.patientDB.assign_to_therapist(patientID, therapistID, new Date()).then(() => {
+    req.requestDB.assign_to_therapist(patientID, therapistID, new Date()).then(() => {
         req.responder.report_sucess_no_info(req, res);
     }).catch(error => {
         req.responder.report_not_found(req, res);

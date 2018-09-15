@@ -1,6 +1,9 @@
 const PatientDB = require('../database/PatientDB.js');
 const TherapistDB = require('../database/TherapistDB.js');
 const AuthenticationDB = require('../database/AuthenticationDB.js');
+const MessageDB = require('../database/MessageDB.js');
+const SessionDB = require('../database/SessionDB.js');
+const RequestDB = require('../database/RequestDB.js');
 const DBReseter = require('../database/ResetDB.js');
 const chai = require("chai");
 var expect = chai.expect;
@@ -8,6 +11,9 @@ var expect = chai.expect;
 var authorizer = new AuthenticationDB("WHAM_TEST");
 var patientDB = new PatientDB("WHAM_TEST", authorizer);
 var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
+const messageDB = new MessageDB("WHAM_TEST", patientDB);
+const sessionDB = new SessionDB("WHAM_TEST", patientDB);
+const requestDB = new RequestDB("WHAM_TEST", patientDB);
 var resetDB = new DBReseter("WHAM_TEST", patientDB);
 
 var adminToken;
@@ -101,9 +107,9 @@ describe("DBTests", function () {
             });
         });
 
-        describe('#add_patient_session()', function () {
+        describe('#add_session()', function () {
             it('should return true if the insert is sucessful', function (done) {
-                patientDB.add_patient_session('cole',1,1,1, [
+                sessionDB.add_session('cole',1,1,1, [
                     {score: 20, time: "2012-03-04 4:1:01"},
                     {score: 20, time: "2012-03-04 4:1:01"},
                     {score: 20, time: "2012-03-04 4:1:01"},
@@ -196,9 +202,9 @@ describe("DBTests", function () {
             });
         });
 
-        describe('#get_patient_session_specific()', function () {
+        describe('#get_session_specific()', function () {
             it("should return the score of the given session time", function (done) {
-                patientDB.get_patient_session_specific("cole", 1).then(score => {
+                sessionDB.get_session_specific("cole", 1).then(score => {
                     expect(score.length).to.be.equal(7);
                     done();
                 });
@@ -207,16 +213,16 @@ describe("DBTests", function () {
 
         describe("#get_patient_sessions()", function () {
             it("should return every session this user has had", function (done) {
-                patientDB.get_patient_sessions("cole").then(online_sessions => {
+                sessionDB.get_patient_sessions("cole").then(online_sessions => {
                     expect(online_sessions.length).to.be.equal(1);
                     done();
                 });
             });
         });
 
-        describe("#delete_patient_session()", function () {
+        describe("#delete_session()", function () {
             it("should return true if the session is sucessful deleted", function (done) {
-                patientDB.delete_patient_session("cole", 1).then(() => {
+                sessionDB.delete_session("cole", 1).then(() => {
                     expect(1).to.be.equal(1);
                     done();
                 });
@@ -245,13 +251,13 @@ describe("DBTests", function () {
     describe("JointDB", function () {
         describe("#send_patient_a_message()", function () {
             it("should give true if the message was sucessfully added", function (done) {
-                patientDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04").then(worked => {
+                messageDB.send_patient_a_message("tim", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04").then(worked => {
                     expect(worked).to.be.an('number');
-                    patientDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04").catch(error => {
+                    messageDB.send_patient_a_message("tim", "therapist15", "You are a cool dude.", "2012-03-04 4:1:04").catch(error => {
                         expect(1).to.be.equal(1);
-                        patientDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04").catch(error => {
+                        messageDB.send_patient_a_message("timmmm", "therapist1", "You are a cool dude.", "2012-03-04 4:1:04").catch(error => {
                             expect(1).to.be.equal(1);
-                            patientDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04").then(worked => {
+                            messageDB.send_patient_a_message("tim", "therapist2", "You are a very cool dude.", "2012-02-01 4:1:04").then(worked => {
                                 expect(worked).to.be.an('number');
                                 done();
                             });
@@ -263,7 +269,7 @@ describe("DBTests", function () {
 
         describe("#get_all_messages_for_patient()", function () {
             it("should return every message this patient has recieved", function (done) {
-                patientDB.get_all_messages_for("tim").then(messages => {
+                messageDB.get_all_messages_for("tim").then(messages => {
                     var expectation = [];
                     expectation.push({
                         therapistID: "therapist1",
@@ -289,7 +295,7 @@ describe("DBTests", function () {
 
         describe("#mark_as_read()", function () {
             it("should return true if the message was properly marked as read", function (done) {
-                patientDB.mark_message_as_read("tim", "1").then(() => {
+                messageDB.mark_message_as_read("tim", "1").then(() => {
                     expect(1).to.be.equal(1);
                     done();
                 });
@@ -298,7 +304,7 @@ describe("DBTests", function () {
 
         describe("#get_all_messages_for_patient()", function () {
             it("should return every message this patient has recieved", function (done) {
-                patientDB.get_all_messages_for("tim").then(messages => {
+                messageDB.get_all_messages_for("tim").then(messages => {
                     var expectation = [];
                     expectation.push({
                         therapistID: "therapist1",
@@ -324,7 +330,7 @@ describe("DBTests", function () {
 
         describe("#get_all_messages_from_therapist", function () {
             it("should return every message this therapist has sent", function (done) {
-                therapistDB.get_all_messages_from("therapist1").then(messages => {
+                messageDB.get_all_messages_from("therapist1").then(messages => {
                     expect(messages).to.be.deep.equal([{
                         patientID: "tim",
                         therapistID: "therapist1",
@@ -342,7 +348,7 @@ describe("DBTests", function () {
     describe("JointDB Pt 2", function () {
         describe("#assign_to_therapist()", function () {
             it("should return true if the pair is sucessful", function (done) {
-                patientDB.assign_to_therapist("tim", "therapist2", "2018-05-22").then(() => {
+                requestDB.assign_to_therapist("tim", "therapist2", "2018-05-22").then(() => {
                     expect(1).to.be.equal(1);
                     done();
                 })
@@ -370,7 +376,7 @@ describe("DBTests", function () {
     describe("JointDB Pt 2", function () {
         describe("#accept_therapist_request", function () {
             it("should give true if sucessful", function (done) {
-                patientDB.accept_therapist_request("tim", "therapist2").then(() => {
+                requestDB.accept_therapist_request("tim", "therapist2").then(() => {
                     expect(1).to.be.equal(1);
                     done();
                 });

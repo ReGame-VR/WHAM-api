@@ -8,6 +8,9 @@ const PatientDB = require('./database/PatientDB.js');
 const TherapistDB = require('./database/TherapistDB.js');
 const AuthenticationDB = require('./database/AuthenticationDB.js');
 const ResetDB = require('./database/ResetDB.js');
+const MessageDB = require('./database/MessageDB.js');
+const SessionDB = require('./database/SessionDB.js');
+const RequestDB = require('./database/RequestDB.js');
 const responder = require('./helpers/http-responses.js'); // The file that handles sending the actual info 
 const methodOverride = require('method-override');
 const main_router = require('./routers/main_router.js'); // The main router file that delegates to every sub URL
@@ -18,10 +21,16 @@ const main_router = require('./routers/main_router.js'); // The main router file
 const authorizer = new AuthenticationDB('WHAM_TEST');
 // The db used to change stuff related to patients
 const patientDB = new PatientDB('WHAM_TEST', authorizer);
-// The db used to change stuf related to therapists
+// The db used to change stuff related to therapists
 const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
 // The db that the admin can query to to reset the app
 const resetDB = new ResetDB("WHAM_TEST", patientDB);
+// The db that handles message stuff
+const messageDB = new MessageDB("WHAM_TEST", patientDB);
+// The db that handles session entries
+const sessionDB = new SessionDB("WHAM_TEST", patientDB);
+// The db that handles pairing requests
+const requestDB = new RequestDB("WHAM_TEST", patientDB);
 
 /********************************LOAD HANDLEBARS HELPERS********************************/
 
@@ -78,6 +87,9 @@ app.use(function (req, res, next) {
     req.authorizer = authorizer;
     req.responder = responder;
     req.resetDB = resetDB;
+    req.messageDB = messageDB;
+    req.sessionDB = sessionDB;
+    req.requestDB = requestDB;
     next();
 })
 

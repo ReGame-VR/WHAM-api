@@ -4,52 +4,20 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 var jwt = require('jsonwebtoken');
 
+var patient_sql = require('./sql/patient_sql.js')
+var message_sql = require('./sql/message_sql.js')
+var session_sql = require('./sql/session_sql.js')
+var request_sql = require('./sql/request_sql.js')
+var general_sql = require('./sql/general_sql.js')
+
+
 /********************SQL STATEMENTS*******************/
-
-//GETTING
-const get_all_patient_info_sql = `SELECT username, dob, weight, height, information,
-(SELECT score FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_score,
-(SELECT time FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_activity_time,
-(SELECT effort FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_effort,
-(SELECT motivation FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_motivation,
-(SELECT engagement FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE P.username = patientID ORDER BY time DESC LIMIT 1) as last_engagement
-FROM PATIENT P`
-const get_patient_info_sql = "SELECT username, dob, weight, height, information FROM PATIENT P WHERE P.username = ?";
-const get_all_patient_sessions_sql = `SELECT score, time, effort, motivation, engagement, SESSION.sessionID FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? ORDER BY sessionID, time DESC`;
-const get_all_patient_message_sql = "SELECT * FROM PATIENT_MESSAGE PM WHERE PM.patientID = ?";
-const get_all_patient_requests_sql = "SELECT therapistID FROM PATIENT_THERAPIST WHERE is_accepted = false AND patientID = ?";
-const get_specif_patient_session_sql = "SELECT score, time, effort, motivation, engagement FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) WHERE patientID = ? AND SESSION.sessionID = ?";
-const get_all_patient_message_replies_sql = "SELECT fromID, date_sent, content, replyID FROM MESSAGE_REPLY WHERE messageID = ?";
-const get_specif_message_sql = "SELECT therapistID, message, date_sent, is_read, messageID FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
-
-//ADDING
-const add_user_sql = "INSERT INTO USER VALUES (?, ?, ?, 1)";
-const add_patient_sql = "INSERT INTO PATIENT VALUES (?, ?, ?, ?, ?)";
-const add_patient_session_sql = "INSERT INTO SESSION (patientID, effort, motivation, engagement) VALUES (?, ?, ?, ?)";
-const add_patient_session_item_sql = "INSERT INTO SESSION_ITEM VALUES (?, ?, ?)"
-const add_patient_message_sql = "INSERT INTO PATIENT_MESSAGE (patientID, therapistID, message, date_sent, is_read) VALUES (?, ?, ?, ?, false)";
-const add_patient_therapist_join_sql = "INSERT INTO PATIENT_THERAPIST VALUES (?, ?, ?, null, false)";
-const add_reply_to_message_sql = "INSERT INTO MESSAGE_REPLY (messageID, fromID, date_sent, content) VALUES (?, ?, ?, ?)";
-
-//DELETING
-const delete_indiv_patient_session_sql = "DELETE FROM SESSION WHERE patientID = ?";
-const delete_indiv_patient_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ?";
-const delete_indiv_patient_therapist_sql = "DELETE FROM PATIENT_THERAPIST WHERE patientID = ?";
-const delete_indiv_patient_sql = "DELETE FROM PATIENT where username = ?";
-const delete_indiv_user_sql = "DELETE FROM USER where username = ?";
-const delete_specif_session_sql = "DELETE FROM SESSION WHERE patientID = ? AND SESSION.sessionID = ?";
-const delete_specif_message_sql = "DELETE FROM PATIENT_MESSAGE WHERE patientID = ? AND messageID = ?";
-
-//UPDATING
-const mark_message_as_read_sql = "UPDATE PATIENT_MESSAGE SET is_read = true WHERE patientID = ? AND messageID = ?";
-const accept_therapist_request_sql = "UPDATE PATIENT_THERAPIST SET is_accepted = true WHERE patientID = ? AND therapistID = ?";
-const remove_patient_therapist_join_sql = "UPDATE PATIENT_THERAPIST SET date_removed = ? WHERE patientID = ? AND therapistID = ?";
 
 class PatientDB {
 
     // Objects:
     // Patient = Object(String Date Number Number String)
-    // Patient-Session = Object(String Date Number Number String Number Date)
+    // Patient-Session = Object(username dob weight height information last_score last_activity_time last_effort last_motivation last_engagement)
     // Session = Object(score: Number time: Date)
     // Message = Object(String String Date Boolean Number)
 
@@ -67,25 +35,24 @@ class PatientDB {
     // Returns every patients info and their last session
     get_all_patient_info() {
         return this.pool.getConnection().then(connection => {
-            var res = connection.query(get_all_patient_info_sql);
+            var res = connection.query(patient_sql.get_all_patient_info_sql);
             connection.release();
             return res;
         });
 
     }
 
-    // String -> Promise([Patient [List-of Session] [List-of Message]])
+    // String -> Promise([Patient [List-of Session] [List-of Message] [List-of String]])
     // Gives all information for the given patient
     get_patient_info(username) {
         var inserts = [username];
-        var info_query = mysql.format(get_patient_info_sql, inserts);
-        var session_query = mysql.format(get_all_patient_sessions_sql, inserts);
-        var message_query = mysql.format(get_all_patient_message_sql, inserts);
-        var requests_query = mysql.format(get_all_patient_requests_sql, inserts);
+        var info_query = mysql.format(patient_sql.get_patient_info_sql, inserts);
+        var session_query = mysql.format(session_sql.get_all_patient_sessions_sql, inserts);
+        var message_query = mysql.format(message_sql.get_all_patient_message_sql, inserts);
+        var requests_query = mysql.format(request_sql.get_all_patient_requests_sql, inserts);
 
         var user_info;
         var session_info;
-        var message_info;
 
         return this.pool.getConnection().then(connection => {
             let res = Promise.all([
@@ -97,13 +64,10 @@ class PatientDB {
             connection.release();
             return res;
         }).then(([user_results, session_results, message_results, requests_results]) => {
-            user_info = {
-                username: user_results[0].username,
-                dob: user_results[0].dob,
-                weight: user_results[0].weight,
-                height: user_results[0].height,
-                information: user_results[0].information
-            };
+            user_info = user_results[0]
+            if(user_info == undefined) {
+                throw new Error("User not found");
+            }
 
             session_info = [];
             var lastID = undefined
@@ -136,27 +100,16 @@ class PatientDB {
                     scores: curSessionItems
                 })
             }
-            message_info = []
-            for (var i = 0; i < message_results.length; i += 1) {
-                message_info.push({
-                    therapistID: message_results[i].therapistID,
-                    message_content: message_results[i].message,
-                    date_sent: message_results[i].date_sent,
-                    is_read: message_results[i].is_read,
-                    patientID: message_results[i].patientID,
-                    messageID: message_results[i].messageID
-                });
-            }
 
             var requests = [];
             for (var i = 0; i < requests_results.length; i += 1) {
                 requests.push(requests_results[i].therapistID);
             }
-            return [user_info, session_info, message_info, requests];
+            return [user_info, session_info, message_results, requests];
         });
     }
 
-    // String String String Number Number String -> Promise(String)
+    // String String String Number Number String -> Promise(JWT)
     // Tries to add the patient to the database
     // If suceed, returns 
     // If fail, throws an error (user already exists or other)
@@ -169,8 +122,8 @@ class PatientDB {
 
         var user_inserts = [username, password, salt];
         var patient_inserts = [username, dob, weight, height, information];
-        var add_user_query = mysql.format(add_user_sql, user_inserts);
-        var add_patient_query = mysql.format(add_patient_sql, patient_inserts);
+        var add_user_query = mysql.format(general_sql.add_user_sql, user_inserts);
+        var add_patient_query = mysql.format(patient_sql.add_patient_sql, patient_inserts);
         return this.pool.getConnection().then(connection => {
             var res = Promise.all([connection.query(add_user_query), connection.query(add_patient_query)]);
             connection.release();
@@ -191,12 +144,12 @@ class PatientDB {
     // String -> Promise(Void)
     // Tries to purge the patient from the DB
     // Including all session, message, and patient-therapist info
-    // If suceed, gives true
-    // If fail, gives false (unknown reason, probably server error)
+    // If suceed, returns
+    // If fail, throws an error (unknown reason, probably server error)
     delete_patient(patientID) {
         var inserts = [patientID];
         return this.pool.getConnection().then(connection => {
-            var delete_indiv_user_query = mysql.format(delete_indiv_user_sql, inserts);
+            var delete_indiv_user_query = mysql.format(general_sql.delete_user_sql, inserts);
             connection.release();
             var res = connection.query(delete_indiv_user_query)
             return res;
@@ -209,287 +162,11 @@ class PatientDB {
         })
     }
 
-    // String -> Promise([List-of Session])
-    // Gives all the session info for a given patient
-    get_patient_sessions(patientID) {
-        var inserts = [patientID];
-
-        return this.pool.getConnection().then(connection => {
-            var session_query = mysql.format(get_all_patient_sessions_sql, inserts);
-            var res = connection.query(session_query);
-            connection.release();
-            return res;
-        }).then(result => {
-            var to_output = []
-            var lastID = undefined
-            var curSessionItems = []
-            for(var i = 0; i < result.length; i++) {
-                if(lastID == undefined || result[i].sessionID !== lastID) {
-                    if(lastID != undefined) {
-                        to_output.push({
-                            sessionID: lastID,
-                            effort: result[i-1].effort,
-                            motivation: result[i-1].motivation,
-                            engagement: result[i-1].engagement,
-                            scores: curSessionItems
-                        })
-                    }
-                    lastID = result[i].sessionID
-                    curSessionItems = []
-                }
-                curSessionItems.push({
-                    score: result[i].score,
-                    time: result[i].time
-                })
-            }
-            if(lastID != undefined) {
-                to_output.push({
-                    sessionID: lastID,
-                    effort: result[result.length-1].effort,
-                    motivation: result[result.length-1].motivation,
-                    engagement: result[result.length-1].engagement,
-                    scores: curSessionItems
-                })
-            }
-            return to_output;
-        })
-    }
-
-    // String Number Number Number [List-of Session] -> Promise(Void)
-    // Adds an entry for a session to the DB
-    // If suceed, gives true
-    // If fail, gives false (server error or already added)
-    add_patient_session(patientID, effort, motivation, engagement, scores) {
-        var connection;
-        return this.pool.getConnection().then(con => {
-            connection = con;
-            var add_patient_session_query = mysql.format(add_patient_session_sql, [patientID, effort, motivation, engagement]);
-            var res = connection.query(add_patient_session_query);
-            return res;
-        }).then(res => {
-            let sessionID = res.insertId;
-            var promises = [];
-            for(var i = 0; i < scores.length; i++) {
-                var add_patient_session_item_query = mysql.format(add_patient_session_item_sql, [sessionID, scores[i].score, scores[i].time]);
-                promises.push(connection.query(add_patient_session_item_query))
-            }
-            var res = Promise.all(promises);
-            connection.release();
-            return res
-        });
-
-    }
-
-    // String String -> Promise(Session)
-    // Gives the score for the session at the given time/sessionID (accepts both)
-    get_patient_session_specific(patientID, sessionID) {
-        var inserts = [patientID, sessionID];
-        return this.pool.getConnection().then(connection => {
-            var get_specif_patient_session_query = mysql.format(get_specif_patient_session_sql, inserts);
-            var res = connection.query(get_specif_patient_session_query);
-            connection.release();
-            return res;
-        }).then(result => { 
-            if(result.length === 0) {
-                throw new Error("No session found");
-            }
-            return result
-        });
-    }
-
-    // String String -> Promise(Void)
-    // Deletes a given patient session for the DB
-    // If suceed, gives true
-    // If fail, gives false (server error)
-    delete_patient_session(patientID, sessionID) {
-        var inserts = [patientID, sessionID];
-
-        return this.pool.getConnection().then(connection => {
-            var delete_specif_session_query = mysql.format(delete_specif_session_sql, inserts);
-            var res = connection.query(delete_specif_session_query);
-            connection.release();
-            return res;
-        }).then(result => {
-            if (result.affectedRows === 0) {
-                throw new Error("Session not found");
-            } else {
-                return;
-            }
-        })
-    }
-
-    // String String (Maybe-Error Maybe-User -> Void) -> Void
+    // String String -> Promise(JWT)
     // Returns true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password) {
         return this.authorizer.login(username, unencrypt_password);
-    }
-
-    // String String String String -> Promise(Number)
-    // Adds a message to this patients database entry
-    send_patient_a_message(patientID, therapistID, message, time) {
-        var inserts = [patientID, therapistID, message, time];
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(add_patient_message_sql, inserts);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        }).then(result => {
-            return result.insertId;
-        })
-    }
-
-    // String -> Promise([List-of Message])
-    // Gives every message that this patient has ever recieved
-    get_all_messages_for(patientID) {
-        var inserts = [patientID];
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(get_all_patient_message_sql, inserts);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        }).then(message_result => {
-            var toReturn = [];
-            for (var i = 0; i < message_result.length; i++) {
-                toReturn.push({
-                    therapistID: message_result[i].therapistID,
-                    patientID: patientID,
-                    message_content: message_result[i].message,
-                    date_sent: message_result[i].date_sent,
-                    is_read: message_result[i].is_read,
-                    messageID: message_result[i].messageID,
-                });
-            }
-            return toReturn;
-        })
-    }
-
-    // String Int -> Promise(Void)
-    // Marks the given message id as read
-    // Gives back whether the querry suceeded or not
-    mark_message_as_read(patientID, messageID) {
-        var inserts = [patientID, messageID];
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(mark_message_as_read_sql, inserts);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        }).then(result => {
-            if (result.affectedRows === 0) {
-                throw new Error("Message not found");
-            } else {
-                return;
-            }
-        })
-    }
-
-    // String String -> Promise(Message)
-    // Returns the info for a specific message
-    get_specific_message(patientID, messageID) {
-        var message_inserts = [patientID, messageID];
-
-        var reply_inserts = [messageID];
-
-        return this.pool.getConnection().then(connection => {
-            var message_sql = mysql.format(get_specif_message_sql, message_inserts);
-            var reply_sql = mysql.format(get_all_patient_message_replies_sql, reply_inserts);
-            var res = Promise.all([connection.query(message_sql), connection.query(reply_sql)])
-            connection.release();
-            return res
-        }).then(([message_result, reply_result]) => {
-            if (message_result.length === 0) {
-                throw new Error("Message Not Found");
-            }
-            var replies = [];
-            for (var i = 0; i < reply_result.length; i += 1) {
-                replies.push({
-                    sentID: reply_result[i].fromID,
-                    messageID: messageID,
-                    date_sent: reply_result[i].date_sent,
-                    reply_content: reply_result[i].content
-                })
-            }
-            return {
-                therapistID: message_result[0].therapistID,
-                patientID: patientID,
-                message_content: message_result[0].message,
-                date_sent: message_result[0].date_sent,
-                is_read: message_result[0].is_read,
-                messageID: message_result[0].messageID,
-                replies: replies
-            };
-        });
-    }
-
-    // String String Date -> Promise(Void)
-    // Pairs this therapist and patinet in the PATIENT_THERAPIST DB
-    assign_to_therapist(patientID, therapistID, date_added) {
-        var inserts = [patientID, therapistID, date_added];
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(add_patient_therapist_join_sql, inserts);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        });
-    }
-
-    // String String -> Promise(Void)
-    // Marks this patient-therapist join as accepted
-    accept_therapist_request(patientID, therapistID) {
-        var inserts = [patientID, therapistID];
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(accept_therapist_request_sql, inserts);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        }).then(result => {
-            if (result.affectedRows === 0) {
-                throw new Error("Pair does not exist");
-            }
-        });
-    }
-
-    // String String Date -> Promise(Void)
-    // Unpairs this therapist and patinet in the PATIENT_THERAPIST DB
-    // DOES NOT delete this pair, simply marks its date_removed as the given date
-    unassign_to_therapist(patientID, therapistID, date_removed) {
-        var inserts = [date_removed, patientID, therapistID];
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(remove_patient_therapist_join_sql, inserts);
-            connection.release();
-            var res = connection.query(query);
-            return res;
-        }).then(result => {
-            if (result.affectedRows === 0) {
-                throw new Error("Pair not found");
-            }
-        });
-    }
-
-    // String -> Promise(Void)
-    // Deletes this message
-    delete_message(patientID, messageID) {
-        return this.pool.getConnection().then(connection => {
-            var message_query = mysql.format(delete_specif_message_sql, [patientID, messageID])
-            var res = connection.query(message_query);
-            connection.release();
-            return res;
-        }).then(message => {
-            if (message.affectedRows === 0) {
-                throw new Error("Message not found");
-            }
-        });
-    }
-
-    // String String String Date -> Promise(Void)
-    // Sends this reply to this message from this ID
-    reply_to_message(sentID, messageID, reply_content, date_sent) {
-        return this.pool.getConnection().then(connection => {
-            var query = mysql.format(add_reply_to_message_sql, [messageID, sentID, date_sent, reply_content]);
-            var res = connection.query(query);
-            connection.release();
-            return res;
-        });
     }
 
 }

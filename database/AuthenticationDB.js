@@ -6,12 +6,6 @@ var jwt = require('jsonwebtoken');
 /********************SQL STATEMENTS*******************/
 const get_user_salt_sql = "SELECT salt FROM USER T WHERE T.username = ?";
 const verify_user_password_sql = "SELECT * FROM USER T where T.username = ? AND T.password = ?";
-const get_user_auth_level = "SELECT auth_level, username FROM USER WHERE salt = ?";
-
-const get_patients_sql = "SELECT * FROM PATIENT";
-const get_therapist_sql = "SELECT * FROM THERAPIST";
-const get_patient_therapist_join_sql = "SELECT * from PATIENT_THERAPIST WHERE is_accepted = true";
-const get_messages_sql = "SELECT * FROM PATIENT_MESSAGE";
 
 const get_therapist_patient_sql = "SELECT patientID from PATIENT_THERAPIST WHERE is_accepted = true AND therapistID = ? AND patientID = ?";
 const get_message_sender_and_receiver_sql = "SELECT patientID, therapistID FROM PATIENT_MESSAGE PM WHERE PM.messageID = ?"
@@ -27,7 +21,7 @@ class AuthenticationDB {
         });
     }
 
-    // String String -> Promise(User)
+    // String String -> Promise(JWT)
     // Tests whether the given login info is valid for the given table
     login(username, unencrypt_password) {
         var get_salt_insert = [username];
@@ -94,16 +88,6 @@ class AuthenticationDB {
         });
     }
 
-    // Any Any Any Callback -> Void
-    // Passes to acl
-    isAllowed(user, stuff, able, callback) {
-        if (user === 'admin') {
-            callback(null, true);
-        } else {
-            this.acl.isAllowed(user, stuff, able, callback);
-        }
-    }
-
     // String String -> Promise(Boolean)
     // Says if this user can view this patient
     canViewPatient(user, patient) {
@@ -145,7 +129,7 @@ class AuthenticationDB {
         })
     }
 
-    // String String -> Promise(Boolean)
+    // String -> Promise(Boolean)
     // Says if this user is an admin
     hasAdminPriv(user) {
         return new Promise(function (resolve, reject) {
