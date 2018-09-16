@@ -21,14 +21,14 @@ class TherapistDB {
     // Patient-Session = Object(String Date Number Number String Number Date)
     // Session = Object(Number Date)
     // Message = Object(String String Date Boolean Number)
-    constructor(connection, authorizer) {
+    constructor(authDB) {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
-        this.authorizer = authorizer;
+        this.authDB = authDB;
     }
 
     // String String -> Promise(JWT)
@@ -62,7 +62,7 @@ class TherapistDB {
     // Returns true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password) {
-        return this.authorizer.login(username, unencrypt_password);
+        return this.authDB.login(username, unencrypt_password);
     }
 
     // Void -> Promise(List-of (Object String Number))
@@ -102,36 +102,30 @@ class TherapistDB {
 
     // String -> Promise([List-of Patient-Session])
     // Return every patient this therapist has
-    get_all_patients(therapistID, callback) {
+    get_all_patients(therapistID) {
         var inserts = [therapistID];
         var connection;
         var get_specific_patient = this.get_specific_patient;
-        this.pool.getConnection().then(con => {
+        return this.pool.getConnection().then(con => {
             connection = con;
             var query = mysql.format(therapist_sql.get_therapist_patients_sql, inserts);
             return connection.query(query);
         }).then(results1 => {
             if (results1.length === 0) {
                 connection.release();
-                callback([]);
+                return [];
             } else {
-                var toReturn = [];
-                for (var a = 0; a < results1.length; a += 1) {
-                    (function (i) {
+                var promises = [];
+                for (var i = 0; i < results1.length; i += 1) {
                         var username = results1[i].username;
                         var dob = results1[i].dob;
                         var weight = results1[i].weight;
                         var height = results1[i].height;
                         var information = results1[i].information;
-                        get_specific_patient(username, dob, weight, height, information, connection).then(patient => {
-                            toReturn.push(patient);
-                            if (i === results1.length - 1) {
-                                connection.release();
-                                callback(toReturn);
-                            }
-                        })
-                    })(a)
+                        promises.push(get_specific_patient(username, dob, weight, height, information, connection))
                 }
+                connection.release();
+                return Promise.all(promises);
             }
         });
     }

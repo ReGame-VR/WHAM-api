@@ -8,14 +8,13 @@ var session_sql = require('./sql/session_sql.js')
 
 class SessionDB {
 
-    constructor(connection, authorizer) {
+    constructor() {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
-        this.authorizer = authorizer;
     }
 
     // String -> Promise([List-of Session])

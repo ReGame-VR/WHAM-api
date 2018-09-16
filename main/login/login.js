@@ -12,7 +12,7 @@ exports.show_login = function(req, res) {
 // UserType -> (Request Response -> Void))
 exports.user_login = function(user_type) {
     return function(req, res) {
-        req.authorizer.login(req.body.username, req.body.password).then(user => {
+        req.authDB.login(req.body.username, req.body.password).then(user => {
             if (req.headers['accept'].includes("text/html")) {
                 res.cookie('auth_token', user.token);
                 req.responder.redirect(req, res, '../' + user_type + 's/' + req.body.username);

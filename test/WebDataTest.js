@@ -12,7 +12,7 @@ var admin_auth_token;
 describe('LoadTestData', function () {
     describe('DBReseter', function () {
         it('should not error if the deletion is sucessful', function (done) {
-            reset(function (token) {
+            reset().then(token => {
                 expect(token).to.be.a('string');
                 admin_auth_token = token;
                 done();

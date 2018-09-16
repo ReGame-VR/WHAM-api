@@ -4,7 +4,7 @@ var fs = require('fs');
 
 class DBReseter {
 
-    constructor(dbName, patientDB) {
+    constructor(patientDB) {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,

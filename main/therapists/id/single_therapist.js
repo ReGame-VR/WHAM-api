@@ -2,16 +2,14 @@
 // Request Response TherapistDB -> Void
 exports.getTherapist = function (req, res) {
     var therapistID = req.params.therapistID;
-    req.therapistDB.get_all_patients(therapistID, (info => {
-        if (info === false) {
-            req.responder.report_not_found(req, res);
-        } else {
+    req.therapistDB.get_all_patients(therapistID).then(info => {
             req.responder.report_sucess(req, res, info, 'therapist/therapist-detail', {
                 patients: info,
                 therapistID: therapistID
             })
-        }
-    }));
+    }).catch(error => {
+        req.responder.report_not_found(req, res);
+    })
 }
 
 //Deletes this therapist from the database

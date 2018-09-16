@@ -21,14 +21,14 @@ class PatientDB {
     // Session = Object(score: Number time: Date)
     // Message = Object(String String Date Boolean Number)
 
-    constructor(connection, authorizer) {
+    constructor(authDB) {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
-        this.authorizer = authorizer;
+        this.authDB = authDB;
     }
 
     // Void -> Promise(([List-of Patient-Session])
@@ -166,7 +166,7 @@ class PatientDB {
     // Returns true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password) {
-        return this.authorizer.login(username, unencrypt_password);
+        return this.authDB.login(username, unencrypt_password);
     }
 
 }

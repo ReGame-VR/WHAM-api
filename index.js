@@ -18,19 +18,19 @@ const main_router = require('./routers/main_router.js'); // The main router file
 /******************************CREATE THE DATABASES****************************/
 
 // The database used to authenticate transactions
-const authorizer = new AuthenticationDB('WHAM_TEST');
+const authDB = new AuthenticationDB();
 // The db used to change stuff related to patients
-const patientDB = new PatientDB('WHAM_TEST', authorizer);
+const patientDB = new PatientDB(authDB);
 // The db used to change stuff related to therapists
-const therapistDB = new TherapistDB('WHAM_TEST', authorizer);
+const therapistDB = new TherapistDB(authDB);
 // The db that the admin can query to to reset the app
-const resetDB = new ResetDB("WHAM_TEST", patientDB);
+const resetDB = new ResetDB(patientDB);
 // The db that handles message stuff
-const messageDB = new MessageDB("WHAM_TEST", patientDB);
+const messageDB = new MessageDB();
 // The db that handles session entries
-const sessionDB = new SessionDB("WHAM_TEST", patientDB);
+const sessionDB = new SessionDB();
 // The db that handles pairing requests
-const requestDB = new RequestDB("WHAM_TEST", patientDB);
+const requestDB = new RequestDB();
 
 /********************************LOAD HANDLEBARS HELPERS********************************/
 
@@ -84,7 +84,7 @@ app.use(bodyParser.urlencoded({
 app.use(function (req, res, next) {
     req.patientDB = patientDB;
     req.therapistDB = therapistDB;
-    req.authorizer = authorizer;
+    req.authDB = authDB;
     req.responder = responder;
     req.resetDB = resetDB;
     req.messageDB = messageDB;
@@ -105,10 +105,9 @@ app.listen(3000, () => console.log('WHAM listening on port 3000!'));
 /************************STUFF FOR TESTING PURPOSES**********************************/
 
 // The helper to reset the app
-const resetApp = function (callback) {
-    resetDB.reset_db().then(token => {
-        callback(token);
-    });
+// Void -> Promise(JWT)
+const resetApp = function () {
+    return resetDB.reset_db()
 }
 
 

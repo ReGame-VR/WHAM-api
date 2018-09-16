@@ -8,14 +8,13 @@ var request_sql = require('./sql/request_sql.js')
 
 class RequestDB {
 
-    constructor(connection, authorizer) {
+    constructor() {
         this.pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
             database: "WHAM_TEST"
         });
-        this.authorizer = authorizer;
     }
 
     // String String Date -> Promise(Void)

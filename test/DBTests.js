@@ -8,13 +8,13 @@ const DBReseter = require('../database/ResetDB.js');
 const chai = require("chai");
 var expect = chai.expect;
 
-var authorizer = new AuthenticationDB("WHAM_TEST");
-var patientDB = new PatientDB("WHAM_TEST", authorizer);
-var therapistDB = new TherapistDB("WHAM_TEST", authorizer);
-const messageDB = new MessageDB("WHAM_TEST", patientDB);
-const sessionDB = new SessionDB("WHAM_TEST", patientDB);
-const requestDB = new RequestDB("WHAM_TEST", patientDB);
-var resetDB = new DBReseter("WHAM_TEST", patientDB);
+var authDB = new AuthenticationDB();
+var patientDB = new PatientDB(authDB);
+var therapistDB = new TherapistDB(authDB);
+const messageDB = new MessageDB();
+const sessionDB = new SessionDB();
+const requestDB = new RequestDB();
+var resetDB = new DBReseter(patientDB);
 
 var adminToken;
 
@@ -36,7 +36,7 @@ describe("DBTests", function () {
                     auth_token: adminToken
                 }
             }
-            authorizer.verifyJWT(req).then(username => {
+            authDB.verifyJWT(req).then(username => {
                 expect(username).to.be.equal('admin');
                 done();
             });
