@@ -27,16 +27,20 @@
     <table class="table table-hover">
       <thead>
         <tr>
+          <th>Session ID</th>
           <th>Date</th>
           <th>Score</th>
         </tr>
       </thead>
       <tbody>
         {{#each sessions}}
-        <tr class="click-row" onclick={{concat "window.location='./sessions/"  sessionID "'"}}>
-          <td>{{time}}</td>
-          <td>{{score}}</td>
-        </tr>
+          {{#each scores}}
+            <tr class="click-row" onclick={{concat "window.location='./sessions/"  ../sessionID "'"}}>
+            <td>{{../sessionID}}</td>
+              <td>{{time}}</td>
+              <td>{{score}}</td>
+            </tr>
+        {{/each}}
         {{/each}}
       </tbody>
     </table>

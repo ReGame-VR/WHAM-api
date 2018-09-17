@@ -205,7 +205,7 @@ describe("DBTests", function () {
         describe('#get_session_specific()', function () {
             it("should return the score of the given session time", function (done) {
                 sessionDB.get_session_specific("cole", 1).then(score => {
-                    expect(score.length).to.be.equal(7);
+                    expect(score.scores.length).to.be.equal(7);
                     done();
                 });
             });

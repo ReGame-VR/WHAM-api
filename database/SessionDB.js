@@ -101,7 +101,21 @@ class SessionDB {
             if(result.length === 0) {
                 throw new Error("No session found");
             }
-            return result
+            var to_output = {
+
+            }
+            to_output.engagement = result[0].engagement;
+            to_output.motivation = result[0].motivation;
+            to_output.effort = result[0].effort;
+            var scores = [];
+            for(var i = 0; i < result.length; i++) {
+                scores.push({
+                    score: result[i].score,
+                    time: result[i].time
+                })
+            }
+            to_output.scores = scores
+            return to_output
         });
     }
 
