@@ -7,12 +7,12 @@
 // Sends the message to the user that they are
 // not authorized to view what they are trying to view
 function report_not_authorized(req, res) {
-    if (req.headers['accept'] === undefined) {
+    if (req.headers['content-type'] == undefined) {
         res.writeHead(403);
         res.end();
-    } else if (req.headers['accept'].includes('text/html')) {
+    } else if (req.headers['content-type'].includes('text/html')) {
         res.render('account/not-allowed');
-    } else if (req.headers['accept'].includes('application/json')) {
+    } else if (req.headers['content-type'].includes('application/json')) {
         res.writeHead(403);
         res.end();
     }
@@ -22,12 +22,12 @@ function report_not_authorized(req, res) {
 // Sends the message to the user that their auth token
 // is either a fake or expired (or some other reason that it couldn't be verified)
 function report_bad_token(req, res) {
-    if (req.headers['accept'] === undefined) {
+    if (req.headers['content-type'] == undefined) {
         res.writeHead(403);
         res.end();
-    } else if (req.headers['accept'].includes('text/html')) {
+    } else if (req.headers['content-type'].includes('text/html')) {
         res.redirect('/login');
-    } else if (req.headers['accept'].includes('application/json')) {
+    } else if (req.headers['content-type'].includes('application/json')) {
         res.writeHead(403);
         res.end();
     }
@@ -37,12 +37,12 @@ function report_bad_token(req, res) {
 // Sends the message to the user that the content they 
 // are trying to view does not exist
 function report_not_found(req, res) {
-    if (req.headers['accept'] === undefined) {
+    if (req.headers['content-type'] == undefined) {
         res.writeHead(403);
         res.end();
-    } else if (req.headers['accept'].includes('text/html')) {
+    } else if (req.headers['content-type'].includes('text/html')) {
         res.render('page-not-found');
-    } else if (req.headers['accept'].includes('application/json')) {
+    } else if (req.headers['content-type'].includes('application/json')) {
         res.writeHead(403);
         res.end();
     }
@@ -86,7 +86,15 @@ function render(req, res, file_name, object) {
 // Req Res String
 // Redirects the user to this location
 function redirect(req, res, location) {
-    res.redirect(location);
+    if (req.headers['content-type'] == undefined) {
+        res.writeHead(403);
+        res.end();
+    } else if (req.headers['content-type'].includes('text/html')) {
+        res.redirect(locationZ);
+    } else if (req.headers['content-type'].includes('application/json')) {
+        res.writeHead(403);
+        res.end();
+    }
 }
 
 // Req Res String -> Void
@@ -105,9 +113,11 @@ function report_fail_with_message(req, res, message) {
 // Will check which one the user is looking for and report the apporpiate information
 // If the reqest is not supported, will notify
 function report_sucess(req, res, json_info, url, html_info) {
-    if (req.headers['accept'].includes('text/html')) {
+    if(req.headers['content-type'] == undefined) {
+        this.report_sucess_with_info(req, res, json_info);
+    } else if (req.headers['content-type'].includes('text/html')) {
         this.render(req, res, url, html_info)
-    } else if (req.headers['accept'].includes('application/json')) {
+    } else if (req.headers['content-type'].includes('application/json')) {
         this.report_sucess_with_info(req, res, json_info);
     } else {
         this.report_request_not_supported(req, res);
