@@ -90,7 +90,7 @@ function redirect(req, res, location) {
         res.writeHead(403);
         res.end();
     } else if (req.headers['content-type'].includes('text/html')) {
-        res.redirect(locationZ);
+        res.redirect(location);
     } else if (req.headers['content-type'].includes('application/json')) {
         res.writeHead(403);
         res.end();
