@@ -10,7 +10,6 @@ exports.getPatientMessages = function (req, res) {
                     messages.splice(i, 1);
                 }
             }
-            requests = [];
         }
         req.responder.report_sucess(req, res, messages, 'patient/patient-message-overview', {
             patientID: patientID,

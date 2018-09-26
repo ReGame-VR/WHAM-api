@@ -20,7 +20,9 @@ exports.addPatientMessage = function (req, res) {
     var message_content = req.body.message_content;
     var date_sent = new Date(req.body.date_sent);
     req.messageDB.send_patient_a_message(patientID, therapistID, message_content, date_sent).then((messageID) => {
-        req.responder.report_sucess_no_info(req, res);
+        req.responder.report_sucess_with_info(req, res, {
+            messageID: messageID
+        })
     }).catch(error => {
         req.responder.report_not_found(req, res);
     });
