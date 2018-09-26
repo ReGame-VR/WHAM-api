@@ -9,7 +9,7 @@ exports.show_login = function(req, res) {
 exports.user_login = function(user_type) {
     return function(req, res) {
         req.authDB.login(req.body.username, req.body.password).then(user => {
-            if (req.headers['content-type'] != undefined && req.headers['content-type'].includes("text/html")) {
+            if (req.responder.accepts_html(req)) {
                 res.cookie('auth_token', user.token);
                 req.responder.redirect(req, res, '../' + user_type + 's/' + req.body.username);
             } else {

@@ -7,12 +7,9 @@
 // Sends the message to the user that they are
 // not authorized to view what they are trying to view
 function report_not_authorized(req, res) {
-    if (req.headers['content-type'] == undefined) {
-        res.writeHead(403);
-        res.end();
-    } else if (req.headers['content-type'].includes('text/html')) {
+    if(accepts_html(req)) {
         res.render('account/not-allowed');
-    } else if (req.headers['content-type'].includes('application/json')) {
+    } else {
         res.writeHead(403);
         res.end();
     }
@@ -22,12 +19,9 @@ function report_not_authorized(req, res) {
 // Sends the message to the user that their auth token
 // is either a fake or expired (or some other reason that it couldn't be verified)
 function report_bad_token(req, res) {
-    if (req.headers['content-type'] == undefined) {
-        res.writeHead(403);
-        res.end();
-    } else if (req.headers['content-type'].includes('text/html')) {
+    if(accepts_html(req)) {
         res.redirect('/login');
-    } else if (req.headers['content-type'].includes('application/json')) {
+    } else {
         res.writeHead(403);
         res.end();
     }
@@ -37,12 +31,9 @@ function report_bad_token(req, res) {
 // Sends the message to the user that the content they 
 // are trying to view does not exist
 function report_not_found(req, res) {
-    if (req.headers['content-type'] == undefined) {
-        res.writeHead(403);
-        res.end();
-    } else if (req.headers['content-type'].includes('text/html')) {
+    if(accepts_html(req)) {
         res.render('page-not-found');
-    } else if (req.headers['content-type'].includes('application/json')) {
+    } else {
         res.writeHead(403);
         res.end();
     }
@@ -86,12 +77,9 @@ function render(req, res, file_name, object) {
 // Req Res String
 // Redirects the user to this location
 function redirect(req, res, location) {
-    if (req.headers['content-type'] == undefined) {
-        res.writeHead(403);
-        res.end();
-    } else if (req.headers['content-type'].includes('text/html')) {
+    if(accepts_html(req)) {
         res.redirect(location);
-    } else if (req.headers['content-type'].includes('application/json')) {
+    } else {
         res.writeHead(403);
         res.end();
     }
@@ -113,15 +101,18 @@ function report_fail_with_message(req, res, message) {
 // Will check which one the user is looking for and report the apporpiate information
 // If the reqest is not supported, will notify
 function report_sucess(req, res, json_info, url, html_info) {
-    if(req.headers['content-type'] == undefined) {
-        this.report_sucess_with_info(req, res, json_info);
-    } else if (req.headers['content-type'].includes('text/html')) {
+    if(accepts_html(req)) {
         this.render(req, res, url, html_info)
-    } else if (req.headers['content-type'].includes('application/json')) {
-        this.report_sucess_with_info(req, res, json_info);
     } else {
-        this.report_request_not_supported(req, res);
+        this.report_sucess_with_info(req, res, json_info);
     }
+}
+
+// Req -> Boolean
+// Says if this req is accpeting a html response
+function accepts_html(req) {
+    return (req.headers['content-type'] != undefined && req.headers['content-type'].includes("text/html"))
+    || (req.headers['accept'] != undefined && req.headers['accept'].includes("text/html"))
 }
 
 module.exports = {
@@ -134,5 +125,6 @@ module.exports = {
     render: render,
     redirect: redirect,
     report_fail_with_message: report_fail_with_message,
-    report_sucess: report_sucess
+    report_sucess: report_sucess,
+    accepts_html: accepts_html
 };
