@@ -10,7 +10,7 @@ function report_not_authorized(req, res) {
     if(accepts_html(req)) {
         res.render('account/not-allowed');
     } else {
-        res.writeHead(403);
+        setHeader(res, 403, "application/json");
         res.end();
     }
 }
@@ -22,7 +22,7 @@ function report_bad_token(req, res) {
     if(accepts_html(req)) {
         res.redirect('/login');
     } else {
-        res.writeHead(403);
+        setHeader(res, 403, "application/json");
         res.end();
     }
 }
@@ -34,7 +34,7 @@ function report_not_found(req, res) {
     if(accepts_html(req)) {
         res.render('page-not-found');
     } else {
-        res.writeHead(403);
+        setHeader(res, 403, "application/json");
         res.end();
     }
 }
@@ -42,9 +42,7 @@ function report_not_found(req, res) {
 // Req Res -> Void
 // Tells the user that the request is not supported
 function report_request_not_supported(req, res) {
-    res.writeHead(403, {
-        "Content-Type": "application/json"
-    });
+    setHeader(res, 403, "application/json");
     res.end();
 }
 
@@ -52,9 +50,7 @@ function report_request_not_supported(req, res) {
 // Tells the user that their querry suceeded 
 // but we have nothing to give back
 function report_sucess_no_info(req, res) {
-    res.writeHead(204, {
-        'Content-Type': 'application/json',
-    });
+    setHeader(res, 204, "application/json");
     res.end();
 }
 
@@ -62,9 +58,7 @@ function report_sucess_no_info(req, res) {
 // Tells the user that their querry suceeded 
 // and we have something to give back
 function report_sucess_with_info(req, res, info) {
-    res.writeHead(200, {
-        'Content-Type': 'application/json',
-    });
+    setHeader(res, 200, "application/json");
     res.end(JSON.stringify(info));
 }
 
@@ -80,7 +74,7 @@ function redirect(req, res, location) {
     if(accepts_html(req)) {
         res.redirect(location);
     } else {
-        res.writeHead(403);
+        setHeader(res, 403, "application/json");
         res.end();
     }
 }
@@ -88,9 +82,7 @@ function redirect(req, res, location) {
 // Req Res String -> Void
 // Gives error 403 with error: message
 function report_fail_with_message(req, res, message) {
-    res.writeHead(403, {
-        "Content-Type": "application/json"
-    });
+    setHeader(res, 403, "application/json");
     res.end(JSON.stringify({
         error: message
     }));
@@ -113,6 +105,17 @@ function report_sucess(req, res, json_info, url, html_info) {
 function accepts_html(req) {
     return (req.headers['content-type'] != undefined && req.headers['content-type'].includes("text/html"))
     || (req.headers['accept'] != undefined && req.headers['accept'].includes("text/html"))
+}
+
+// Res String String => Void
+// Sets the header for the response
+function setHeader(res, status, content_type) {
+    res.writeHead(status, {
+        "Content-Type": content_type,
+        'Access-Control-Allow-Origin': '*',
+        "Access-Control-Allow-Credential": true,
+        'Access-Control-Allow-Methods': "GET,PUT,POST,DELETE,PATCH",
+    });
 }
 
 module.exports = {
