@@ -4,7 +4,8 @@ exports.getSession = function (req, res) {
     var patientID = req.params.patientID;
     var sessionID = req.params.sessionID;
     req.sessionDB.get_session_specific(patientID, sessionID).then(sessionInfo => {
-            req.responder.report_sucess(req, res, sessionInfo, 'patient/patient-session-details', sessionInfo);
+        sessionInfo.id = sessionID
+        req.responder.report_sucess(req, res, sessionInfo, 'patient/patient-session-details', sessionInfo);
     }).catch(error => {
         req.responder.report_not_found(req, res);
     });
