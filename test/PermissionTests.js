@@ -271,7 +271,7 @@ describe("PermTests", function () {
                     date_sent: "2016-02-28T16:41:41"
                 })
                 .end(function (err, res) {
-                    expect(res.status).to.be.equal(204);
+                    expect(res.status).to.be.equal(200);
                     done();
                 });
         });
@@ -435,7 +435,7 @@ describe("PermTests", function () {
                     date_sent: "2016-02-28T16:41:41"
                 })
                 .end(function (err, res) {
-                    expect(res.status).to.be.equal(204);
+                    expect(res.status).to.be.equal(200);
                     done();
                 });
         });
