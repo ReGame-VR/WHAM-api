@@ -213,14 +213,15 @@ describe('LoadTestData', function () {
 
     describe('Adds patient sessions', function () {
         var to_send = []
-        for (let i = 10; i < 50; i++) {
-            to_send.push({
-                score: 10 + i,
-                time: '2016-02-28T16:' + i + ':10'
-            })
-        }
 
         it('should give status 204 if the session add was sucessful', function (done) {
+            to_send = []
+            for (let i = 10; i < 50; i++) {
+                to_send.push({
+                    score: 10 + i,
+                    time: '2016-02-28T16:' + i + ':10'
+                })
+            }
             chai.request(app)
                 .post('/patients/ryan/sessions')
                 .accept('application/json')
@@ -239,15 +240,14 @@ describe('LoadTestData', function () {
                 });
         });
 
-        to_send = []
-        for (let i = 10; i < 30; i++) {
-            to_send.push({
-                score: 10,
-                time: '2016-02-25T16:' + 2 * i + ':10',
-            })
-        }
-
         it('should give status 204 if the session add was sucessful', function (done) {
+            to_send = []
+            for (let i = 10; i < 30; i++) {
+                to_send.push({
+                    score: 10,
+                    time: '2016-02-25T16:' + 2 * i + ':10',
+                })
+            }
             chai.request(app)
                 .post('/patients/ryan/sessions')
                 .accept('application/json')
@@ -266,14 +266,14 @@ describe('LoadTestData', function () {
                 });
         });
 
-        to_send = []
-        for (let i = 10; i < 30; i++) {
-            to_send.push({
-                score: 10 - i,
-                time: '2016-02-23T16:' + i + ':10',
-            })
-        }
         it('should give status 204 if the session add was sucessful', function (done) {
+            to_send = []
+            for (let i = 10; i < 30; i++) {
+                to_send.push({
+                    score: 10 - i,
+                    time: '2016-02-23T16:' + i + ':10',
+                })
+            }
             chai.request(app)
                 .post('/patients/ryan/sessions')
                 .accept('application/json')
@@ -291,14 +291,15 @@ describe('LoadTestData', function () {
                     done();
                 });
         });
-        to_send = []
-        for (let i = 10; i < 30; i++) {
-            to_send.push({
-                score: 10 * Math.sin(i),
-                time: '2016-02-24T16:' + 2 * i + ':10',
-            })
-        }
+
         it('should give status 204 if the session add was sucessful', function (done) {
+            to_send = []
+            for (let i = 10; i < 30; i++) {
+                to_send.push({
+                    score: 10 * Math.sin(i),
+                    time: '2016-02-24T16:' + 2 * i + ':10',
+                })
+            }
             chai.request(app)
                 .post('/patients/ryan/sessions')
                 .accept('application/json')
