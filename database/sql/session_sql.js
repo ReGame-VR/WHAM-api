@@ -6,7 +6,8 @@ const get_all_patient_sessions_sql =
 const get_specif_patient_session_sql = 
     `SELECT score, time, effort, motivation, engagement 
     FROM (SESSION JOIN SESSION_ITEM on SESSION.sessionID = SESSION_ITEM.sessionID) 
-    WHERE patientID = ? AND SESSION.sessionID = ?`;
+    WHERE patientID = ? AND SESSION.sessionID = ?
+    ORDER BY time DESC`;
 const get_patient_recent_sessions_sql = 
     `SELECT score, time, effort, motivation, engagement 
     FROM PATIENT P JOIN SESSION PS JOIN SESSION_ITEM SI on PS.sessionID = SI.sessionID ON P.username = PS.patientID 
