@@ -68,6 +68,7 @@ app.set('view engine', 'handlebars');
 
 // Sets the path or something (???)
 app.use(express.static(path.join(__dirname, 'public')));
+console.log(path.join(__dirname, 'public'));
 
 // Gives express the ability to parse JSON
 app.use(bodyParser.json());

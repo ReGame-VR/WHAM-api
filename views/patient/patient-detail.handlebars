@@ -8,14 +8,13 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
     crossorigin="anonymous">
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript" src="/js/test.js"
 
   <script>
-    console.log("{{sessions}}")
     var sessionsText = "{{sessions}}".split(",");
     var sessions = [];
     for(var i = 0; i < sessionsText.length; i += 2) {
       sessions.push([new Date(sessionsText[i]), Number(sessionsText[i+1])]);
-      console.log([new Date(sessionsText[i]), Number(sessionsText[i+1])]);
     }
     google.charts.load('current', {
       'packages': ['corechart']

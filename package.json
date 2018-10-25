@@ -4,6 +4,7 @@
   "description": "The WHAM Code For the Server",
   "main": "index.js",
   "dependencies": {
+    "asset-pipeline": "^0.3.2",
     "bcrypt": "^2.0.1",
     "body-parser": "^1.18.3",
     "chai": "^4.2.0",
