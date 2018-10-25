@@ -66,7 +66,7 @@ const app = express();
 app.engine('handlebars', hbs.engine);
 app.set('view engine', 'handlebars');
 
-// Sets the path or something (???)
+// Sets the folder where all static files should be put for use in Handlebars
 app.use(express.static(path.join(__dirname, 'public')));
 console.log(path.join(__dirname, 'public'));
 
