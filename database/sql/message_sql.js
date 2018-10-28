@@ -5,7 +5,7 @@ const get_specif_message_sql =
         WHERE patientID = ? AND messageID = ?`;
 const get_all_patient_message_replies_sql =
     `SELECT fromID, date_sent, content, replyID 
-        FROM MESSAGE_REPLY WHERE messageID = ?`;
+        FROM MESSAGE_REPLY WHERE messageID = ? ORDER BY date_sent`;
 const get_all_patient_message_sql = 
     `SELECT therapistID, message as message_content, is_read, date_sent, patientID, messageID 
     FROM PATIENT_MESSAGE PM 
