@@ -472,6 +472,23 @@ describe('HTTPTests', function () {
         });
     })
 
+    describe("reloggingin", () => {
+        it("Log in therapist after pairing", (done) => {
+            chai.request(app)
+                .post('/login/therapist')
+                .accept('application/json')
+                .send({
+                    username: 'therapist1',
+                    password: 'passworddddd',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body.token).to.be.a('string');
+                    done();
+                });
+        })
+    })
+
     describe('Adds patient sessions', function () {
         it('should give status 204 if the session add was sucessful', function (done) {
             chai.request(app)

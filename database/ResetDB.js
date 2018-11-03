@@ -25,11 +25,11 @@ class DBReseter {
             var res = connection.query(sql);
             connection.release();
             return res;
-        }).then(function (result) {
+        }).then(result => {
             return patientDB.add_patient("admin", process.env.ADMIN_PASSWORD, "1999-05-05", "160", "71", "").then(token => {
                 return token;
             });
-        });
+        })
     }
 }
 
