@@ -23,9 +23,14 @@ exports.addPatient = function (req, res) {
     var height = req.body.height
     var information = req.body.information
     req.patientDB.add_patient(username, unencrypt_password, dob, weight, height, information).then(worked => {
-            req.responder.report_sucess_with_info(req, res, {
-                token: worked
-            })
+            if (req.responder.accepts_html(req)) {
+                res.cookie('auth_token', worked);
+                req.responder.redirect(req, res, '../patients/' + username);
+            } else {
+                req.responder.report_sucess_with_info(req, res, {
+                    token: worked,
+                })
+            }
     }).catch(() => {
         req.responder.report_fail_with_message(req, res, "User already exists");
     });

@@ -17,9 +17,14 @@ exports.addTherapist = function (req, res) {
     var username = req.body.username
     var unencrypt_password = req.body.password
     req.therapistDB.add_therapist(username, unencrypt_password).then((token) => {
-        req.responder.report_sucess_with_info(req, res, {
-            token: token
-        })
+        if (req.responder.accepts_html(req)) {
+            res.cookie('auth_token', token);
+            req.responder.redirect(req, res, '../therapists/' + username);
+        } else {
+            req.responder.report_sucess_with_info(req, res, {
+                token: token,
+            })
+        }
     }).catch(error => {
       console.log(error);
         req.responder.report_fail_with_message(req, res, "User already exists");
