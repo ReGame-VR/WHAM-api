@@ -76,3 +76,6 @@ RAML/api.html
 
 # NYC Testing
 .nyc_output
+
+# Eslint
+.eslintrc*
