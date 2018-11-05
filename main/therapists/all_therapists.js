@@ -21,7 +21,6 @@ exports.addTherapist = function (req, res) {
             token: token
         })
     }).catch(error => {
-      console.log(error);
         req.responder.report_fail_with_message(req, res, "User already exists");
     });
 }

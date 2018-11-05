@@ -62,7 +62,7 @@ class TherapistDB {
     // Returns true given a proper login
     // False given an incorrect login
     login(username, unencrypt_password) {
-        return this.authDB.login(username, unencrypt_password);
+        return this.authDB.login(username, unencrypt_password, "therapist");
     }
 
     // Void -> Promise(List-of (Object String Number))

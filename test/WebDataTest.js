@@ -23,7 +23,7 @@ describe('LoadTestData', function () {
     describe('Adds Patients', function () {
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'ryan',
@@ -42,7 +42,7 @@ describe('LoadTestData', function () {
 
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy',
@@ -61,7 +61,7 @@ describe('LoadTestData', function () {
 
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'cole',
@@ -101,7 +101,7 @@ describe('LoadTestData', function () {
     describe('Adds Therapists', function () {
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist1',
@@ -116,7 +116,7 @@ describe('LoadTestData', function () {
 
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist2',
@@ -131,7 +131,7 @@ describe('LoadTestData', function () {
 
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist3',

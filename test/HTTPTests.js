@@ -40,7 +40,7 @@ describe('HTTPTests', function () {
     describe('Adds Patients', function () {
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'ryan',
@@ -59,7 +59,7 @@ describe('HTTPTests', function () {
 
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy',
@@ -78,7 +78,7 @@ describe('HTTPTests', function () {
 
         it('does not allow invalid dates', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy2',
@@ -96,7 +96,7 @@ describe('HTTPTests', function () {
 
         it('does not allow invalid dates', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy3',
@@ -114,7 +114,7 @@ describe('HTTPTests', function () {
 
         it('does not allow spaces in usernames', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'this is a bad username',
@@ -132,7 +132,7 @@ describe('HTTPTests', function () {
 
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'cole',
@@ -151,7 +151,7 @@ describe('HTTPTests', function () {
 
         it('should return 403 if the patient already exists', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'ryan',
@@ -231,7 +231,7 @@ describe('HTTPTests', function () {
     describe('Adds Therapists', function () {
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist1',
@@ -246,7 +246,7 @@ describe('HTTPTests', function () {
 
         it('should return an error if therapist name was taken', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist1',
@@ -261,7 +261,7 @@ describe('HTTPTests', function () {
 
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist2',
@@ -276,7 +276,7 @@ describe('HTTPTests', function () {
 
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist3',

@@ -26,7 +26,7 @@ exports.addPatient = function (req, res) {
             req.responder.report_sucess_with_info(req, res, {
                 token: worked
             })
-    }).catch(() => {
+    }).catch(error => {
         req.responder.report_fail_with_message(req, res, "User already exists");
     });
 }
