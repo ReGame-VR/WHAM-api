@@ -1,6 +1,12 @@
 language: node_js
 node_js:
   - "lts/*"
+env:
+  - DB_HOST=localhost
+  - DB_USER=root
+  - DB_PASS=
+  - JWT_SECRET=jewifosj
+  - ADMIN_PASSWORD=jfweie20fj
 services:
   - mysql
 before_install:
