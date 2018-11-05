@@ -1,4 +1,8 @@
 language: node_js
 node_js:
-  - "iojs"
-  - "7"
+  - "lts/*"
+services:
+  - mysql
+before_install:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS WHAM_TEST;'  
+  - mysql -u root --default-character-set=utf8 WHAM_TEST < database/schemas/schemas.sql
