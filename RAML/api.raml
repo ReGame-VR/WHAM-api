@@ -34,9 +34,9 @@ types:
           height: number # In CM
           information: string # Stuff about the patient that is not already included
           last_score: string
-          last_activity_time: datetime,
-          last_effort: number,
-          last_motivation: number,
+          last_activity_time: datetime
+          last_effort: number
+          last_motivation: number
           last_engagement: number
     example:
       username: "Joey"
@@ -215,34 +215,59 @@ resourceTypes:
 
   UserCollection:
     type:  { Collection: {item : <<item>>} }
-    post:
-      description: Register a new <<item>> user.
-      body:
-        application/json:
-          type: <<newItem>>
-
-      responses:
-        200:
-          description: Returns the token that is bound to the users account.
-          body:
-            application/json:
-              properties: 
-                token: string
-        403:
-          description: Invalid username/password.
-          body:
-            properties:
-              error: string
-            examples:
-              usernameTaken:
-                error: "Username taken already."
-              badPassword:
-                error: "Password must be at least 8 characters long."
+    
 
 /register:
   get:
     description: Shows the user registration screen.
+  /patient:
+    post:
+        description: Register a new <<item>> user.
+        body:
+          application/json:
+            type: NewPatient
 
+        responses:
+          200:
+            description: Returns the token that is bound to the users account.
+            body:
+              application/json:
+                properties: 
+                  token: string
+          403:
+            description: Invalid username/password.
+            body:
+              properties:
+                error: string
+              examples:
+                usernameTaken:
+                  error: "Username taken already."
+                badPassword:
+                  error: "Password must be at least 8 characters long."
+  /therapist:
+    post:
+        description: Register a new <<item>> user.
+        body:
+          application/json:
+            type: NewTherapist
+
+        responses:
+          200:
+            description: Returns the token that is bound to the users account.
+            body:
+              application/json:
+                properties: 
+                  token: string
+          403:
+            description: Invalid username/password.
+            body:
+              properties:
+                error: string
+              examples:
+                usernameTaken:
+                  error: "Username taken already."
+                badPassword:
+                  error: "Password must be at least 8 characters long."
 /logout:
   get:
     description: Clears the auth-token cookie and shows the logout screen.
