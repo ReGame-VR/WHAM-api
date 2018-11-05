@@ -3,7 +3,7 @@
 exports.getPatients = function (req, res) {
     req.patientDB.get_all_patient_info().then(info => {
         req.responder.report_sucess(req, res, info, 'patient/patient-overview', {patients: info})
-    }).catch(error => {
+    }).catch(() => {
         req.responder.report_not_found(req, res);
     });
 }
@@ -26,7 +26,7 @@ exports.addPatient = function (req, res) {
             req.responder.report_sucess_with_info(req, res, {
                 token: worked
             })
-    }).catch(error => {
+    }).catch(() => {
         req.responder.report_fail_with_message(req, res, "User already exists");
     });
 }

@@ -6,9 +6,6 @@ const login = require('../main/login/login.js');
 
 const login_route = express.Router();
 
-// Renders the login choosing screen as HTML
-login_route.get('/', login.show_login);
-
 // Logs this patient
 // Will give back the users authenticaiton token
 login_route.post('/patient',

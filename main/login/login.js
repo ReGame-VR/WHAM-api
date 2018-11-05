@@ -1,9 +1,3 @@
-// Shows the login choosing screen
-// Request Response HTTPResponses -> Void
-exports.show_login = function(req, res) {
-    req.responder.render(req, res, 'account/login-picker', {})
-};
-
 // Logs this user in
 // UserType -> (Request Response -> Void))
 exports.user_login = function(user_type) {

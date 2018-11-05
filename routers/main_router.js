@@ -9,19 +9,23 @@ const all_therapists = require('../main/therapists/all_therapists.js');
 const api = require('../main/api.js');
 const register = require('../main/register/register.js');
 const logout = require('../main/logout/logout.js');
+const home = require('../main/home/home.js');
 
 const main_route = express.Router();
+
+// Show home screen
+main_route.get('/', home.show_home);
 
 // Permissions for adding users are very loose (anyone can do it)
 // so we have to make a specific exception for not putting these ones in their routers
 
 // Adds a patient to the DB (create an account)
 // Will give back the users authenticaiton token
-main_route.post('/patients', all_patients.addPatient);
+main_route.post('/register/patient', all_patients.addPatient);
 
 // Adds a therapist to the DB
 // Will give back the users authenticaiton token
-main_route.post('/therapists', all_therapists.addTherapist);
+main_route.post('/register/therapist', all_therapists.addTherapist);
 
 // Sets the router for /login
 main_route.use('/login',login_route);
@@ -35,8 +39,11 @@ main_route.use('/patients', patient_route);
 // If the user goes to /api it will render the API HTML
 main_route.get('/api', api.showAPI);
 
-// Renders the registration screen as HTML
-main_route.get('/register', register.show_register);
+// Renders the patient registration screen as HTML
+main_route.get('/register/patient', register.show_patient_register);
+
+// Renders the therapist registration screen as HTML
+main_route.get('/register/therapist', register.show_therapist_register);
 
 // Clears the cookies and shows the logout screen
 main_route.get('/logout', logout.show_logout);

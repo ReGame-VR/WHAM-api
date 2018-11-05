@@ -1,5 +1,8 @@
 // Shows the user registration screen
-// Request Response -> Void
-exports.show_register = function(req, res) {
-    req.responder.render(req, res, 'account/register', {});
+exports.show_patient_register = function(req, res) {
+    req.responder.render(req, res, 'account/register-patient', {});
+};
+
+exports.show_therapist_register = function(req, res) {
+    req.responder.render(req, res, 'account/register-therapist', {});
 };
