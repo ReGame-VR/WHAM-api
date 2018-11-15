@@ -31,7 +31,7 @@ describe("PermTests", function () {
     describe("Adds Users", function () {
         it("should return the patient salt given a sucessful create account", function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .send({
                     username: 'ryan',
                     password: 'test_password',
@@ -51,7 +51,7 @@ describe("PermTests", function () {
 
         it("should return the patient salt given a sucessful create account", function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .send({
                     username: 'timmy',
                     password: 'this is a valid password',
@@ -70,7 +70,7 @@ describe("PermTests", function () {
 
         it("should return the patient salt given a sucessful create account", function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .send({
                     username: 'cole',
                     password: 'enrique',
@@ -90,7 +90,7 @@ describe("PermTests", function () {
 
         it("should return the therapist salt given a sucessful adding", function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .send({
                     username: 'therapist1',
                     password: 'passworddddd'
@@ -105,7 +105,7 @@ describe("PermTests", function () {
 
         it("should return the therapist salt given a sucessful adding", function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .send({
                     username: 'therapist2',
                     password: 'password'
