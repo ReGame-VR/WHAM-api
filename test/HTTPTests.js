@@ -40,7 +40,7 @@ describe('HTTPTests', function () {
     describe('Adds Patients', function () {
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'ryan',
@@ -59,7 +59,7 @@ describe('HTTPTests', function () {
 
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy',
@@ -78,7 +78,7 @@ describe('HTTPTests', function () {
 
         it('does not allow invalid dates', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy2',
@@ -96,7 +96,7 @@ describe('HTTPTests', function () {
 
         it('does not allow invalid dates', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'timmy3',
@@ -114,7 +114,7 @@ describe('HTTPTests', function () {
 
         it('does not allow spaces in usernames', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'this is a bad username',
@@ -132,7 +132,7 @@ describe('HTTPTests', function () {
 
         it('should return the patient salt given a sucessful create account', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'cole',
@@ -151,7 +151,7 @@ describe('HTTPTests', function () {
 
         it('should return 403 if the patient already exists', function (done) {
             chai.request(app)
-                .post('/patients')
+                .post('/register/patient')
                 .accept('application/json')
                 .send({
                     username: 'ryan',
@@ -181,6 +181,20 @@ describe('HTTPTests', function () {
                 })
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
+                    done();
+                });
+        });
+
+        it('should not let the patient login through the therapist URL', function (done) {
+            chai.request(app)
+                .post('/login/therapist')
+                .accept('application/json')
+                .send({
+                    username: 'ryan',
+                    password: 'test_password',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
                     done();
                 });
         });
@@ -217,7 +231,7 @@ describe('HTTPTests', function () {
     describe('Adds Therapists', function () {
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist1',
@@ -232,7 +246,7 @@ describe('HTTPTests', function () {
 
         it('should return an error if therapist name was taken', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist1',
@@ -247,7 +261,7 @@ describe('HTTPTests', function () {
 
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist2',
@@ -262,7 +276,7 @@ describe('HTTPTests', function () {
 
         it('should return the therapist salt given a sucessful adding', function (done) {
             chai.request(app)
-                .post('/therapists')
+                .post('/register/therapist')
                 .accept('application/json')
                 .send({
                     username: 'therapist3',
@@ -277,7 +291,7 @@ describe('HTTPTests', function () {
     });
 
     describe('Logs therapist in', function () {
-        it('should return the patient salt given a sucessful login', function (done) {
+        it('should return the therapist JWT given a sucessful login', function (done) {
             chai.request(app)
                 .post('/login/therapist')
                 .accept('application/json')
@@ -288,6 +302,20 @@ describe('HTTPTests', function () {
                 .end(function (err, res) {
                     expect(res.status).to.be.equal(200);
                     expect(res.body.token).to.be.a('string');
+                    done();
+                });
+        });
+
+        it('should not let a therapist login through patient URL', function (done) {
+            chai.request(app)
+                .post('/login/patient')
+                .accept('application/json')
+                .send({
+                    username: 'therapist3',
+                    password: 'test',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
                     done();
                 });
         });
@@ -470,6 +498,23 @@ describe('HTTPTests', function () {
                     done();
                 });
         });
+    })
+
+    describe("reloggingin", () => {
+        it("Log in therapist after pairing", (done) => {
+            chai.request(app)
+                .post('/login/therapist')
+                .accept('application/json')
+                .send({
+                    username: 'therapist1',
+                    password: 'passworddddd',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(200);
+                    expect(res.body.token).to.be.a('string');
+                    done();
+                });
+        })
     })
 
     describe('Adds patient sessions', function () {

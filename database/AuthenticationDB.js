@@ -23,12 +23,17 @@ class AuthenticationDB {
 
     // String String -> Promise(JWT)
     // Tests whether the given login info is valid for the given table
-    login(username, unencrypt_password) {
+    login(username, unencrypt_password, type) {
         var get_salt_insert = [username];
         var password;
         var connection;
         return this.pool.getConnection().then(con => {
             connection = con
+            return verifyType(username, type, connection);
+        }).then(is_of_type => {
+            if(is_of_type === false) {
+                throw new Error("Does not match type");
+            }
             var get_salt_query = mysql.format(get_user_salt_sql, get_salt_insert);
             return connection.query(get_salt_query)
         }).then(results => {
@@ -142,6 +147,24 @@ class AuthenticationDB {
 // Says if this user is an admin
 function isAdmin(user) {
     return user === 'admin'
+}
+
+// String String Connection -> Promise(Boolean)
+// Verifies if this user is of the said type
+function verifyType(username, type, conn) {
+    if(type === "patient") {
+        var get_message_query = mysql.format("SELECT * FROM PATIENT where username = ?", [username]);
+        return conn.query(get_message_query).then(res => {
+            return res.length > 0;
+        })
+    } else if(type === "therapist") {
+        var get_message_query = mysql.format("SELECT * FROM THERAPIST where username = ?", [username]);
+        return conn.query(get_message_query).then(res => {
+            return res.length > 0;
+        })
+    } else {
+        throw new Error("Invalid type");
+    }
 }
 
 module.exports = AuthenticationDB;
