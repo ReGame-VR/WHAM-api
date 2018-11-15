@@ -6,10 +6,9 @@ env:
     - DB_HOST=localhost
     - DB_USER=root
     - DB_PASS=
-    - JWT_SECRET=jewifosj
-    - ADMIN_PASSWORD=jfweie20fj
+    - JWT_SECRET=jewifosjfjweieofji
+    - ADMIN_PASSWORD=password
 services:
   - mysql
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS WHAM_TEST;'  
-  - mysql -u root --default-character-set=utf8 WHAM_TEST < database/schemas/schemas.sql
