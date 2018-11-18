@@ -10,7 +10,7 @@ Required Setup:
 
 1. Install and Run a MySQL server. Create a database WHAM_TEST
 2. Run npm install
-3. Create a .env file in the /Backend folder. 
+3. Create a .env file in the main folder. 
 Required Fields:
 
 DB_HOST=?<br>
@@ -18,5 +18,7 @@ DB_USER=?<br>
 DB_PASS=?<br>
 JWT_SECRET=?<br>
 ADMIN_PASSWORD=?
+
+4. Run "npm test" "npm restart" or "npm start"
 
 
