@@ -366,6 +366,22 @@ describe('HTTPTests', function () {
                 });
         });
 
+        it('should give status 403 if the pair was already added', function (done) {
+            chai.request(app)
+                .post('/therapists/therapist1/patients')
+                .accept('application/json')
+                .query({
+                    auth_token: admin_auth_token,
+                })
+                .send({
+                    patientID: 'ryan',
+                })
+                .end(function (err, res) {
+                    expect(res.status).to.be.equal(403);
+                    done();
+                });
+        });
+
         it('should give status 403 if the pair was unsucessful', function (done) {
             chai.request(app)
                 .post('/therapists/therapist1/patients')

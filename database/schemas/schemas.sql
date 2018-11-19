@@ -42,6 +42,7 @@ CREATE TABLE PATIENT_THERAPIST (
     date_assigned DATE,
     date_removed DATE, -- CAN BE NULL
     is_accepted BOOLEAN, -- false means patient must accept, true means is accepted
+    PRIMARY KEY(patientID, therapistID),
     FOREIGN KEY (patientID) REFERENCES PATIENT(username) ON DELETE CASCADE, 
     FOREIGN KEY (therapistID) REFERENCES THERAPIST(username) ON DELETE CASCADE  
 );
