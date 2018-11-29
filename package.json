@@ -15,7 +15,6 @@
     "express-handlebars": "^3.0.0",
     "jsonwebtoken": "^8.3.0",
     "method-override": "^2.3.10",
-    "mocha": "^5.2.0",
     "mysql": "^2.16.0",
     "nyc": "^12.0.2",
     "passport-local": "^1.0.0",
@@ -25,7 +24,7 @@
     "zingchart": "^2.8.2"
   },
   "scripts": {
-    "test": "nyc --reporter=text mocha",
+    "test": "mocha",
     "start": "node index.js",
     "restart": "mocha --grep LoadTestData"
   },
@@ -38,5 +37,8 @@
   "bugs": {
     "url": "https://github.com/ryan-bradford/WHAM/issues"
   },
-  "homepage": "https://github.com/ryan-bradford/WHAM#readme"
+  "homepage": "https://github.com/ryan-bradford/WHAM#readme",
+  "devDependencies": {
+    "mocha": "^5.2.0"
+  }
 }
