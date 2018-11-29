@@ -24,7 +24,7 @@
     "zingchart": "^2.8.2"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --exit",
     "start": "node index.js",
     "restart": "mocha --grep LoadTestData"
   },
