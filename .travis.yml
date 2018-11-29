@@ -12,3 +12,4 @@ services:
   - mysql
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS WHAM_TEST;'  
+  - sudo timedatectl set-timezone America/New_York
