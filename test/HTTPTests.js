@@ -76,42 +76,6 @@ describe('HTTPTests', function () {
                 });
         });
 
-        it('does not allow invalid dates', function (done) {
-            chai.request(app)
-                .post('/register/patient')
-                .accept('application/json')
-                .send({
-                    username: 'timmy2',
-                    password: 'password',
-                    dob: '1981-20-27',
-                    weight: 155,
-                    height: 78,
-                    information: '',
-                })
-                .end(function (err, res) {
-                    expect(res.status).to.be.equal(403);
-                    done();
-                });
-        });
-
-        it('does not allow invalid dates', function (done) {
-            chai.request(app)
-                .post('/register/patient')
-                .accept('application/json')
-                .send({
-                    username: 'timmy3',
-                    password: 'password',
-                    dob: '1981-02-40',
-                    weight: 155,
-                    height: 78,
-                    information: '',
-                })
-                .end(function (err, res) {
-                    expect(res.status).to.be.equal(403);
-                    done();
-                });
-        });
-
         it('does not allow spaces in usernames', function (done) {
             chai.request(app)
                 .post('/register/patient')
