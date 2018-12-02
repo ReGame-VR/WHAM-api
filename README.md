@@ -24,7 +24,6 @@ ADMIN_PASSWORD=?
 4. Run "npm test" "npm restart" or "npm start"
 
 API Next Steps:
-1. Link API to actual URL on the Google Cloud Compute Server
 1. Make the API support the data that is actually sent from the hardware.
 2. Use React Native instead of Handlebars as the template-ing engine.
 
